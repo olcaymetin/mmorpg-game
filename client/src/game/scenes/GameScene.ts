@@ -54,6 +54,7 @@ export class GameScene extends Phaser.Scene {
   // Brush type: "tile" | "eraser" | "object"
   private currentBrushType = "tile";
   private currentTileIndex = 0;
+  private currentTileStamp: { width: number; height: number; tiles: number[][] } | null = null;
   private currentObjectName = "marketplace";
 
   // Placed Objects list
@@ -179,9 +180,15 @@ export class GameScene extends Phaser.Scene {
       this.currentBrushType = brush.type;
       if (brush.type === "tile" && brush.index !== undefined) {
         this.currentTileIndex = brush.index;
+        this.currentTileStamp = null;
       } else if (brush.type === "object" && brush.name) {
         this.currentObjectName = brush.name;
       }
+    });
+
+    this.game.events.on("editor-tile-stamp-selected", (stamp: { width: number; height: number; tiles: number[][] }) => {
+      this.currentBrushType = "tile";
+      this.currentTileStamp = stamp;
     });
 
     this.game.events.on("editor-mode-changed", (enabled: boolean) => {
@@ -312,7 +319,27 @@ export class GameScene extends Phaser.Scene {
 
       if (tileX >= 0 && tileX < 50 && tileY >= 0 && tileY < 40) {
         if (this.currentBrushType === "tile") {
-          this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: this.currentTileIndex });
+          if (this.currentTileStamp) {
+            const updates: Array<{ x: number; y: number; tileIndex: number }> = [];
+            for (let r = 0; r < this.currentTileStamp.height; r++) {
+              for (let c = 0; c < this.currentTileStamp.width; c++) {
+                const tx = tileX + c;
+                const ty = tileY + r;
+                if (tx >= 0 && tx < 50 && ty >= 0 && ty < 40) {
+                  updates.push({
+                    x: tx,
+                    y: ty,
+                    tileIndex: this.currentTileStamp.tiles[r][c]
+                  });
+                }
+              }
+            }
+            if (updates.length > 0) {
+              this.room.send("tile-update-multi", { updates });
+            }
+          } else {
+            this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: this.currentTileIndex });
+          }
         } else if (this.currentBrushType === "eraser" && !this.clickedGameObject) {
           this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: -1 });
         }

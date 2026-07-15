@@ -26,6 +26,11 @@ const App: React.FC = () => {
   // Active tab inside spawning objects selector
   const [activeTab, setActiveTab] = useState<"structures" | "decorations" | "effects">("structures");
 
+  // Selection box start/end for multi-tile selection
+  const [selectionStart, setSelectionStart] = useState<{ col: number; row: number } | null>(null);
+  const [selectionEnd, setSelectionEnd] = useState<{ col: number; row: number } | null>(null);
+  const [isSelectingTileset, setIsSelectingTileset] = useState(false);
+
   // Legacy map migration state
   const [hasLegacyMap, setHasLegacyMap] = useState(false);
 
@@ -109,7 +114,26 @@ const App: React.FC = () => {
     }
   };
 
-  const handleTilesetClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const getSelectionRect = () => {
+    if (!selectionStart || !selectionEnd) return null;
+    const colStart = Math.min(selectionStart.col, selectionEnd.col);
+    const colEnd = Math.max(selectionStart.col, selectionEnd.col);
+    const rowStart = Math.min(selectionStart.row, selectionEnd.row);
+    const rowEnd = Math.max(selectionStart.row, selectionEnd.row);
+
+    return {
+      left: colStart * 16,
+      top: rowStart * 16,
+      width: (colEnd - colStart + 1) * 16,
+      height: (rowEnd - rowStart + 1) * 16,
+      colsCount: colEnd - colStart + 1,
+      rowsCount: rowEnd - rowStart + 1,
+      colStart,
+      rowStart,
+    };
+  };
+
+  const handleTilesetMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const clickY = e.clientY - rect.top;
@@ -117,10 +141,59 @@ const App: React.FC = () => {
     const col = Math.floor(clickX / 16);
     const row = Math.floor(clickY / 16);
 
-    // Grid size: 32 columns x 23 rows of 16x16 tiles
     if (col >= 0 && col < 32 && row >= 0 && row < 23) {
-      const index = row * 32 + col;
-      handleSelectTile(index);
+      setSelectionStart({ col, row });
+      setSelectionEnd({ col, row });
+      setIsSelectingTileset(true);
+      setSelectedObject(null);
+    }
+  };
+
+  const handleTilesetMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isSelectingTileset || !selectionStart) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
+
+    const col = Math.max(0, Math.min(31, Math.floor(clickX / 16)));
+    const row = Math.max(0, Math.min(22, Math.floor(clickY / 16)));
+
+    setSelectionEnd({ col, row });
+  };
+
+  const handleTilesetMouseUp = () => {
+    if (!isSelectingTileset || !selectionStart || !selectionEnd) return;
+    setIsSelectingTileset(false);
+
+    const colStart = Math.min(selectionStart.col, selectionEnd.col);
+    const colEnd = Math.max(selectionStart.col, selectionEnd.col);
+    const rowStart = Math.min(selectionStart.row, selectionEnd.row);
+    const rowEnd = Math.max(selectionStart.row, selectionEnd.row);
+
+    const w = colEnd - colStart + 1;
+    const h = rowEnd - rowStart + 1;
+
+    if (w === 1 && h === 1) {
+      // Single tile selection
+      const index = rowStart * 32 + colStart;
+      setSelectedTile(index);
+      if (game) {
+        game.events.emit("editor-brush-selected", { type: "tile", index });
+      }
+    } else {
+      // Multi-tile stamp selection
+      setSelectedTile(-3); // -3 represents custom stamp
+      const tiles: number[][] = [];
+      for (let r = rowStart; r <= rowEnd; r++) {
+        const rowTiles = [];
+        for (let c = colStart; c <= colEnd; c++) {
+          rowTiles.push(r * 32 + c);
+        }
+        tiles.push(rowTiles);
+      }
+      if (game) {
+        game.events.emit("editor-tile-stamp-selected", { width: w, height: h, tiles });
+      }
     }
   };
 
@@ -500,13 +573,16 @@ const App: React.FC = () => {
                 </div>
               )}
 
-              {/* ── Terrains Tileset Selector ── */}
+               {/* ── Terrains Tileset Selector ── */}
               <div className="section-title">Zemin Fayansları (16x16)</div>
               <div className="tileset-container">
                 <div
                   className="tileset-wrapper"
                   style={{ position: "relative", width: "512px", height: "368px", cursor: "pointer" }}
-                  onClick={handleTilesetClick}
+                  onMouseDown={handleTilesetMouseDown}
+                  onMouseMove={handleTilesetMouseMove}
+                  onMouseUp={handleTilesetMouseUp}
+                  onMouseLeave={handleTilesetMouseUp}
                 >
                   <img
                     src="/assets/terrains.png"
@@ -519,7 +595,7 @@ const App: React.FC = () => {
                     }}
                   />
                   
-                  {/* Active selection highlighting box */}
+                  {/* Active single selection highlighting box */}
                   {selectedTile >= 0 && (
                     <div
                       className="selection-box"
@@ -531,6 +607,24 @@ const App: React.FC = () => {
                         height: "16px",
                         left: `${(selectedTile % 32) * 16}px`,
                         top: `${Math.floor(selectedTile / 32) * 16}px`,
+                        pointerEvents: "none",
+                      }}
+                    />
+                  )}
+
+                  {/* Multi-tile selection preview (during drag or when stamp is selected) */}
+                  {getSelectionRect() && (selectedTile === -3 || isSelectingTileset) && (
+                    <div
+                      className="selection-box selection-box--stamp"
+                      style={{
+                        position: "absolute",
+                        border: "2px solid #3b82f6",
+                        boxShadow: "0 0 8px rgba(59, 130, 246, 0.9)",
+                        backgroundColor: "rgba(59, 130, 246, 0.15)",
+                        left: `${getSelectionRect()!.left}px`,
+                        top: `${getSelectionRect()!.top}px`,
+                        width: `${getSelectionRect()!.width}px`,
+                        height: `${getSelectionRect()!.height}px`,
                         pointerEvents: "none",
                       }}
                     />

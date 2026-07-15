@@ -43,6 +43,14 @@ interface TileUpdateMessage {
   tileIndex: number;
 }
 
+interface TileUpdateMultiMessage {
+  updates: Array<{
+    x: number;
+    y: number;
+    tileIndex: number;
+  }>;
+}
+
 interface TileUpdateBulkMessage {
   mapData: { [key: string]: number };
   placedObjects?: Array<{
@@ -146,13 +154,30 @@ export class GameRoom extends Room<GameState> {
      * "tile-update" handler - for painting/erasing single tiles
      */
     this.onMessage("tile-update", (client: Client, msg: TileUpdateMessage) => {
-      const key = `${msg.x},${msg.y}`;
-      if (msg.tileIndex === -1) {
-        this.state.mapData.delete(key);
-      } else {
-        this.state.mapData.set(key, msg.tileIndex);
+       const key = `${msg.x},${msg.y}`;
+       if (msg.tileIndex === -1) {
+         this.state.mapData.delete(key);
+       } else {
+         this.state.mapData.set(key, msg.tileIndex);
+       }
+       this.triggerDebouncedSave();
+    });
+
+    /**
+     * "tile-update-multi" handler - for painting multiple tiles (stamp/brush)
+     */
+    this.onMessage("tile-update-multi", (client: Client, msg: TileUpdateMultiMessage) => {
+      if (msg.updates) {
+        msg.updates.forEach(u => {
+          const key = `${u.x},${u.y}`;
+          if (u.tileIndex === -1) {
+            this.state.mapData.delete(key);
+          } else {
+            this.state.mapData.set(key, u.tileIndex);
+          }
+        });
+        this.triggerDebouncedSave();
       }
-      this.triggerDebouncedSave();
     });
 
     /**
