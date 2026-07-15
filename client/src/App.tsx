@@ -23,6 +23,9 @@ const App: React.FC = () => {
   // Selected object properties (for scaling/deletion)
   const [selectedObject, setSelectedObject] = useState<{ id: string; type: string; scale: number } | null>(null);
 
+  // Active tab inside spawning objects selector
+  const [activeTab, setActiveTab] = useState<"structures" | "decorations" | "effects">("structures");
+
   // Legacy map migration state
   const [hasLegacyMap, setHasLegacyMap] = useState(false);
 
@@ -304,7 +307,19 @@ const App: React.FC = () => {
                 <div className="object-settings-card">
                   <div className="card-title">Seçili Obje Ayarları</div>
                   <div className="card-detail">
-                    Tip: <b>{selectedObject.type === "bank" ? "Banka" : selectedObject.type === "games" ? "Ev" : selectedObject.type === "blacksmith" ? "Demirci" : selectedObject.type === "shop" ? "Dükkan" : selectedObject.type === "gem_trader" ? "Cevher Tüccarı" : selectedObject.type === "farmer_npc" ? "Çiftçi NPC" : "Market"}</b>
+                    Tip: <b>{
+                      selectedObject.type === "bank" ? "Banka" :
+                      selectedObject.type === "games" ? "Ev" :
+                      selectedObject.type === "blacksmith" ? "Demirci" :
+                      selectedObject.type === "shop" ? "Dükkan" :
+                      selectedObject.type === "gem_trader" ? "Cevher Tüccarı" :
+                      selectedObject.type === "farmer_npc" ? "Çiftçi NPC" :
+                      selectedObject.type === "vfx_leaf_single" ? "Tek Yaprak" :
+                      selectedObject.type === "vfx_smoke" ? "Fırın Dumanı" :
+                      selectedObject.type.startsWith("vfx_") ? `Yaprak Efekti (${selectedObject.type.replace("vfx_leaves_", "").replace("_", " ")})` :
+                      selectedObject.type.startsWith("decor_grass_") ? `Dekor (Çiçek/Çimen #${selectedObject.type.replace("decor_grass_", "")})` :
+                      "Market"
+                    }</b>
                   </div>
                   
                   <div className="slider-group">
@@ -329,64 +344,161 @@ const App: React.FC = () => {
               )}
 
               {/* ── Spawning Objects Selector ── */}
-              <div className="section-title">Büyük Objeler (Fotoğraf)</div>
-              <div className="object-grid" style={{ gridTemplateColumns: "repeat(2, 1fr)" }}>
+              <div className="section-title">Büyük Objeler & Efektler</div>
+              
+              {/* Tab Navigation Buttons */}
+              <div className="editor-tabs">
                 <button
-                  className={`obj-btn ${selectedTile === -2 && selectedObjectName === "marketplace" ? "obj-btn--active" : ""}`}
-                  onClick={() => handleSelectObjectBrush("marketplace")}
+                  className={`tab-btn ${activeTab === "structures" ? "tab-btn--active" : ""}`}
+                  onClick={() => setActiveTab("structures")}
                 >
-                  <img src="/assets/marketplace.png" alt="market" className="obj-thumb" />
-                  <span>Market</span>
+                  🏰 Yapı & NPC
                 </button>
-                
                 <button
-                  className={`obj-btn ${selectedTile === -2 && selectedObjectName === "bank" ? "obj-btn--active" : ""}`}
-                  onClick={() => handleSelectObjectBrush("bank")}
+                  className={`tab-btn ${activeTab === "decorations" ? "tab-btn--active" : ""}`}
+                  onClick={() => setActiveTab("decorations")}
                 >
-                  <img src="/assets/bank.png" alt="bank" className="obj-thumb" />
-                  <span>Banka</span>
+                  🌿 Dekor (Foto)
                 </button>
-
                 <button
-                  className={`obj-btn ${selectedTile === -2 && selectedObjectName === "games" ? "obj-btn--active" : ""}`}
-                  onClick={() => handleSelectObjectBrush("games")}
+                  className={`tab-btn ${activeTab === "effects" ? "tab-btn--active" : ""}`}
+                  onClick={() => setActiveTab("effects")}
                 >
-                  <img src="/assets/games.png" alt="house" className="obj-thumb" />
-                  <span>Ev</span>
-                </button>
-
-                <button
-                  className={`obj-btn ${selectedTile === -2 && selectedObjectName === "blacksmith" ? "obj-btn--active" : ""}`}
-                  onClick={() => handleSelectObjectBrush("blacksmith")}
-                >
-                  <img src="/assets/blacksmith.png" alt="blacksmith" className="obj-thumb" />
-                  <span>Demirci</span>
-                </button>
-
-                <button
-                  className={`obj-btn ${selectedTile === -2 && selectedObjectName === "shop" ? "obj-btn--active" : ""}`}
-                  onClick={() => handleSelectObjectBrush("shop")}
-                >
-                  <img src="/assets/shop.png" alt="shop" className="obj-thumb" />
-                  <span>Dükkan</span>
-                </button>
-
-                <button
-                  className={`obj-btn ${selectedTile === -2 && selectedObjectName === "gem_trader" ? "obj-btn--active" : ""}`}
-                  onClick={() => handleSelectObjectBrush("gem_trader")}
-                >
-                  <img src="/assets/gem_trader.png" alt="gem trader" className="obj-thumb" />
-                  <span>Cevher Tüccarı</span>
-                </button>
-
-                <button
-                  className={`obj-btn ${selectedTile === -2 && selectedObjectName === "farmer_npc" ? "obj-btn--active" : ""}`}
-                  onClick={() => handleSelectObjectBrush("farmer_npc")}
-                >
-                  <img src="/assets/farmer_npc.png" alt="farmer npc" className="obj-thumb" />
-                  <span>Çiftçi NPC</span>
+                  ✨ Efekt (GIF)
                 </button>
               </div>
+
+              {/* Tab 1: Structures & NPCs */}
+              {activeTab === "structures" && (
+                <div className="object-grid" style={{ gridTemplateColumns: "repeat(2, 1fr)" }}>
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "marketplace" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("marketplace")}
+                  >
+                    <img src="/assets/marketplace.png" alt="market" className="obj-thumb" />
+                    <span>Market</span>
+                  </button>
+                  
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "bank" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("bank")}
+                  >
+                    <img src="/assets/bank.png" alt="bank" className="obj-thumb" />
+                    <span>Banka</span>
+                  </button>
+
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "games" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("games")}
+                  >
+                    <img src="/assets/games.png" alt="house" className="obj-thumb" />
+                    <span>Ev</span>
+                  </button>
+
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "blacksmith" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("blacksmith")}
+                  >
+                    <img src="/assets/blacksmith.png" alt="blacksmith" className="obj-thumb" />
+                    <span>Demirci</span>
+                  </button>
+
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "shop" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("shop")}
+                  >
+                    <img src="/assets/shop.png" alt="shop" className="obj-thumb" />
+                    <span>Dükkan</span>
+                  </button>
+
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "gem_trader" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("gem_trader")}
+                  >
+                    <img src="/assets/gem_trader.png" alt="gem trader" className="obj-thumb" />
+                    <span>Cevher Tüccarı</span>
+                  </button>
+
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "farmer_npc" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("farmer_npc")}
+                  >
+                    <img src="/assets/farmer_npc.png" alt="farmer npc" className="obj-thumb" />
+                    <span>Çiftçi NPC</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Tab 2: Customization / Decorations (11 items) */}
+              {activeTab === "decorations" && (
+                <div className="object-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
+                  {Array.from({ length: 11 }, (_, i) => i + 1).map(idx => (
+                    <button
+                      key={`decor-${idx}`}
+                      className={`obj-btn obj-btn--small ${selectedTile === -2 && selectedObjectName === `decor_grass_${idx}` ? "obj-btn--active" : ""}`}
+                      onClick={() => handleSelectObjectBrush(`decor_grass_${idx}`)}
+                    >
+                      <img src={`/assets/customization/Grass_Tufts_Flowers_${idx}.png`} alt={`decor-${idx}`} className="obj-thumb obj-thumb--small" />
+                      <span style={{ fontSize: "6px" }}>Dekor #{idx}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Tab 3: VFX / Gifts (Gifs) */}
+              {activeTab === "effects" && (
+                <div className="object-grid" style={{ gridTemplateColumns: "repeat(2, 1fr)" }}>
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "vfx_leaf_single" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("vfx_leaf_single")}
+                  >
+                    <img src="/assets/gift/Modern_Farm_vfx_Falling_Leaf_16x16.gif" alt="leaf" className="obj-thumb" />
+                    <span>Tek Yaprak</span>
+                  </button>
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "vfx_leaves_1" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("vfx_leaves_1")}
+                  >
+                    <img src="/assets/gift/Modern_Farm_vfx_Falling_Leaves_16x16.gif" alt="leaves1" className="obj-thumb" />
+                    <span>Yapraklar 1</span>
+                  </button>
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "vfx_leaves_2" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("vfx_leaves_2")}
+                  >
+                    <img src="/assets/gift/Modern_Farm_vfx_Falling_Leaves_2_16x16.gif" alt="leaves2" className="obj-thumb" />
+                    <span>Yapraklar 2</span>
+                  </button>
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "vfx_leaves_3" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("vfx_leaves_3")}
+                  >
+                    <img src="/assets/gift/Modern_Farm_vfx_Falling_Leaves_3_16x16.gif" alt="leaves3" className="obj-thumb" />
+                    <span>Yapraklar 3</span>
+                  </button>
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "vfx_leaves_brown" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("vfx_leaves_brown")}
+                  >
+                    <img src="/assets/gift/Modern_Farm_vfx_Falling_Leaves_Brown_16x16.gif" alt="leaves_brown" className="obj-thumb" />
+                    <span>K.rengi Yaprak</span>
+                  </button>
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "vfx_leaves_yellow" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("vfx_leaves_yellow")}
+                  >
+                    <img src="/assets/gift/Modern_Farm_vfx_Falling_Leaves_Yellow_16x16.gif" alt="leaves_yellow" className="obj-thumb" />
+                    <span>Sarı Yaprak</span>
+                  </button>
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "vfx_smoke" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("vfx_smoke")}
+                  >
+                    <img src="/assets/gift/Stone_Oven_Smoke_Effect_16x16.gif" alt="smoke" className="obj-thumb" />
+                    <span>Fırın Dumanı</span>
+                  </button>
+                </div>
+              )}
 
               {/* ── Terrains Tileset Selector ── */}
               <div className="section-title">Zemin Fayansları (16x16)</div>

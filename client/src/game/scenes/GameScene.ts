@@ -109,6 +109,27 @@ export class GameScene extends Phaser.Scene {
     this.load.image("shop", "assets/shop.png");
     this.load.image("gem_trader", "assets/gem_trader.png");
     this.load.image("farmer_npc", "assets/farmer_npc.png");
+
+    // Load gift effects
+    this.load.image("vfx_leaf_single", "assets/gift/Modern_Farm_vfx_Falling_Leaf_16x16.gif");
+    this.load.image("vfx_leaves_1", "assets/gift/Modern_Farm_vfx_Falling_Leaves_16x16.gif");
+    this.load.image("vfx_leaves_2", "assets/gift/Modern_Farm_vfx_Falling_Leaves_2_16x16.gif");
+    this.load.image("vfx_leaves_3", "assets/gift/Modern_Farm_vfx_Falling_Leaves_3_16x16.gif");
+    this.load.image("vfx_leaves_brown", "assets/gift/Modern_Farm_vfx_Falling_Leaves_Brown_16x16.gif");
+    this.load.image("vfx_leaves_yellow", "assets/gift/Modern_Farm_vfx_Falling_Leaves_Yellow_16x16.gif");
+    this.load.image("vfx_smoke", "assets/gift/Stone_Oven_Smoke_Effect_16x16.gif");
+
+    // Load customization items
+    for (let i = 1; i <= 11; i++) {
+      this.load.image(`decor_grass_${i}`, `assets/customization/Grass_Tufts_Flowers_${i}.png`);
+    }
+  }
+
+  private getDefaultScaleForType(type: string): number {
+    if (type.startsWith("decor_grass_") || type.startsWith("vfx_")) {
+      return 2.0;
+    }
+    return 0.15;
   }
 
   create(data: SceneData): void {
@@ -305,12 +326,13 @@ export class GameScene extends Phaser.Scene {
           if (this.currentBrushType === "object") {
             // Place building object on server
             const uniqueId = `obj_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            const defaultScale = this.getDefaultScaleForType(this.currentObjectName);
             this.room.send("object-place", {
               id: uniqueId,
               type: this.currentObjectName,
               x: pointer.worldX,
               y: pointer.worldY,
-              scale: 0.15
+              scale: defaultScale
             });
           } else {
             handlePaint(pointer);
