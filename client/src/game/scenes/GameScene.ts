@@ -352,13 +352,15 @@ export class GameScene extends Phaser.Scene {
     if (!meta) return;
 
     const textureKey = `crop_${cropType}`;
-    const worldX = tx * 16 + 8; // center of tile
-    const worldY = ty * 16 + meta.frameH / 2; // bottom-aligned
+    // Align sprite bottom to the BOTTOM of the tile so plants grow upward
+    const worldX = tx * 16 + 8;          // center of tile horizontally
+    const worldY = (ty + 1) * 16;        // bottom edge of tile
 
     let sprite = this.cropSprites.get(key);
     if (!sprite) {
       sprite = this.add.sprite(worldX, worldY, textureKey, stage);
-      sprite.setDepth(5); // above terrain, below players
+      sprite.setOrigin(0.5, 1.0);        // bottom-center origin → grows upward
+      sprite.setDepth(5);                // above terrain, below players
       this.cropSprites.set(key, sprite);
     } else {
       sprite.setFrame(stage);
