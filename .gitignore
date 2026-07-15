@@ -1,0 +1,30 @@
+# Node
+node_modules/
+npm-debug.log*
+
+# Build outputs
+dist/
+client/dist/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Editor
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Tunnel tools (not needed in repo)
+cloudflared.exe
+ngrok.exe
+ngrok.zip

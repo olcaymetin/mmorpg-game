@@ -1,0 +1,13 @@
+{
+  "name": "mmorpg-game",
+  "version": "1.0.0",
+  "description": "2D MMORPG - Multiplayer farming game",
+  "scripts": {
+    "install:all": "cd client && npm install && cd ../server && npm install",
+    "build": "cd client && npm install && npm run build && cd ../server && npm install && npm run build",
+    "start": "cd server && npm start"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
