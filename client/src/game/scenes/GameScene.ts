@@ -126,6 +126,7 @@ export class GameScene extends Phaser.Scene {
     for (let i = 1; i <= 11; i++) {
       this.load.image(`decor_grass_${i}`, `assets/customization/Grass_Tufts_Flowers_${i}.png`);
     }
+    this.load.spritesheet("decor_sheet_gorsel", "assets/customization/görsel.png", { frameWidth: 16, frameHeight: 16 });
 
     // Load material gift items as spritesheets
     this.load.spritesheet("mg_stable_gate", "assets/material_gift/Stable_Gate_16x16.png", { frameWidth: 32, frameHeight: 32 });
@@ -137,7 +138,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private getDefaultScaleForType(type: string): number {
-    if (type.startsWith("decor_grass_") || type.startsWith("vfx_") || type.startsWith("mg_")) {
+    if (type.startsWith("decor_grass_") || type.startsWith("decor_gorsel_") || type.startsWith("vfx_") || type.startsWith("mg_")) {
       return 2.0;
     }
     return 0.15;
@@ -231,6 +232,28 @@ export class GameScene extends Phaser.Scene {
 
     // Create animations for VFX and Material Gift items
     this.createGIFAnimations();
+
+    // Slice decor_sheet_gorsel into individual texture frames at runtime
+    const sheet = this.textures.get("decor_sheet_gorsel");
+    if (sheet) {
+      for (let i = 0; i < 44; i++) {
+        const frame = sheet.frames[i];
+        if (frame) {
+          const canvas = document.createElement("canvas");
+          canvas.width = 16;
+          canvas.height = 16;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(
+              sheet.getSourceImage() as HTMLImageElement,
+              frame.cutX, frame.cutY, 16, 16,
+              0, 0, 16, 16
+            );
+            this.textures.addCanvas(`decor_gorsel_${i}`, canvas);
+          }
+        }
+      }
+    }
 
     // 11. Mouse wheel zoom (middle mouse wheel) and responsive scale resize
     const getMinZoom = () => {

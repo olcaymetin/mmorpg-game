@@ -403,6 +403,7 @@ const App: React.FC = () => {
                       selectedObject.type === "mg_wooden_gate" ? "Tahta Kapı" :
                       selectedObject.type.startsWith("vfx_") ? `Yaprak Efekti (${selectedObject.type.replace("vfx_leaves_", "").replace("_", " ")})` :
                       selectedObject.type.startsWith("decor_grass_") ? `Dekor (Çiçek/Çimen #${selectedObject.type.replace("decor_grass_", "")})` :
+                      selectedObject.type.startsWith("decor_gorsel_") ? `Görsel Dekor #${selectedObject.type.replace("decor_gorsel_", "")}` :
                       "Market"
                     }</b>
                   </div>
@@ -416,6 +417,7 @@ const App: React.FC = () => {
                       type="range"
                       min={
                         selectedObject.type.startsWith("decor_grass_") ||
+                        selectedObject.type.startsWith("decor_gorsel_") ||
                         selectedObject.type.startsWith("vfx_") ||
                         selectedObject.type.startsWith("mg_")
                           ? "0.5"
@@ -423,6 +425,7 @@ const App: React.FC = () => {
                       }
                       max={
                         selectedObject.type.startsWith("decor_grass_") ||
+                        selectedObject.type.startsWith("decor_gorsel_") ||
                         selectedObject.type.startsWith("vfx_") ||
                         selectedObject.type.startsWith("mg_")
                           ? "5.0"
@@ -430,6 +433,7 @@ const App: React.FC = () => {
                       }
                       step={
                         selectedObject.type.startsWith("decor_grass_") ||
+                        selectedObject.type.startsWith("decor_gorsel_") ||
                         selectedObject.type.startsWith("vfx_") ||
                         selectedObject.type.startsWith("mg_")
                           ? "0.1"
@@ -539,7 +543,7 @@ const App: React.FC = () => {
                 </div>
               )}
 
-              {/* Tab 2: Customization / Decorations (11 items) */}
+              {/* Tab 2: Customization / Decorations (11 items + 24 custom sheet items) */}
               {activeTab === "decorations" && (
                 <div className="object-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
                   {Array.from({ length: 11 }, (_, i) => i + 1).map(idx => (
@@ -552,6 +556,31 @@ const App: React.FC = () => {
                       <span style={{ fontSize: "6px" }}>Dekor #{idx}</span>
                     </button>
                   ))}
+                  {[0, 1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 13, 14, 15, 17, 18, 19, 22, 23, 24, 28, 29, 30, 38].map(frameIdx => {
+                    const col = frameIdx % 11;
+                    const row = Math.floor(frameIdx / 11);
+                    return (
+                      <button
+                        key={`decor-gorsel-${frameIdx}`}
+                        className={`obj-btn obj-btn--small ${selectedTile === -2 && selectedObjectName === `decor_gorsel_${frameIdx}` ? "obj-btn--active" : ""}`}
+                        onClick={() => handleSelectObjectBrush(`decor_gorsel_${frameIdx}`)}
+                      >
+                        <div
+                          className="obj-thumb obj-thumb--small"
+                          style={{
+                            width: "16px",
+                            height: "16px",
+                            backgroundImage: "url('/assets/customization/görsel.png')",
+                            backgroundSize: `${11 * 16}px ${4 * 16}px`,
+                            backgroundPosition: `-${col * 16}px -${row * 16}px`,
+                            imageRendering: "pixelated",
+                            margin: "0 auto",
+                          }}
+                        />
+                        <span style={{ fontSize: "6px" }}>Görsel #{frameIdx}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
 
