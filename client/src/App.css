@@ -258,6 +258,24 @@ kbd {
   backdrop-filter: blur(16px);
   user-select: none;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Scrollable support when content exceeds height */
+  overflow-y: auto;
+}
+
+/* Custom Scrollbar for editor panel */
+.editor-panel::-webkit-scrollbar {
+  width: 6px;
+}
+.editor-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+.editor-panel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+.editor-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .editor-panel--collapsed {
@@ -364,6 +382,8 @@ kbd {
 /* Tileset Box Scrollable */
 .tileset-container {
   flex-grow: 1;
+  flex-shrink: 0;
+  min-height: 240px;
   overflow: auto;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 6px;
