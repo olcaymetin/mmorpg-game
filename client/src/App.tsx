@@ -62,7 +62,7 @@ const App: React.FC = () => {
     setEditMode(nextMode);
     setSelectedObject(null);
     if (game) {
-      game.events.emit("editor-mode-toggled", nextMode);
+      game.events.emit("editor-mode-changed", nextMode);
     }
   };
 
