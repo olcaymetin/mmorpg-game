@@ -408,9 +408,27 @@ const App: React.FC = () => {
                     <input
                       id="scale-slider"
                       type="range"
-                      min="0.05"
-                      max="0.45"
-                      step="0.01"
+                      min={
+                        selectedObject.type.startsWith("decor_grass_") ||
+                        selectedObject.type.startsWith("vfx_") ||
+                        selectedObject.type.startsWith("mg_")
+                          ? "0.5"
+                          : "0.05"
+                      }
+                      max={
+                        selectedObject.type.startsWith("decor_grass_") ||
+                        selectedObject.type.startsWith("vfx_") ||
+                        selectedObject.type.startsWith("mg_")
+                          ? "5.0"
+                          : "0.50"
+                      }
+                      step={
+                        selectedObject.type.startsWith("decor_grass_") ||
+                        selectedObject.type.startsWith("vfx_") ||
+                        selectedObject.type.startsWith("mg_")
+                          ? "0.1"
+                          : "0.01"
+                      }
                       value={selectedObject.scale}
                       onChange={handleObjectScaleChange}
                     />
