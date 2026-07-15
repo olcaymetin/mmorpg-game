@@ -304,7 +304,7 @@ const App: React.FC = () => {
                 <div className="object-settings-card">
                   <div className="card-title">Seçili Obje Ayarları</div>
                   <div className="card-detail">
-                    Tip: <b>{selectedObject.type === "bank" ? "Banka" : selectedObject.type === "games" ? "Ev" : selectedObject.type === "blacksmith" ? "Demirci" : selectedObject.type === "shop" ? "Dükkan" : "Market"}</b>
+                    Tip: <b>{selectedObject.type === "bank" ? "Banka" : selectedObject.type === "games" ? "Ev" : selectedObject.type === "blacksmith" ? "Demirci" : selectedObject.type === "shop" ? "Dükkan" : selectedObject.type === "gem_trader" ? "Cevher Tüccarı" : selectedObject.type === "farmer_npc" ? "Çiftçi NPC" : "Market"}</b>
                   </div>
                   
                   <div className="slider-group">
@@ -369,6 +369,22 @@ const App: React.FC = () => {
                 >
                   <img src="/assets/shop.png" alt="shop" className="obj-thumb" />
                   <span>Dükkan</span>
+                </button>
+
+                <button
+                  className={`obj-btn ${selectedTile === -2 && selectedObjectName === "gem_trader" ? "obj-btn--active" : ""}`}
+                  onClick={() => handleSelectObjectBrush("gem_trader")}
+                >
+                  <img src="/assets/gem_trader.png" alt="gem trader" className="obj-thumb" />
+                  <span>Cevher Tüccarı</span>
+                </button>
+
+                <button
+                  className={`obj-btn ${selectedTile === -2 && selectedObjectName === "farmer_npc" ? "obj-btn--active" : ""}`}
+                  onClick={() => handleSelectObjectBrush("farmer_npc")}
+                >
+                  <img src="/assets/farmer_npc.png" alt="farmer npc" className="obj-thumb" />
+                  <span>Çiftçi NPC</span>
                 </button>
               </div>
 
