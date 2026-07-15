@@ -26,7 +26,9 @@ const SPEED = 4;
 /** Half of player size — used for boundary clamping */
 const HALF = 16;
 
-const SAVE_FILE_PATH = path.join(__dirname, "..", "..", "save_data.json");
+const SAVE_FILE_PATH = fs.existsSync("/data")
+  ? "/data/save_data.json"
+  : path.join(__dirname, "..", "..", "save_data.json");
 
 // ─── Message types ────────────────────────────────────────────────────────────
 
