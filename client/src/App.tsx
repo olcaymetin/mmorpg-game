@@ -304,7 +304,7 @@ const App: React.FC = () => {
                 <div className="object-settings-card">
                   <div className="card-title">Seçili Obje Ayarları</div>
                   <div className="card-detail">
-                    Tip: <b>{selectedObject.type === "bank" ? "Banka" : selectedObject.type === "games" ? "Ev" : selectedObject.type === "blacksmith" ? "Demirci" : "Market"}</b>
+                    Tip: <b>{selectedObject.type === "bank" ? "Banka" : selectedObject.type === "games" ? "Ev" : selectedObject.type === "blacksmith" ? "Demirci" : selectedObject.type === "shop" ? "Dükkan" : "Market"}</b>
                   </div>
                   
                   <div className="slider-group">
@@ -361,6 +361,14 @@ const App: React.FC = () => {
                 >
                   <img src="/assets/blacksmith.png" alt="blacksmith" className="obj-thumb" />
                   <span>Demirci</span>
+                </button>
+
+                <button
+                  className={`obj-btn ${selectedTile === -2 && selectedObjectName === "shop" ? "obj-btn--active" : ""}`}
+                  onClick={() => handleSelectObjectBrush("shop")}
+                >
+                  <img src="/assets/shop.png" alt="shop" className="obj-thumb" />
+                  <span>Dükkan</span>
                 </button>
               </div>
 

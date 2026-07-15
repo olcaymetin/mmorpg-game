@@ -106,6 +106,7 @@ export class GameScene extends Phaser.Scene {
     this.load.image("bank", "assets/bank.png");
     this.load.image("games", "assets/games.png");
     this.load.image("blacksmith", "assets/blacksmith.png");
+    this.load.image("shop", "assets/shop.png");
   }
 
   create(data: SceneData): void {
