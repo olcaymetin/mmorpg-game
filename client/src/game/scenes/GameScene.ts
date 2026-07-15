@@ -111,27 +111,27 @@ export class GameScene extends Phaser.Scene {
     this.load.image("gem_trader", "assets/gem_trader.png");
     this.load.image("farmer_npc", "assets/farmer_npc.png");
 
-    // Load gift effects
-    this.load.image("vfx_leaf_single", "assets/gift/Modern_Farm_vfx_Falling_Leaf_16x16.gif");
-    this.load.image("vfx_leaves_1", "assets/gift/Modern_Farm_vfx_Falling_Leaves_16x16.gif");
-    this.load.image("vfx_leaves_2", "assets/gift/Modern_Farm_vfx_Falling_Leaves_2_16x16.gif");
-    this.load.image("vfx_leaves_3", "assets/gift/Modern_Farm_vfx_Falling_Leaves_3_16x16.gif");
-    this.load.image("vfx_leaves_brown", "assets/gift/Modern_Farm_vfx_Falling_Leaves_Brown_16x16.gif");
-    this.load.image("vfx_leaves_yellow", "assets/gift/Modern_Farm_vfx_Falling_Leaves_Yellow_16x16.gif");
-    this.load.image("vfx_smoke", "assets/gift/Stone_Oven_Smoke_Effect_16x16.gif");
+    // Load gift effects as spritesheets
+    this.load.spritesheet("vfx_leaf_single", "assets/gift/Modern_Farm_vfx_Falling_Leaf_16x16.png", { frameWidth: 16, frameHeight: 16 });
+    this.load.spritesheet("vfx_leaves_1", "assets/gift/Modern_Farm_vfx_Falling_Leaves_16x16.png", { frameWidth: 48, frameHeight: 48 });
+    this.load.spritesheet("vfx_leaves_2", "assets/gift/Modern_Farm_vfx_Falling_Leaves_2_16x16.png", { frameWidth: 48, frameHeight: 48 });
+    this.load.spritesheet("vfx_leaves_3", "assets/gift/Modern_Farm_vfx_Falling_Leaves_3_16x16.png", { frameWidth: 48, frameHeight: 48 });
+    this.load.spritesheet("vfx_leaves_brown", "assets/gift/Modern_Farm_vfx_Falling_Leaves_Brown_16x16.png", { frameWidth: 48, frameHeight: 48 });
+    this.load.spritesheet("vfx_leaves_yellow", "assets/gift/Modern_Farm_vfx_Falling_Leaves_Yellow_16x16.png", { frameWidth: 48, frameHeight: 48 });
+    this.load.spritesheet("vfx_smoke", "assets/gift/Stone_Oven_Smoke_Effect_16x16.png", { frameWidth: 64, frameHeight: 64 });
 
     // Load customization items
     for (let i = 1; i <= 11; i++) {
       this.load.image(`decor_grass_${i}`, `assets/customization/Grass_Tufts_Flowers_${i}.png`);
     }
 
-    // Load material gift items
-    this.load.image("mg_stable_gate", "assets/material_gift/Stable_Gate_16x16.gif");
-    this.load.image("mg_stable_gate_lb", "assets/material_gift/Stable_Gate_Light_Brown_16x16.gif");
-    this.load.image("mg_well", "assets/material_gift/Well_16x16.gif");
-    this.load.image("mg_crate_1", "assets/material_gift/Wooden_Crate_1_16x16.gif");
-    this.load.image("mg_crate_2", "assets/material_gift/Wooden_Crate_2_16x16.gif");
-    this.load.image("mg_wooden_gate", "assets/material_gift/Wooden_Gate_16x16.gif");
+    // Load material gift items as spritesheets
+    this.load.spritesheet("mg_stable_gate", "assets/material_gift/Stable_Gate_16x16.png", { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet("mg_stable_gate_lb", "assets/material_gift/Stable_Gate_Light_Brown_16x16.png", { frameWidth: 32, frameHeight: 25 });
+    this.load.spritesheet("mg_well", "assets/material_gift/Well_16x16.png", { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet("mg_crate_1", "assets/material_gift/Wooden_Crate_1_16x16.png", { frameWidth: 32, frameHeight: 48 });
+    this.load.spritesheet("mg_crate_2", "assets/material_gift/Wooden_Crate_2_16x16.png", { frameWidth: 32, frameHeight: 48 });
+    this.load.spritesheet("mg_wooden_gate", "assets/material_gift/Wooden_Gate_16x16.png", { frameWidth: 32, frameHeight: 32 });
   }
 
   private getDefaultScaleForType(type: string): number {
@@ -222,6 +222,9 @@ export class GameScene extends Phaser.Scene {
 
     // 10. Load fallback: if client has legacy map in local storage, allow importing
     this.checkLegacyLocalMap();
+
+    // Create animations for VFX and Material Gift items
+    this.createGIFAnimations();
 
     // 11. Mouse wheel zoom (middle mouse wheel) and responsive scale resize
     const getMinZoom = () => {
@@ -501,11 +504,17 @@ export class GameScene extends Phaser.Scene {
     // Destroy previous representation if it exists
     this.destroyLocalObject(id);
 
-    const img = this.add.image(x, y, type);
+    const isAnimated = type.startsWith("vfx_") || type.startsWith("mg_");
+    const img = isAnimated ? this.add.sprite(x, y, type) : this.add.image(x, y, type);
+    
     img.setScale(scale);
     img.setOrigin(0.5, 0.8);
     img.setInteractive({ draggable: true });
     img.setData("id", id);
+
+    if (isAnimated) {
+      (img as Phaser.GameObjects.Sprite).play(`${type}_anim`);
+    }
 
     this.input.setDraggable(img);
 
@@ -650,16 +659,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private checkLegacyLocalMap(): void {
-    const rawMap = localStorage.getItem("mmorpg_map_data");
-    const rawObjs = localStorage.getItem("mmorpg_placed_objects");
-    if (rawMap || rawObjs) {
-      console.log("[Migration] Found legacy map data in browser localStorage.");
-      // Expose to window so React HUD can offer automatic upload
-      (window as any).mmorpg_legacy_map = {
-        mapData: rawMap ? JSON.parse(rawMap) : {},
-        placedObjects: rawObjs ? JSON.parse(rawObjs) : [],
-      };
-    }
+    // Legacy check is handled inside React App.tsx on load
   }
 
   // ─── Entity management ───────────────────────────────────────────────────
@@ -745,5 +745,34 @@ export class GameScene extends Phaser.Scene {
         this.isMoving = false;
       }
     }
+  }
+
+  private createGIFAnimations(): void {
+    const anims = [
+      { key: "vfx_leaf_single", end: 14 },
+      { key: "vfx_leaves_1", end: 23 },
+      { key: "vfx_leaves_2", end: 23 },
+      { key: "vfx_leaves_3", end: 23 },
+      { key: "vfx_leaves_brown", end: 23 },
+      { key: "vfx_leaves_yellow", end: 23 },
+      { key: "vfx_smoke", end: 5 },
+      { key: "mg_stable_gate", end: 11 },
+      { key: "mg_stable_gate_lb", end: 11 },
+      { key: "mg_well", end: 23 },
+      { key: "mg_crate_1", end: 19 },
+      { key: "mg_crate_2", end: 19 },
+      { key: "mg_wooden_gate", end: 20 },
+    ];
+
+    anims.forEach(a => {
+      if (!this.anims.exists(`${a.key}_anim`)) {
+        this.anims.create({
+          key: `${a.key}_anim`,
+          frames: this.anims.generateFrameNumbers(a.key, { start: 0, end: a.end }),
+          frameRate: 10,
+          repeat: -1,
+        });
+      }
+    });
   }
 }
