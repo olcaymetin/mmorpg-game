@@ -81,18 +81,20 @@ export class GameScene extends Phaser.Scene {
   private cropSprites = new Map<string, Phaser.GameObjects.Sprite>();
   private selectedSeed = ""; // empty = not in seed mode
 
-  // Crop metadata: frameHeight for each crop
-  static readonly CROP_META: Record<string, { frameH: number }> = {
-    Cabbage:     { frameH: 32 }, Carrot:      { frameH: 32 },
-    Cauliflower: { frameH: 32 }, Coffee:      { frameH: 64 },
-    Corn:        { frameH: 64 }, Cotton:      { frameH: 32 },
-    Grape:       { frameH: 96 }, Onion:       { frameH: 64 },
-    Pepper:      { frameH: 32 }, Pineapple:   { frameH: 64 },
-    Prickly_Pear:{ frameH: 96 }, Pumpkin:     { frameH: 64 },
-    Radish:      { frameH: 32 }, Strawberry:  { frameH: 32 },
-    Tomato:      { frameH: 64 }, Turnip:      { frameH: 48 },
-    Watermelon:  { frameH: 64 }, Wheat:       { frameH: 32 },
-    Zuchini:     { frameH: 64 },
+  // Crop metadata: plantH = the pixel row where the number strip begins
+  // (i.e. only pixels 0..plantH-1 contain actual plant art — no numbers below)
+  // Values verified by pixel analysis of each PNG file.
+  static readonly CROP_META: Record<string, { frameH: number; plantH: number }> = {
+    Cabbage:      { frameH: 32, plantH: 16 }, Carrot:       { frameH: 32, plantH: 16 },
+    Cauliflower:  { frameH: 32, plantH: 16 }, Coffee:       { frameH: 64, plantH: 32 },
+    Corn:         { frameH: 64, plantH: 32 }, Cotton:       { frameH: 32, plantH: 16 },
+    Grape:        { frameH: 96, plantH: 64 }, Onion:        { frameH: 64, plantH: 32 },
+    Pepper:       { frameH: 32, plantH: 16 }, Pineapple:    { frameH: 64, plantH: 32 },
+    Prickly_Pear: { frameH: 96, plantH: 48 }, Pumpkin:      { frameH: 64, plantH: 32 },
+    Radish:       { frameH: 32, plantH: 16 }, Strawberry:   { frameH: 32, plantH: 16 },
+    Tomato:       { frameH: 64, plantH: 32 }, Turnip:       { frameH: 48, plantH: 32 },
+    Watermelon:   { frameH: 64, plantH: 32 }, Wheat:        { frameH: 32, plantH: 16 },
+    Zuchini:      { frameH: 64, plantH: 32 },
   };
 
   constructor() {
@@ -338,17 +340,30 @@ export class GameScene extends Phaser.Scene {
   // ─── Crop Farming Helpers ─────────────────────────────────────────────────
 
   /**
-   * For each crop image, manually register 7 frame regions that cover ONLY
-   * the plant pixels (0 to plantHeight), skipping the 16px number strip.
-   * Must be called after the images are fully loaded (inside create()).
+   * For each crop, create a brand-new canvas texture that contains ONLY the
+   * plant pixels (rows 0..plantH-1). This physically removes the number strip
+   * from the texture data, so it can never appear regardless of how Phaser
+   * renders the sprite.
    */
   private buildCropTextures(): void {
     for (const [cropName, meta] of Object.entries(GameScene.CROP_META)) {
-      const plantH = meta.frameH - 16; // exclude the bottom number strip
-      const tex = this.textures.get(`crop_${cropName}`);
-      if (!tex) continue;
+      const { frameH, plantH } = meta;
+      const cleanKey = `crop_clean_${cropName}`;
+      if (this.textures.exists(cleanKey)) continue;
+
+      const sourceTex = this.textures.get(`crop_${cropName}`);
+      const sourceImg = sourceTex.getSourceImage() as HTMLImageElement | HTMLCanvasElement;
+
+      // Draw only the top plantH rows of the source image onto a new canvas
+      const canvas = document.createElement("canvas");
+      canvas.width = 7 * 16;  // 112px — 7 frames side by side
+      canvas.height = plantH;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(sourceImg as CanvasImageSource, 0, 0, 7 * 16, plantH, 0, 0, 7 * 16, plantH);
+
+      // Register the clean canvas as a new Phaser texture with 7 frames
+      const tex = this.textures.addCanvas(cleanKey, canvas);
       for (let i = 0; i < 7; i++) {
-        // frame key = stage index, source image index = 0, x, y, width, height
         tex.add(i, 0, i * 16, 0, 16, plantH);
       }
     }
@@ -367,15 +382,16 @@ export class GameScene extends Phaser.Scene {
     const meta = GameScene.CROP_META[cropType];
     if (!meta) return;
 
-    const textureKey = `crop_${cropType}`;
-    // Bottom of tile — sprite grows upward using origin (0.5, 1.0)
+    // Use the pre-processed clean texture (no number strip)
+    const textureKey = `crop_clean_${cropType}`;
+    // Bottom of tile — plant grows upward with origin (0.5, 1.0)
     const worldX = tx * 16 + 8;
     const worldY = (ty + 1) * 16;
 
     let sprite = this.cropSprites.get(key);
     if (!sprite) {
       sprite = this.add.sprite(worldX, worldY, textureKey, stage);
-      sprite.setOrigin(0.5, 1.0); // grow upward from soil
+      sprite.setOrigin(0.5, 1.0);
       sprite.setDepth(5);
       this.cropSprites.set(key, sprite);
     } else {
