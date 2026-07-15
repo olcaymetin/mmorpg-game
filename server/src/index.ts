@@ -21,13 +21,26 @@ app.use(express.json());
 app.use("/colyseus", monitor());
 
 // Serve the built Vite client as static files.
-// When running via tunnel, friends access the game through this same port.
+// __dirname = server/dist → go up two levels to reach client/dist
 const clientDist = path.join(__dirname, "..", "..", "client", "dist");
+console.log(`[Static] Serving client from: ${clientDist}`);
 app.use(express.static(clientDist));
 
 // SPA fallback — serve index.html for all non-API routes
 app.get("*", (_req, res) => {
-  res.sendFile(path.join(clientDist, "index.html"));
+  const indexPath = path.join(clientDist, "index.html");
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      console.error(`[Static] index.html not found at ${indexPath}`, err.message);
+      res.status(200).send(`
+        <html><body style="background:#1a1a2e;color:#fff;font-family:sans-serif;text-align:center;padding:50px">
+          <h1>🎮 MMORPG Server Running</h1>
+          <p>Server is live but client build is missing.</p>
+          <p>Path checked: ${indexPath}</p>
+        </body></html>
+      `);
+    }
+  });
 });
 
 // ─── Colyseus game server ─────────────────────────────────────────────────────
