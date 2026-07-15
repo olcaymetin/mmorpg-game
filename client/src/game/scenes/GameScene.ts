@@ -160,7 +160,7 @@ export class GameScene extends Phaser.Scene {
       width: 50,
       height: 40,
     });
-    const tileset = this.map.addTilesetImage("terrains", "terrains", 16, 16, 0, 0, 1)!;
+    const tileset = this.map.addTilesetImage("terrains", "terrains", 16, 16)!;
     const fencesTileset = this.map.addTilesetImage("fences", "fences", 16, 16, 0, 0, 2000)!;
     this.layer = this.map.createBlankLayer("terrain_layer", tileset)!;
     this.layer.setScale(2); // Scale 16x16 tiles to 32x32
