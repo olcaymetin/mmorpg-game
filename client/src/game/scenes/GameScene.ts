@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import type { Room } from "colyseus.js";
-import type { GameState, Player } from "../schema/GameState";
+import type { GameState, Player, PlacedObjectState } from "../schema/GameState";
 
 // ─── World & rendering constants ──────────────────────────────────────────────
 export const WORLD_W  = 1600; // 50 columns * 32px
@@ -101,20 +101,18 @@ export class GameScene extends Phaser.Scene {
       frameHeight: 16,
     });
 
-    // Load building images (Direct images)
-    this.load.image("bank", "assets/bank.png");
+    // Load building images
     this.load.image("marketplace", "assets/marketplace.png");
+    this.load.image("bank", "assets/bank.png");
     this.load.image("games", "assets/games.png");
     this.load.image("blacksmith", "assets/blacksmith.png");
   }
 
-  init(data: SceneData): void {
-    this.room    = data.room;
+  create(data: SceneData): void {
+    this.room = data.room;
     this.localId = data.sessionId;
-  }
 
-  create(): void {
-    // 1. Create global animations for all character skins
+    // 1. Setup sprite slicing animations for all character skins
     this.createAnimations();
 
     // 2. Draw basic grid background
@@ -135,14 +133,10 @@ export class GameScene extends Phaser.Scene {
     this.selectionGraphics = this.add.graphics();
     this.selectionGraphics.setDepth(99999);
 
-    // 5. Load persisted map & building objects from localStorage
-    this.loadMapData();
-    this.loadPlacedObjects();
-
-    // 6. Clamp camera to world bounds
+    // 5. Clamp camera to world bounds
     this.cameras.main.setBounds(0, 0, WORLD_W, WORLD_H);
 
-    // 7. Register keys
+    // 6. Register keys
     const kb = this.input.keyboard!;
     this.cursors = kb.createCursorKeys();
     this.keyW = kb.addKey(Phaser.Input.Keyboard.KeyCodes.W);
@@ -150,13 +144,13 @@ export class GameScene extends Phaser.Scene {
     this.keyS = kb.addKey(Phaser.Input.Keyboard.KeyCodes.S);
     this.keyD = kb.addKey(Phaser.Input.Keyboard.KeyCodes.D);
 
-    // 8. Bind Colyseus state callbacks
+    // 7. Bind Colyseus state callbacks
     this.bindStateSync();
 
-    // 9. Editor paint, erase & drag inputs
+    // 8. Editor paint, erase & drag inputs
     this.setupEditorInputs();
 
-    // 10. React editor events
+    // 9. React editor events
     this.game.events.on("editor-brush-selected", (brush: { type: string; index?: number; name?: string }) => {
       this.currentBrushType = brush.type;
       if (brush.type === "tile" && brush.index !== undefined) {
@@ -164,89 +158,50 @@ export class GameScene extends Phaser.Scene {
       } else if (brush.type === "object" && brush.name) {
         this.currentObjectName = brush.name;
       }
-      this.deselectObject();
     });
 
-    this.game.events.on("editor-mode-toggled", (active: boolean) => {
-      this.editorMode = active;
-      this.deselectObject();
-      if (active) {
-        if (this.isMoving) {
-          this.room.send("move", { dx: 0, dy: 0 });
-          this.isMoving = false;
-        }
-      } else {
-        // Snap camera follow back to player container
-        const local = this.entities.get(this.localId);
-        if (local) {
-          this.cameras.main.startFollow(local.container, true, 0.08, 0.08);
-        }
+    this.game.events.on("editor-mode-changed", (enabled: boolean) => {
+      this.editorMode = enabled;
+      this.selectionGraphics.clear();
+      if (!enabled) {
+        this.deselectObject();
+        this.cameras.main.startFollow(this.entities.get(this.localId)!.container, true, 0.08, 0.08);
       }
     });
 
-    // Scale change from React sidebar
-    this.game.events.on("editor-object-scale", (data: { id: string; scale: number }) => {
-      const obj = this.placedObjects.find(o => o.id === data.id);
-      if (obj && obj.imageObj) {
-        obj.scale = data.scale;
-        obj.imageObj.setScale(data.scale);
-        this.drawSelectionOutline();
-        this.savePlacedObjects();
+    this.game.events.on("editor-object-delete-requested", (id: string) => {
+      this.room.send("object-delete", { id });
+    });
+
+    this.game.events.on("editor-object-scale-changed", (payload: { id: string; scale: number }) => {
+      const obj = this.placedObjects.find(o => o.id === payload.id);
+      if (obj) {
+        obj.scale = payload.scale;
+        this.room.send("object-place", { id: obj.id, type: obj.type, x: obj.x, y: obj.y, scale: obj.scale });
       }
     });
 
-    // Delete request from React sidebar
-    this.game.events.on("editor-object-delete", (id: string) => {
-      this.deletePlacedObject(id);
-    });
-
-    // 11. Mouse wheel zoom (middle mouse wheel)
-    const getMinZoom = () => {
-      return Math.max(this.scale.width / WORLD_W, this.scale.height / WORLD_H);
-    };
-
-    const initialMinZoom = getMinZoom();
-    if (this.cameras.main.zoom < initialMinZoom) {
-      this.cameras.main.setZoom(initialMinZoom);
-    }
-
-    this.input.on("wheel", (
-      _pointer: Phaser.Input.Pointer,
-      _gameObjects: Phaser.GameObjects.GameObject[],
-      _deltaX: number,
-      deltaY: number
-    ) => {
-      const zoomFactor = 0.001;
-      const currentZoom = this.cameras.main.zoom;
-      const minZoom = getMinZoom();
-      const newZoom = Phaser.Math.Clamp(currentZoom - deltaY * zoomFactor, minZoom, 3.0);
-      this.cameras.main.setZoom(newZoom);
-    });
-
-    this.scale.on("resize", (gameSize: Phaser.Structs.Size) => {
-      const minZoom = Math.max(gameSize.width / WORLD_W, gameSize.height / WORLD_H);
-      if (this.cameras.main.zoom < minZoom) {
-        this.cameras.main.setZoom(minZoom);
-      }
-    });
+    // 10. Load fallback: if client has legacy map in local storage, allow importing
+    this.checkLegacyLocalMap();
   }
 
-  // ─── Animation Builder ────────────────────────────────────────────────────
+  // ─── Animation Helper ─────────────────────────────────────────────────────
 
   private createAnimations(): void {
     const skins = ["farmer_1", "farmer_2", "body_2"];
-    const animConfig = [
-      { key: "idle", row: 1, count: 6, repeat: -1, frameRate: 8 },
-      { key: "walk", row: 2, count: 6, repeat: -1, frameRate: 10 },
-      { key: "dig", row: 3, count: 9, repeat: 0, frameRate: 12 },
-      { key: "water", row: 7, count: 14, repeat: 0, frameRate: 16 },
-      { key: "chop", row: 9, count: 10, repeat: 0, frameRate: 14 },
-      { key: "fish", row: 11, count: 32, repeat: -1, frameRate: 8 },
-    ];
     const dirs = ["right", "up", "left", "down"];
 
+    const animSpecs = [
+      { key: "idle",  row: 0, count: 6,  frameRate: 6,  repeat: -1 },
+      { key: "walk",  row: 1, count: 6,  frameRate: 10, repeat: -1 },
+      { key: "chop",  row: 2, count: 10, frameRate: 12, repeat: 0  },
+      { key: "water", row: 3, count: 14, frameRate: 14, repeat: 0  },
+      { key: "dig",   row: 4, count: 9,  frameRate: 12, repeat: 0  },
+      { key: "fish",  row: 6, count: 16, frameRate: 10, repeat: 0  },
+    ];
+
     skins.forEach(skin => {
-      animConfig.forEach(anim => {
+      animSpecs.forEach(anim => {
         dirs.forEach((dir, dirIndex) => {
           const animKey = `${skin}_${anim.key}_${dir}`;
           const startFrame = (anim.row * 128) + (dirIndex * anim.count);
@@ -298,25 +253,14 @@ export class GameScene extends Phaser.Scene {
       if (pointer.button !== 0) return; // Only left-click paints/erases
       if (this.isDraggingCamera || this.isDraggingObject) return;
 
-      // ── TILE PAINTING ──
-      if (this.currentBrushType === "tile") {
-        const tileX = Math.floor(pointer.worldX / TILE_SIZE);
-        const tileY = Math.floor(pointer.worldY / TILE_SIZE);
+      const tileX = Math.floor(pointer.worldX / TILE_SIZE);
+      const tileY = Math.floor(pointer.worldY / TILE_SIZE);
 
-        if (tileX >= 0 && tileX < 50 && tileY >= 0 && tileY < 40) {
-          this.map.putTileAt(this.currentTileIndex, tileX, tileY, true, this.layer);
-          this.saveMapData();
-        }
-      }
-      
-      // ── TILE ERASING ──
-      else if (this.currentBrushType === "eraser" && !this.clickedGameObject) {
-        const tileX = Math.floor(pointer.worldX / TILE_SIZE);
-        const tileY = Math.floor(pointer.worldY / TILE_SIZE);
-
-        if (tileX >= 0 && tileX < 50 && tileY >= 0 && tileY < 40) {
-          this.map.removeTileAt(tileX, tileY, true, true, this.layer);
-          this.saveMapData();
+      if (tileX >= 0 && tileX < 50 && tileY >= 0 && tileY < 40) {
+        if (this.currentBrushType === "tile") {
+          this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: this.currentTileIndex });
+        } else if (this.currentBrushType === "eraser" && !this.clickedGameObject) {
+          this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: -1 });
         }
       }
     };
@@ -326,9 +270,15 @@ export class GameScene extends Phaser.Scene {
       if (pointer.button === 0) { // Left Click
         if (this.editorMode && !this.clickedGameObject) {
           if (this.currentBrushType === "object") {
-            // Place building object
-            this.spawnPlacedObject(this.currentObjectName, pointer.worldX, pointer.worldY);
-            this.savePlacedObjects();
+            // Place building object on server
+            const uniqueId = `obj_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            this.room.send("object-place", {
+              id: uniqueId,
+              type: this.currentObjectName,
+              x: pointer.worldX,
+              y: pointer.worldY,
+              scale: 0.15
+            });
           } else {
             handlePaint(pointer);
           }
@@ -380,7 +330,7 @@ export class GameScene extends Phaser.Scene {
       if (pointer.button === 0) { // Left click on object
         const id = gameObject.getData("id");
         if (this.currentBrushType === "eraser") {
-          this.deletePlacedObject(id);
+          this.room.send("object-delete", { id });
         } else {
           this.selectObject(id);
         }
@@ -407,9 +357,10 @@ export class GameScene extends Phaser.Scene {
       this.drawSelectionOutline();
     });
 
-    this.input.on("dragend", () => {
+    this.input.on("dragend", (_pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.Image) => {
       this.isDraggingObject = false;
-      this.savePlacedObjects();
+      const id = gameObject.getData("id");
+      this.room.send("object-move", { id, x: gameObject.x, y: gameObject.y });
     });
   }
 
@@ -419,7 +370,6 @@ export class GameScene extends Phaser.Scene {
     this.selectedObjectId = id;
     const obj = this.placedObjects.find(o => o.id === id);
     if (obj) {
-      // Emit event to React sidebar to load settings
       this.game.events.emit("editor-object-selected", {
         id: obj.id,
         type: obj.type,
@@ -455,52 +405,22 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  // ─── Map Data Storage ──────────────────────────────────────────────────────
+  // ─── Local Objects Spawning ───────────────────────────────────────────────
 
-  private saveMapData(): void {
-    const mapData: { [key: string]: number } = {};
-    for (let x = 0; x < 50; x++) {
-      for (let y = 0; y < 40; y++) {
-        const t = this.map.getTileAt(x, y, true, this.layer);
-        if (t && t.index !== -1) {
-          mapData[`${x},${y}`] = t.index;
-        }
-      }
-    }
-    localStorage.setItem("mmorpg_map_data", JSON.stringify(mapData));
-  }
+  private spawnLocalObject(type: string, x: number, y: number, scale = 0.15, id: string): PlacedObject {
+    // Destroy previous representation if it exists
+    this.destroyLocalObject(id);
 
-  private loadMapData(): void {
-    const raw = localStorage.getItem("mmorpg_map_data");
-    if (raw) {
-      try {
-        const mapData = JSON.parse(raw);
-        for (const key in mapData) {
-          const [x, y] = key.split(",").map(Number);
-          this.map.putTileAt(mapData[key], x, y, true, this.layer);
-        }
-      } catch (e) {
-        console.error("Failed to load map data", e);
-      }
-    }
-  }
-
-  // ─── Placed Building Objects Management ───────────────────────────────────
-
-  private spawnPlacedObject(type: string, x: number, y: number, scale = 0.15, id = ""): PlacedObject {
-    const uniqueId = id || `obj_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const img = this.add.image(x, y, type);
     img.setScale(scale);
-    
-    // Y-sorting base origin (buildings draw from their bottom)
     img.setOrigin(0.5, 0.8);
     img.setInteractive({ draggable: true });
-    img.setData("id", uniqueId);
+    img.setData("id", id);
 
     this.input.setDraggable(img);
 
     const obj: PlacedObject = {
-      id: uniqueId,
+      id,
       type,
       x,
       y,
@@ -512,65 +432,40 @@ export class GameScene extends Phaser.Scene {
     return obj;
   }
 
-  private deletePlacedObject(id: string): void {
-    const index = this.placedObjects.findIndex(o => o.id === id);
-    if (index !== -1) {
-      const obj = this.placedObjects[index];
+  private destroyLocalObject(id: string): void {
+    const idx = this.placedObjects.findIndex(o => o.id === id);
+    if (idx !== -1) {
+      const obj = this.placedObjects[idx];
       if (obj.imageObj) {
         obj.imageObj.destroy();
       }
-      this.placedObjects.splice(index, 1);
-      this.deselectObject();
-      this.savePlacedObjects();
-    }
-  }
-
-  private savePlacedObjects(): void {
-    const data = this.placedObjects.map(o => ({
-      id: o.id,
-      type: o.type,
-      x: o.x,
-      y: o.y,
-      scale: o.scale,
-    }));
-    localStorage.setItem("mmorpg_placed_objects", JSON.stringify(data));
-  }
-
-  private loadPlacedObjects(): void {
-    const raw = localStorage.getItem("mmorpg_placed_objects");
-    if (raw) {
-      try {
-        const data = JSON.parse(raw);
-        data.forEach((d: { id: string; type: string; x: number; y: number; scale: number }) => {
-          this.spawnPlacedObject(d.type, d.x, d.y, d.scale, d.id);
-        });
-      } catch (e) {
-        console.error("Failed to load placed objects", e);
+      this.placedObjects.splice(idx, 1);
+      if (this.selectedObjectId === id) {
+        this.deselectObject();
       }
     }
   }
 
-  // ─── Colyseus state sync ──────────────────────────────────────────────────
+  // ─── Colyseus State Bindings ───────────────────────────────────────────────
 
   private bindStateSync(): void {
-    const { players } = this.room.state;
+    const { players, mapData, placedObjects } = this.room.state;
 
+    // 1. Players Sync
     players.onAdd((player: Player, sessionId: string) => {
       this.spawnPlayer(player, sessionId);
 
-      (player as unknown as { onChange: (cb: () => void) => void }).onChange(
-        () => {
-          const entity = this.entities.get(sessionId);
-          if (entity) {
-            entity.container.setPosition(player.x, player.y);
-            
-            const animKey = `${player.skin}_${player.state}_${player.direction}`;
-            if (entity.sprite.anims.currentAnim?.key !== animKey) {
-              entity.sprite.play(animKey, true);
-            }
+      (player as any).onChange(() => {
+        const entity = this.entities.get(sessionId);
+        if (entity) {
+          entity.container.setPosition(player.x, player.y);
+          
+          const animKey = `${player.skin}_${player.state}_${player.direction}`;
+          if (entity.sprite.anims.currentAnim?.key !== animKey) {
+            entity.sprite.play(animKey, true);
           }
         }
-      );
+      });
     });
 
     players.onRemove((_player: Player, sessionId: string) => {
@@ -580,6 +475,101 @@ export class GameScene extends Phaser.Scene {
         this.entities.delete(sessionId);
       }
     });
+
+    // 2. Map Tiles Sync
+    mapData.onAdd((tileIndex: number, key: string) => {
+      const [xStr, yStr] = key.split(",");
+      const tx = parseInt(xStr, 10);
+      const ty = parseInt(yStr, 10);
+      this.map.putTileAt(tileIndex, tx, ty, true, this.layer);
+    });
+
+    mapData.onChange((tileIndex: number, key: string) => {
+      const [xStr, yStr] = key.split(",");
+      const tx = parseInt(xStr, 10);
+      const ty = parseInt(yStr, 10);
+      this.map.putTileAt(tileIndex, tx, ty, true, this.layer);
+    });
+
+    mapData.onRemove((_tileIndex: number, key: string) => {
+      const [xStr, yStr] = key.split(",");
+      const tx = parseInt(xStr, 10);
+      const ty = parseInt(yStr, 10);
+      this.map.removeTileAt(tx, ty, true, true, this.layer);
+    });
+
+    // 3. Placed Buildings Sync
+    placedObjects.onAdd((objState: PlacedObjectState, id: string) => {
+      this.spawnLocalObject(objState.type, objState.x, objState.y, objState.scale, id);
+    });
+
+    placedObjects.onChange((objState: PlacedObjectState, id: string) => {
+      const obj = this.placedObjects.find(o => o.id === id);
+      if (obj) {
+        obj.x = objState.x;
+        obj.y = objState.y;
+        obj.scale = objState.scale;
+        if (obj.imageObj) {
+          obj.imageObj.x = objState.x;
+          obj.imageObj.y = objState.y;
+          obj.imageObj.setScale(objState.scale);
+        }
+      }
+      this.drawSelectionOutline();
+    });
+
+    placedObjects.onRemove((_objState: PlacedObjectState, id: string) => {
+      this.destroyLocalObject(id);
+    });
+  }
+
+  // ─── Import / Export utilities ─────────────────────────────────────────────
+
+  public getExportJSON(): string {
+    const mapDataPayload: { [key: string]: number } = {};
+    for (let x = 0; x < 50; x++) {
+      for (let y = 0; y < 40; y++) {
+        const t = this.map.getTileAt(x, y, true, this.layer);
+        if (t && t.index !== -1) {
+          mapDataPayload[`${x},${y}`] = t.index;
+        }
+      }
+    }
+    const placedObjectsPayload = this.placedObjects.map(o => ({
+      id: o.id,
+      type: o.type,
+      x: o.x,
+      y: o.y,
+      scale: o.scale,
+    }));
+    return JSON.stringify({ mapData: mapDataPayload, placedObjects: placedObjectsPayload }, null, 2);
+  }
+
+  public importJSON(jsonString: string): boolean {
+    try {
+      const parsed = JSON.parse(jsonString);
+      this.room.send("tile-update-bulk", {
+        mapData: parsed.mapData || {},
+        placedObjects: parsed.placedObjects || [],
+      });
+      return true;
+    } catch (e) {
+      console.error("Failed to import JSON map data", e);
+      return false;
+    }
+  }
+
+  private checkLegacyLocalMap(): void {
+    const rawMap = localStorage.getItem("mmorpg_map_data");
+    const rawObjs = localStorage.getItem("mmorpg_placed_objects");
+    if (rawMap || rawObjs) {
+      console.log("[Migration] Found legacy map data in browser localStorage.");
+      // Expose to window so React HUD can offer automatic upload
+      (window as any).mmorpg_legacy_map = {
+        mapData: rawMap ? JSON.parse(rawMap) : {},
+        placedObjects: rawObjs ? JSON.parse(rawObjs) : [],
+      };
+    }
   }
 
   // ─── Entity management ───────────────────────────────────────────────────
@@ -622,7 +612,7 @@ export class GameScene extends Phaser.Scene {
   // ─── Game loop ────────────────────────────────────────────────────────────
 
   update(time: number): void {
-    // ── 1. depth Y-Sorting (Characters & buildings sort depths dynamically) ──
+    // ── 1. depth Y-Sorting ──
     this.layer.setDepth(0); // Ground is always at the bottom
     
     // Sort players depth
@@ -633,13 +623,11 @@ export class GameScene extends Phaser.Scene {
     // Sort placed building objects depth
     this.placedObjects.forEach(obj => {
       if (obj.imageObj) {
-        // Since buildings have origin 0.5, 0.8: feet/ground is at y coordinate offset
         obj.imageObj.setDepth(obj.y);
       }
     });
 
     if (this.editorMode) {
-      // Re-evaluate outline in case of dragging
       this.drawSelectionOutline();
       return;
     }

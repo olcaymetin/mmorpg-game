@@ -535,3 +535,57 @@ kbd {
   color: #fff;
   box-shadow: 0 0 10px rgba(239, 68, 68, 0.35);
 }
+
+/* ── Legacy Migration Card ────────────────────────────────────────────────── */
+.legacy-migration-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  background: rgba(168, 85, 247, 0.12); /* purple neon */
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.1) inset;
+}
+
+.warning-label {
+  font-size: 10px;
+  line-height: 1.4;
+  color: #e9d5ff;
+  font-family: "Courier New", monospace;
+  font-weight: bold;
+}
+
+.btn--primary {
+  background: rgba(168, 85, 247, 0.25);
+  border-color: rgba(168, 85, 247, 0.55);
+  color: #f3e8ff;
+  font-family: "Press Start 2P", monospace;
+  font-size: 7px;
+  padding: 8px 12px;
+}
+
+.btn--primary:hover {
+  background: rgba(168, 85, 247, 0.55);
+  border-color: #a855f7;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.45);
+}
+
+.btn--secondary {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.85);
+  font-family: "Courier New", monospace;
+  font-weight: bold;
+  font-size: 10px;
+  padding: 6px 8px;
+}
+
+.btn--secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+

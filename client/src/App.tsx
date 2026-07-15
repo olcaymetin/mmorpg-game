@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./App.css";
 import { useColyseus } from "./hooks/useColyseus";
 import { PhaserGame } from "./game/PhaserGame";
@@ -23,6 +23,12 @@ const App: React.FC = () => {
   // Selected object properties (for scaling/deletion)
   const [selectedObject, setSelectedObject] = useState<{ id: string; type: string; scale: number } | null>(null);
 
+  // Legacy map migration state
+  const [hasLegacyMap, setHasLegacyMap] = useState(false);
+
+  // File input ref for importing map
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Bind game events for selection sync
   useEffect(() => {
     if (!game) return;
@@ -37,6 +43,11 @@ const App: React.FC = () => {
 
     game.events.on("editor-object-selected", handleObjectSelected);
     game.events.on("editor-object-deselected", handleObjectDeselected);
+
+    // Check for legacy local storage maps
+    if ((window as any).mmorpg_legacy_map) {
+      setHasLegacyMap(true);
+    }
 
     return () => {
       game.events.off("editor-object-selected", handleObjectSelected);
@@ -82,13 +93,13 @@ const App: React.FC = () => {
     const newScale = parseFloat(e.target.value);
     if (selectedObject && game) {
       setSelectedObject({ ...selectedObject, scale: newScale });
-      game.events.emit("editor-object-scale", { id: selectedObject.id, scale: newScale });
+      game.events.emit("editor-object-scale-changed", { id: selectedObject.id, scale: newScale });
     }
   };
 
   const handleObjectDelete = () => {
     if (selectedObject && game) {
-      game.events.emit("editor-object-delete", selectedObject.id);
+      game.events.emit("editor-object-delete-requested", selectedObject.id);
       setSelectedObject(null);
     }
   };
@@ -105,6 +116,68 @@ const App: React.FC = () => {
     if (col >= 0 && col < 32 && row >= 0 && row < 23) {
       const index = row * 32 + col;
       handleSelectTile(index);
+    }
+  };
+
+  // ─── Import / Export handlers ───
+
+  const handleExportMap = () => {
+    if (!game) return;
+    const scene = game.scene.keys.GameScene as any;
+    if (scene) {
+      const json = scene.getExportJSON();
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `mmorpg_map_${Date.now()}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  const handleImportMapClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !game) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      const scene = game.scene.keys.GameScene as any;
+      if (scene) {
+        const success = scene.importJSON(text);
+        if (success) {
+          alert("Harita başarıyla içe aktarıldı!");
+        } else {
+          alert("Harita dosyası çözümlenemedi. Lütfen geçerli bir JSON harita dosyası seçin.");
+        }
+      }
+    };
+    reader.readAsText(file);
+    // Reset file input value so same file can be selected again
+    e.target.value = "";
+  };
+
+  const handleMigrateLegacyMap = () => {
+    const legacy = (window as any).mmorpg_legacy_map;
+    if (legacy && room) {
+      room.send("tile-update-bulk", {
+        mapData: legacy.mapData || {},
+        placedObjects: legacy.placedObjects || []
+      });
+      setHasLegacyMap(false);
+      // Remove legacy items to avoid prompting again
+      localStorage.removeItem("mmorpg_map_data");
+      localStorage.removeItem("mmorpg_placed_objects");
+      delete (window as any).mmorpg_legacy_map;
+      alert("Yerel haritanız sunucuya başarıyla taşındı!");
     }
   };
 
@@ -186,6 +259,16 @@ const App: React.FC = () => {
                 </button>
               </div>
 
+              {/* ── Legacy Migration Banner ── */}
+              {hasLegacyMap && (
+                <div className="legacy-migration-card">
+                  <span className="warning-label">💡 Tarayıcınızda eski bir harita tasarımı bulundu!</span>
+                  <button className="btn btn--primary" onClick={handleMigrateLegacyMap}>
+                    Haritayı Sunucuya Yükle 🚀
+                  </button>
+                </div>
+              )}
+
               {/* ── Action Brushes ── */}
               <div className="brush-row">
                 <button
@@ -194,6 +277,24 @@ const App: React.FC = () => {
                 >
                   🧹 Silgi (Eraser)
                 </button>
+              </div>
+
+              {/* ── Import / Export Harita Dosyası ── */}
+              <div className="section-title">Harita Kaydet / Yükle</div>
+              <div className="brush-row" style={{ display: "flex", gap: "8px" }}>
+                <button className="btn btn--secondary" onClick={handleExportMap} style={{ flex: 1 }}>
+                  💾 Dışa Aktar (JSON)
+                </button>
+                <button className="btn btn--secondary" onClick={handleImportMapClick} style={{ flex: 1 }}>
+                  📂 İçe Aktar (JSON)
+                </button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept=".json"
+                  style={{ display: "none" }}
+                />
               </div>
 
               {/* ── Placed Object Settings (Visible when a building is selected) ── */}

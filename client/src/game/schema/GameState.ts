@@ -9,6 +9,24 @@
  */
 import { Schema, MapSchema, defineTypes } from "@colyseus/schema";
 
+// ─── PlacedObjectState ────────────────────────────────────────────────────────
+
+export class PlacedObjectState extends Schema {
+  id!: string;
+  type!: string;
+  x!: number;
+  y!: number;
+  scale!: number;
+}
+
+defineTypes(PlacedObjectState, {
+  id: "string",
+  type: "string",
+  x: "float32",
+  y: "float32",
+  scale: "float32",
+});
+
 // ─── Player ──────────────────────────────────────────────────────────────────
 
 export class Player extends Schema {
@@ -35,8 +53,12 @@ defineTypes(Player, {
 
 export class GameState extends Schema {
   players!: MapSchema<Player>;
+  mapData!: MapSchema<number>;
+  placedObjects!: MapSchema<PlacedObjectState>;
 }
 
 defineTypes(GameState, {
   players: { map: Player },
+  mapData: { map: "int32" },
+  placedObjects: { map: PlacedObjectState },
 });
