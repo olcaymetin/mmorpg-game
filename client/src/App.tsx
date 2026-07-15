@@ -587,11 +587,14 @@ const App: React.FC = () => {
                   <img
                     src="/assets/terrains.png"
                     alt="terrains"
+                    draggable={false}
+                    onDragStart={(e) => e.preventDefault()}
                     style={{
                       display: "block",
                       width: "512px",
                       height: "368px",
                       imageRendering: "pixelated",
+                      userSelect: "none",
                     }}
                   />
                   
