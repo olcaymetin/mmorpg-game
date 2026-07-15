@@ -54,11 +54,13 @@ defineTypes(Player, {
 export class GameState extends Schema {
   players!: MapSchema<Player>;
   mapData!: MapSchema<number>;
+  decorData!: MapSchema<number>;
   placedObjects!: MapSchema<PlacedObjectState>;
 }
 
 defineTypes(GameState, {
   players: { map: Player },
   mapData: { map: "int32" },
+  decorData: { map: "int32" },
   placedObjects: { map: PlacedObjectState },
 });

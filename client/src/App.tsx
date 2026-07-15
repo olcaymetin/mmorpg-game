@@ -31,6 +31,9 @@ const App: React.FC = () => {
   const [selectionEnd, setSelectionEnd] = useState<{ col: number; row: number } | null>(null);
   const [isSelectingTileset, setIsSelectingTileset] = useState(false);
 
+  // Active tileset tab (terrains or fences)
+  const [activeTileset, setActiveTileset] = useState<"terrains" | "fences">("terrains");
+
   // Legacy map migration state
   const [hasLegacyMap, setHasLegacyMap] = useState(false);
 
@@ -140,8 +143,9 @@ const App: React.FC = () => {
 
     const col = Math.floor(clickX / 16);
     const row = Math.floor(clickY / 16);
+    const maxRow = activeTileset === "fences" ? 17 : 23;
 
-    if (col >= 0 && col < 32 && row >= 0 && row < 23) {
+    if (col >= 0 && col < 32 && row >= 0 && row < maxRow) {
       setSelectionStart({ col, row });
       setSelectionEnd({ col, row });
       setIsSelectingTileset(true);
@@ -155,8 +159,9 @@ const App: React.FC = () => {
     const clickX = e.clientX - rect.left;
     const clickY = e.clientY - rect.top;
 
+    const maxRow = activeTileset === "fences" ? 16 : 22;
     const col = Math.max(0, Math.min(31, Math.floor(clickX / 16)));
-    const row = Math.max(0, Math.min(22, Math.floor(clickY / 16)));
+    const row = Math.max(0, Math.min(maxRow, Math.floor(clickY / 16)));
 
     setSelectionEnd({ col, row });
   };
@@ -172,10 +177,11 @@ const App: React.FC = () => {
 
     const w = colEnd - colStart + 1;
     const h = rowEnd - rowStart + 1;
+    const startGid = activeTileset === "fences" ? 2000 : 0;
 
     if (w === 1 && h === 1) {
       // Single tile selection
-      const index = rowStart * 32 + colStart;
+      const index = startGid + (rowStart * 32 + colStart);
       setSelectedTile(index);
       if (game) {
         game.events.emit("editor-brush-selected", { type: "tile", index });
@@ -187,7 +193,7 @@ const App: React.FC = () => {
       for (let r = rowStart; r <= rowEnd; r++) {
         const rowTiles = [];
         for (let c = colStart; c <= colEnd; c++) {
-          rowTiles.push(r * 32 + c);
+          rowTiles.push(startGid + (r * 32 + c));
         }
         tiles.push(rowTiles);
       }
@@ -653,32 +659,63 @@ const App: React.FC = () => {
               )}
 
                {/* ── Terrains Tileset Selector ── */}
-              <div className="section-title">Zemin Fayansları (16x16)</div>
+              <div className="section-title">Zemin & Çit Fayansları (16x16)</div>
+
+              {/* Sub-Tabs to switch between Terrains and Fences */}
+              <div className="editor-tabs" style={{ marginTop: "6px", marginBottom: "8px" }}>
+                <button
+                  className={`tab-btn ${activeTileset === "terrains" ? "tab-btn--active" : ""}`}
+                  onClick={() => {
+                    setActiveTileset("terrains");
+                    setSelectedTile(0);
+                    if (game) game.events.emit("editor-brush-selected", { type: "tile", index: 0 });
+                  }}
+                >
+                  🏞️ Zeminler
+                </button>
+                <button
+                  className={`tab-btn ${activeTileset === "fences" ? "tab-btn--active" : ""}`}
+                  onClick={() => {
+                    setActiveTileset("fences");
+                    setSelectedTile(2000);
+                    if (game) game.events.emit("editor-brush-selected", { type: "tile", index: 2000 });
+                  }}
+                >
+                  🚧 Çitler (Şeffaf)
+                </button>
+              </div>
+
               <div className="tileset-container">
                 <div
                   className="tileset-wrapper"
-                  style={{ position: "relative", width: "512px", height: "368px", cursor: "pointer" }}
+                  style={{
+                    position: "relative",
+                    width: "512px",
+                    height: activeTileset === "fences" ? "272px" : "368px",
+                    cursor: "pointer"
+                  }}
                   onMouseDown={handleTilesetMouseDown}
                   onMouseMove={handleTilesetMouseMove}
                   onMouseUp={handleTilesetMouseUp}
                   onMouseLeave={handleTilesetMouseUp}
                 >
                   <img
-                    src="/assets/terrains.png"
-                    alt="terrains"
+                    src={activeTileset === "fences" ? "/assets/fences.png" : "/assets/terrains.png"}
+                    alt="tileset"
                     draggable={false}
                     onDragStart={(e) => e.preventDefault()}
                     style={{
                       display: "block",
                       width: "512px",
-                      height: "368px",
+                      height: activeTileset === "fences" ? "272px" : "368px",
                       imageRendering: "pixelated",
                       userSelect: "none",
                     }}
                   />
                   
                   {/* Active single selection highlighting box */}
-                  {selectedTile >= 0 && (
+                  {((selectedTile >= 2000 && activeTileset === "fences") || 
+                    (selectedTile >= 0 && selectedTile < 2000 && activeTileset === "terrains")) && (
                     <div
                       className="selection-box"
                       style={{
@@ -687,8 +724,8 @@ const App: React.FC = () => {
                         boxShadow: "0 0 6px rgba(85, 255, 34, 0.9)",
                         width: "16px",
                         height: "16px",
-                        left: `${(selectedTile % 32) * 16}px`,
-                        top: `${Math.floor(selectedTile / 32) * 16}px`,
+                        left: `${((selectedTile >= 2000 ? selectedTile - 2000 : selectedTile) % 32) * 16}px`,
+                        top: `${Math.floor((selectedTile >= 2000 ? selectedTile - 2000 : selectedTile) / 32) * 16}px`,
                         pointerEvents: "none",
                       }}
                     />

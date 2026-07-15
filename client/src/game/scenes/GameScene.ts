@@ -49,6 +49,7 @@ export class GameScene extends Phaser.Scene {
   // ── Tilemap & Object Editor ────────────────────────────────────────────────
   private map!: Phaser.Tilemaps.Tilemap;
   private layer!: Phaser.Tilemaps.TilemapLayer;
+  private decorLayer!: Phaser.Tilemaps.TilemapLayer;
   private editorMode = false;
   
   // Brush type: "tile" | "eraser" | "object"
@@ -110,6 +111,7 @@ export class GameScene extends Phaser.Scene {
     this.load.image("shop", "assets/shop.png");
     this.load.image("gem_trader", "assets/gem_trader.png");
     this.load.image("farmer_npc", "assets/farmer_npc.png");
+    this.load.image("fences", "assets/fences.png");
 
     // Load gift effects as spritesheets
     this.load.spritesheet("vfx_leaf_single", "assets/gift/Modern_Farm_vfx_Falling_Leaf_16x16.png", { frameWidth: 16, frameHeight: 16 });
@@ -158,9 +160,13 @@ export class GameScene extends Phaser.Scene {
       width: 50,
       height: 40,
     });
-    const tileset = this.map.addTilesetImage("terrains", "terrains", 16, 16)!;
+    const tileset = this.map.addTilesetImage("terrains", "terrains", 16, 16, 0, 0, 1)!;
+    const fencesTileset = this.map.addTilesetImage("fences", "fences", 16, 16, 0, 0, 2000)!;
     this.layer = this.map.createBlankLayer("terrain_layer", tileset)!;
     this.layer.setScale(2); // Scale 16x16 tiles to 32x32
+
+    this.decorLayer = this.map.createBlankLayer("decor_layer", fencesTileset)!;
+    this.decorLayer.setScale(2);
 
     // 4. Initialize Selection Graphics Overlay
     this.selectionGraphics = this.add.graphics();
@@ -331,16 +337,19 @@ export class GameScene extends Phaser.Scene {
       if (tileX >= 0 && tileX < 50 && tileY >= 0 && tileY < 40) {
         if (this.currentBrushType === "tile") {
           if (this.currentTileStamp) {
-            const updates: Array<{ x: number; y: number; tileIndex: number }> = [];
+            const updates: Array<{ x: number; y: number; tileIndex: number; layer: "terrain" | "decor" }> = [];
             for (let r = 0; r < this.currentTileStamp.height; r++) {
               for (let c = 0; c < this.currentTileStamp.width; c++) {
                 const tx = tileX + c;
                 const ty = tileY + r;
                 if (tx >= 0 && tx < 50 && ty >= 0 && ty < 40) {
+                  const tileIndex = this.currentTileStamp.tiles[r][c];
+                  const layer = tileIndex >= 2000 ? "decor" : "terrain";
                   updates.push({
                     x: tx,
                     y: ty,
-                    tileIndex: this.currentTileStamp.tiles[r][c]
+                    tileIndex,
+                    layer
                   });
                 }
               }
@@ -349,10 +358,12 @@ export class GameScene extends Phaser.Scene {
               this.room.send("tile-update-multi", { updates });
             }
           } else {
-            this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: this.currentTileIndex });
+            const layer = this.currentTileIndex >= 2000 ? "decor" : "terrain";
+            this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: this.currentTileIndex, layer });
           }
         } else if (this.currentBrushType === "eraser" && !this.clickedGameObject) {
-          this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: -1 });
+          this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: -1, layer: "decor" });
+          this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: -1, layer: "terrain" });
         }
       }
     };
@@ -597,6 +608,31 @@ export class GameScene extends Phaser.Scene {
       this.map.removeTileAt(tx, ty, true, true, this.layer);
     });
 
+    // 2b. Decor/Fence Tiles Sync
+    const decorData = (this.room.state as any).decorData;
+    if (decorData) {
+      decorData.onAdd((tileIndex: number, key: string) => {
+        const [xStr, yStr] = key.split(",");
+        const tx = parseInt(xStr, 10);
+        const ty = parseInt(yStr, 10);
+        this.map.putTileAt(tileIndex, tx, ty, true, this.decorLayer);
+      });
+
+      decorData.onChange((tileIndex: number, key: string) => {
+        const [xStr, yStr] = key.split(",");
+        const tx = parseInt(xStr, 10);
+        const ty = parseInt(yStr, 10);
+        this.map.putTileAt(tileIndex, tx, ty, true, this.decorLayer);
+      });
+
+      decorData.onRemove((_tileIndex: number, key: string) => {
+        const [xStr, yStr] = key.split(",");
+        const tx = parseInt(xStr, 10);
+        const ty = parseInt(yStr, 10);
+        this.map.removeTileAt(tx, ty, true, true, this.decorLayer);
+      });
+    }
+
     // 3. Placed Buildings Sync
     placedObjects.onAdd((objState: PlacedObjectState, id: string) => {
       this.spawnLocalObject(objState.type, objState.x, objState.y, objState.scale, id);
@@ -626,11 +662,16 @@ export class GameScene extends Phaser.Scene {
 
   public getExportJSON(): string {
     const mapDataPayload: { [key: string]: number } = {};
+    const decorDataPayload: { [key: string]: number } = {};
     for (let x = 0; x < 50; x++) {
       for (let y = 0; y < 40; y++) {
         const t = this.map.getTileAt(x, y, true, this.layer);
         if (t && t.index !== -1) {
           mapDataPayload[`${x},${y}`] = t.index;
+        }
+        const d = this.map.getTileAt(x, y, true, this.decorLayer);
+        if (d && d.index !== -1) {
+          decorDataPayload[`${x},${y}`] = d.index;
         }
       }
     }
@@ -641,7 +682,7 @@ export class GameScene extends Phaser.Scene {
       y: o.y,
       scale: o.scale,
     }));
-    return JSON.stringify({ mapData: mapDataPayload, placedObjects: placedObjectsPayload }, null, 2);
+    return JSON.stringify({ mapData: mapDataPayload, decorData: decorDataPayload, placedObjects: placedObjectsPayload }, null, 2);
   }
 
   public importJSON(jsonString: string): boolean {
@@ -649,6 +690,7 @@ export class GameScene extends Phaser.Scene {
       const parsed = JSON.parse(jsonString);
       this.room.send("tile-update-bulk", {
         mapData: parsed.mapData || {},
+        decorData: parsed.decorData || {},
         placedObjects: parsed.placedObjects || [],
       });
       return true;
@@ -704,6 +746,7 @@ export class GameScene extends Phaser.Scene {
   update(time: number): void {
     // ── 1. depth Y-Sorting ──
     this.layer.setDepth(0); // Ground is always at the bottom
+    this.decorLayer.setDepth(1); // Fences/decors on top of ground, under players
     
     // Sort players depth
     this.entities.forEach(entity => {

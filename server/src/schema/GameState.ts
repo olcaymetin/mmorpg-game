@@ -31,5 +31,6 @@ export class Player extends Schema {
 export class GameState extends Schema {
   @type({ map: Player }) players = new MapSchema<Player>();
   @type({ map: "int32" }) mapData = new MapSchema<number>(); // Key is "x,y" coordinate string, Value is tile index
+  @type({ map: "int32" }) decorData = new MapSchema<number>(); // Key is "x,y" coordinate string, Value is fence/decor tile index
   @type({ map: PlacedObjectState }) placedObjects = new MapSchema<PlacedObjectState>(); // Key is object ID
 }

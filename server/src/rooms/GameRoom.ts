@@ -41,6 +41,7 @@ interface TileUpdateMessage {
   x: number;
   y: number;
   tileIndex: number;
+  layer?: "terrain" | "decor";
 }
 
 interface TileUpdateMultiMessage {
@@ -48,11 +49,13 @@ interface TileUpdateMultiMessage {
     x: number;
     y: number;
     tileIndex: number;
+    layer?: "terrain" | "decor";
   }>;
 }
 
 interface TileUpdateBulkMessage {
   mapData: { [key: string]: number };
+  decorData?: { [key: string]: number };
   placedObjects?: Array<{
     id: string;
     type: string;
@@ -155,10 +158,11 @@ export class GameRoom extends Room<GameState> {
      */
     this.onMessage("tile-update", (client: Client, msg: TileUpdateMessage) => {
        const key = `${msg.x},${msg.y}`;
+       const targetMap = msg.layer === "decor" ? this.state.decorData : this.state.mapData;
        if (msg.tileIndex === -1) {
-         this.state.mapData.delete(key);
+         targetMap.delete(key);
        } else {
-         this.state.mapData.set(key, msg.tileIndex);
+         targetMap.set(key, msg.tileIndex);
        }
        this.triggerDebouncedSave();
     });
@@ -170,10 +174,11 @@ export class GameRoom extends Room<GameState> {
       if (msg.updates) {
         msg.updates.forEach(u => {
           const key = `${u.x},${u.y}`;
+          const targetMap = u.layer === "decor" ? this.state.decorData : this.state.mapData;
           if (u.tileIndex === -1) {
-            this.state.mapData.delete(key);
+            targetMap.delete(key);
           } else {
-            this.state.mapData.set(key, u.tileIndex);
+            targetMap.set(key, u.tileIndex);
           }
         });
         this.triggerDebouncedSave();
@@ -186,12 +191,18 @@ export class GameRoom extends Room<GameState> {
     this.onMessage("tile-update-bulk", (client: Client, msg: TileUpdateBulkMessage) => {
       // Clear current state first
       this.state.mapData.clear();
+      this.state.decorData.clear();
       this.state.placedObjects.clear();
 
-      // Set new tiles
       if (msg.mapData) {
         for (const key in msg.mapData) {
           this.state.mapData.set(key, msg.mapData[key]);
+        }
+      }
+
+      if (msg.decorData) {
+        for (const key in msg.decorData) {
+          this.state.decorData.set(key, msg.decorData[key]);
         }
       }
 
@@ -295,6 +306,11 @@ export class GameRoom extends Room<GameState> {
         mapData[key] = val;
       });
 
+      const decorData: { [key: string]: number } = {};
+      this.state.decorData.forEach((val, key) => {
+        decorData[key] = val;
+      });
+
       const placedObjects: Array<{
         id: string;
         type: string;
@@ -312,7 +328,7 @@ export class GameRoom extends Room<GameState> {
         });
       });
 
-      const payload = { mapData, placedObjects };
+      const payload = { mapData, decorData, placedObjects };
       fs.writeFileSync(SAVE_FILE_PATH, JSON.stringify(payload, null, 2), "utf8");
       console.log(`[Persistence] Saved map configurations successfully to: ${SAVE_FILE_PATH}`);
     } catch (e) {
@@ -333,6 +349,12 @@ export class GameRoom extends Room<GameState> {
       if (parsed.mapData) {
         for (const key in parsed.mapData) {
           this.state.mapData.set(key, parsed.mapData[key]);
+        }
+      }
+
+      if (parsed.decorData) {
+        for (const key in parsed.decorData) {
+          this.state.decorData.set(key, parsed.decorData[key]);
         }
       }
 
