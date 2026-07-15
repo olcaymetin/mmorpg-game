@@ -183,6 +183,36 @@ export class GameScene extends Phaser.Scene {
 
     // 10. Load fallback: if client has legacy map in local storage, allow importing
     this.checkLegacyLocalMap();
+
+    // 11. Mouse wheel zoom (middle mouse wheel) and responsive scale resize
+    const getMinZoom = () => {
+      return Math.max(this.scale.width / WORLD_W, this.scale.height / WORLD_H);
+    };
+
+    const initialMinZoom = getMinZoom();
+    if (this.cameras.main.zoom < initialMinZoom) {
+      this.cameras.main.setZoom(initialMinZoom);
+    }
+
+    this.input.on("wheel", (
+      _pointer: Phaser.Input.Pointer,
+      _gameObjects: Phaser.GameObjects.GameObject[],
+      _deltaX: number,
+      deltaY: number
+    ) => {
+      const zoomFactor = 0.001;
+      const currentZoom = this.cameras.main.zoom;
+      const minZoom = getMinZoom();
+      const newZoom = Phaser.Math.Clamp(currentZoom - deltaY * zoomFactor, minZoom, 3.0);
+      this.cameras.main.setZoom(newZoom);
+    });
+
+    this.scale.on("resize", (gameSize: Phaser.Structs.Size) => {
+      const minZoom = Math.max(gameSize.width / WORLD_W, gameSize.height / WORLD_H);
+      if (this.cameras.main.zoom < minZoom) {
+        this.cameras.main.setZoom(minZoom);
+      }
+    });
   }
 
   // ─── Animation Helper ─────────────────────────────────────────────────────
@@ -192,12 +222,12 @@ export class GameScene extends Phaser.Scene {
     const dirs = ["right", "up", "left", "down"];
 
     const animSpecs = [
-      { key: "idle",  row: 0, count: 6,  frameRate: 6,  repeat: -1 },
-      { key: "walk",  row: 1, count: 6,  frameRate: 10, repeat: -1 },
-      { key: "chop",  row: 2, count: 10, frameRate: 12, repeat: 0  },
-      { key: "water", row: 3, count: 14, frameRate: 14, repeat: 0  },
-      { key: "dig",   row: 4, count: 9,  frameRate: 12, repeat: 0  },
-      { key: "fish",  row: 6, count: 16, frameRate: 10, repeat: 0  },
+      { key: "idle",  row: 1, count: 6,  frameRate: 8,  repeat: -1 },
+      { key: "walk",  row: 2, count: 6,  frameRate: 10, repeat: -1 },
+      { key: "dig",   row: 3, count: 9,  frameRate: 12, repeat: 0  },
+      { key: "water", row: 7, count: 14, frameRate: 16, repeat: 0  },
+      { key: "chop",  row: 9, count: 10, frameRate: 14, repeat: 0  },
+      { key: "fish",  row: 11, count: 32, frameRate: 8,  repeat: -1 },
     ];
 
     skins.forEach(skin => {
