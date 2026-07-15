@@ -155,14 +155,11 @@ export class GameScene extends Phaser.Scene {
     this.load.spritesheet("mg_crate_2", "assets/material_gift/Wooden_Crate_2_16x16.png", { frameWidth: 32, frameHeight: 48 });
     this.load.spritesheet("mg_wooden_gate", "assets/material_gift/Wooden_Gate_16x16.png", { frameWidth: 32, frameHeight: 32 });
 
-    // Load crop growth stage spritesheets (7 frames each, 16px wide)
+    // Load crop growth stage images as plain images — frames are defined manually
+    // in create() to exclude the 16px stage-number strip at the bottom.
     for (const cropName of Object.keys(GameScene.CROP_META)) {
-      const meta = GameScene.CROP_META[cropName];
       const fileName = `${cropName}_Growth_Stages_16x16.png`;
-      this.load.spritesheet(`crop_${cropName}`, `assets/crops/${fileName}`, {
-        frameWidth: 16,
-        frameHeight: meta.frameH,
-      });
+      this.load.image(`crop_${cropName}`, `assets/crops/${fileName}`);
     }
   }
 
@@ -266,6 +263,9 @@ export class GameScene extends Phaser.Scene {
     // Create animations for VFX and Material Gift items
     this.createGIFAnimations();
 
+    // Build crop textures: define frames that exclude the 16px number strip
+    this.buildCropTextures();
+
     // Slice decor_sheet_gorsel into individual texture frames at runtime
     const sheet = this.textures.get("decor_sheet_gorsel");
     if (sheet) {
@@ -337,11 +337,27 @@ export class GameScene extends Phaser.Scene {
 
   // ─── Crop Farming Helpers ─────────────────────────────────────────────────
 
+  /**
+   * For each crop image, manually register 7 frame regions that cover ONLY
+   * the plant pixels (0 to plantHeight), skipping the 16px number strip.
+   * Must be called after the images are fully loaded (inside create()).
+   */
+  private buildCropTextures(): void {
+    for (const [cropName, meta] of Object.entries(GameScene.CROP_META)) {
+      const plantH = meta.frameH - 16; // exclude the bottom number strip
+      const tex = this.textures.get(`crop_${cropName}`);
+      if (!tex) continue;
+      for (let i = 0; i < 7; i++) {
+        // frame key = stage index, source image index = 0, x, y, width, height
+        tex.add(i, 0, i * 16, 0, 16, plantH);
+      }
+    }
+  }
+
   /** Called by React HUD to set the selected seed type and switch to seed brush */
   public setSelectedSeed(cropType: string): void {
     this.selectedSeed = cropType;
     this.currentBrushType = cropType ? "seed" : "tile";
-    // Expose to HUD
     (window as any).mmorpg_selected_seed = cropType;
   }
 
@@ -352,25 +368,21 @@ export class GameScene extends Phaser.Scene {
     if (!meta) return;
 
     const textureKey = `crop_${cropType}`;
-    // Each spritesheet has a 16px number-strip at the bottom — hide it with setCrop.
-    // plantHeight = full frame height minus the 16px number bar.
-    const plantHeight = meta.frameH - 16;
-    // Align the plant's bottom to the bottom edge of the tile so it grows upward.
-    const worldX = tx * 16 + 8;   // horizontal center of tile
-    const worldY = (ty + 1) * 16; // bottom edge of tile
+    // Bottom of tile — sprite grows upward using origin (0.5, 1.0)
+    const worldX = tx * 16 + 8;
+    const worldY = (ty + 1) * 16;
 
     let sprite = this.cropSprites.get(key);
     if (!sprite) {
       sprite = this.add.sprite(worldX, worldY, textureKey, stage);
-      sprite.setOrigin(0.5, 1.0);            // bottom-center → grows upward
-      sprite.setCrop(0, 0, 16, plantHeight); // hide the 16px number strip
-      sprite.setDepth(5);                    // above terrain, below players
+      sprite.setOrigin(0.5, 1.0); // grow upward from soil
+      sprite.setDepth(5);
       this.cropSprites.set(key, sprite);
     } else {
       sprite.setFrame(stage);
-      sprite.setCrop(0, 0, 16, plantHeight); // re-apply after frame change
     }
   }
+
 
   // ─── Animation Helper ─────────────────────────────────────────────────────
 

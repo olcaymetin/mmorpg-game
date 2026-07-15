@@ -94,8 +94,8 @@ interface CropHarvestMessage {
   y: number;
 }
 
-// Growth stage duration in milliseconds (30 seconds per stage)
-const GROWTH_INTERVAL_MS = 30_000;
+// Growth stage duration in milliseconds — 5s per stage × 6 stages = 30s total
+const GROWTH_INTERVAL_MS = 5_000;
 // Total stages 0-6, stage 6 = fully grown / harvestable
 const MAX_CROP_STAGE = 6;
 
@@ -119,8 +119,8 @@ export class GameRoom extends Room<GameState> {
     // Load persisted map & buildings data if save file exists
     this.loadSaveData();
 
-    // Start crop growth timer (checks every 10 seconds)
-    this.growthTimer = setInterval(() => this.tickCropGrowth(), 10_000);
+    // Start crop growth timer (checks every 3 seconds for responsive updates)
+    this.growthTimer = setInterval(() => this.tickCropGrowth(), 3_000);
 
     /**
      * "move" message handler (authoritative server movement).
