@@ -3,6 +3,28 @@ import "./App.css";
 import { useColyseus } from "./hooks/useColyseus";
 import { PhaserGame } from "./game/PhaserGame";
 
+const cropLabels: Record<string, string> = {
+  Cabbage: "Lahana",
+  Carrot: "Havuç",
+  Cauliflower: "Karnabahar",
+  Coffee: "Kahve",
+  Corn: "Mısır",
+  Cotton: "Pamuk",
+  Grape: "Üzüm",
+  Onion: "Soğan",
+  Pepper: "Biber",
+  Pineapple: "Ananas",
+  Prickly_Pear: "Kaktüs",
+  Pumpkin: "Kabak",
+  Radish: "Turp",
+  Strawberry: "Çilek",
+  Tomato: "Domates",
+  Turnip: "Şalgam",
+  Watermelon: "Karpuz",
+  Wheat: "Buğday",
+  Zuchini: "Kabak (Z)",
+};
+
 /**
  * App — root React component.
  *
@@ -22,6 +44,9 @@ const App: React.FC = () => {
 
   // Selected object properties (for scaling/deletion)
   const [selectedObject, setSelectedObject] = useState<{ id: string; type: string; scale: number } | null>(null);
+
+  // Local player's inventory
+  const [inventory, setInventory] = useState<Record<string, number>>({});
 
   // Active tab inside spawning objects selector
   const [activeTab, setActiveTab] = useState<"structures" | "decorations" | "effects" | "materials" | "seeds">("structures");
@@ -67,6 +92,35 @@ const App: React.FC = () => {
       game.events.off("editor-object-deselected", handleObjectDeselected);
     };
   }, [game]);
+
+  // Synchronize player inventory from Colyseus GameState
+  useEffect(() => {
+    if (!room) return;
+
+    const updateInventory = () => {
+      const player = room.state.players.get(room.sessionId);
+      if (player && player.inventory) {
+        const inv: Record<string, number> = {};
+        player.inventory.forEach((val, key) => {
+          inv[key] = val;
+        });
+        setInventory(inv);
+      }
+    };
+
+    // Initial check
+    updateInventory();
+
+    // Subscribe to state change
+    const unsubscribe = room.onStateChange(() => {
+      updateInventory();
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [room, sessionId]);
+
 
   const handleToggleEditMode = () => {
     const nextMode = !editMode;
@@ -848,6 +902,40 @@ const App: React.FC = () => {
               </div>
             </>
           )}
+        </div>
+      )}
+
+      {/* ── Inventory Panel ── */}
+      {connected && (
+        <div className="inventory-card">
+          <div className="inventory-title">🎒 Envanterim (Çantam)</div>
+          <div className="inventory-items">
+            {Object.keys(inventory).length === 0 || Object.values(inventory).every(qty => qty <= 0) ? (
+              <div className="inventory-empty">Çanta boş. Ekin topla!</div>
+            ) : (
+              Object.entries(inventory).map(([cropName, qty]) => {
+                if (qty <= 0) return null;
+                const label = cropLabels[cropName] || cropName;
+                return (
+                  <div key={cropName} className="inventory-item">
+                    <div
+                      className="inventory-thumb"
+                      style={{
+                        backgroundImage: `url('/assets/crops/${cropName}_Growth_Stages_16x16.png')`,
+                        backgroundSize: `112px auto`,
+                        backgroundPosition: `-96px bottom`,
+                        imageRendering: "pixelated",
+                      }}
+                    />
+                    <div className="inventory-details">
+                      <span className="inventory-name" title={label}>{label}</span>
+                      <span className="inventory-qty">x{qty}</span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
       )}
 

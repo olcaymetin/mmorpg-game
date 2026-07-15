@@ -508,16 +508,19 @@ export class GameScene extends Phaser.Scene {
     // ─── Click / Drag Input Handlers ───
     this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
       if (pointer.button === 0) { // Left Click
-        if (this.editorMode && !this.clickedGameObject) {
-          const tileX = Math.floor(pointer.worldX / 16);
-          const tileY = Math.floor(pointer.worldY / 16);
-          const tileKey = `${tileX},${tileY}`;
-          const crop = this.room?.state.crops.get(tileKey);
+        const tileX = Math.floor(pointer.worldX / 16);
+        const tileY = Math.floor(pointer.worldY / 16);
+        const tileKey = `${tileX},${tileY}`;
+        const crop = this.room?.state.crops.get(tileKey);
 
-          if (crop && crop.stage >= 6) {
-            // Harvest if fully grown
-            this.room?.send("crop-harvest", { x: tileX, y: tileY });
-          } else if (this.currentBrushType === "object") {
+        if (crop && crop.stage >= 6) {
+          // Harvest if fully grown (works in both play and edit modes!)
+          this.room?.send("crop-harvest", { x: tileX, y: tileY });
+          return;
+        }
+
+        if (this.editorMode && !this.clickedGameObject) {
+          if (this.currentBrushType === "object") {
             // Place building object on server
             const uniqueId = `obj_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             const defaultScale = this.getDefaultScaleForType(this.currentObjectName);

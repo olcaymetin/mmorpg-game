@@ -304,6 +304,13 @@ export class GameRoom extends Room<GameState> {
       if (!crop) return;
 
       if (crop.stage >= MAX_CROP_STAGE) {
+        const player = this.state.players.get(client.sessionId);
+        if (player) {
+          const cropType = crop.cropType;
+          const currentCount = player.inventory.get(cropType) || 0;
+          player.inventory.set(cropType, currentCount + 1);
+          console.log(`[Inventory] Player ${client.sessionId.slice(0, 8)} harvested 1 ${cropType}. Total: ${currentCount + 1}`);
+        }
         this.state.crops.delete(key);
         this.triggerDebouncedSave();
         console.log(`[Crop] Harvested ${crop.cropType} at ${key}`);

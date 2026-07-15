@@ -53,6 +53,7 @@ export class Player extends Schema {
   state!: string;
   direction!: string;
   skin!: string;
+  inventory!: MapSchema<number>;
 }
 
 defineTypes(Player, {
@@ -63,6 +64,7 @@ defineTypes(Player, {
   state: "string",
   direction: "string",
   skin: "string",
+  inventory: { map: "int32" },
 });
 
 // ─── GameState ────────────────────────────────────────────────────────────────
