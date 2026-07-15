@@ -124,10 +124,18 @@ export class GameScene extends Phaser.Scene {
     for (let i = 1; i <= 11; i++) {
       this.load.image(`decor_grass_${i}`, `assets/customization/Grass_Tufts_Flowers_${i}.png`);
     }
+
+    // Load material gift items
+    this.load.image("mg_stable_gate", "assets/material_gift/Stable_Gate_16x16.gif");
+    this.load.image("mg_stable_gate_lb", "assets/material_gift/Stable_Gate_Light_Brown_16x16.gif");
+    this.load.image("mg_well", "assets/material_gift/Well_16x16.gif");
+    this.load.image("mg_crate_1", "assets/material_gift/Wooden_Crate_1_16x16.gif");
+    this.load.image("mg_crate_2", "assets/material_gift/Wooden_Crate_2_16x16.gif");
+    this.load.image("mg_wooden_gate", "assets/material_gift/Wooden_Gate_16x16.gif");
   }
 
   private getDefaultScaleForType(type: string): number {
-    if (type.startsWith("decor_grass_") || type.startsWith("vfx_")) {
+    if (type.startsWith("decor_grass_") || type.startsWith("vfx_") || type.startsWith("mg_")) {
       return 2.0;
     }
     return 0.15;

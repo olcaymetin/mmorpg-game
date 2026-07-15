@@ -24,7 +24,7 @@ const App: React.FC = () => {
   const [selectedObject, setSelectedObject] = useState<{ id: string; type: string; scale: number } | null>(null);
 
   // Active tab inside spawning objects selector
-  const [activeTab, setActiveTab] = useState<"structures" | "decorations" | "effects">("structures");
+  const [activeTab, setActiveTab] = useState<"structures" | "decorations" | "effects" | "materials">("structures");
 
   // Selection box start/end for multi-tile selection
   const [selectionStart, setSelectionStart] = useState<{ col: number; row: number } | null>(null);
@@ -389,6 +389,12 @@ const App: React.FC = () => {
                       selectedObject.type === "farmer_npc" ? "Çiftçi NPC" :
                       selectedObject.type === "vfx_leaf_single" ? "Tek Yaprak" :
                       selectedObject.type === "vfx_smoke" ? "Fırın Dumanı" :
+                      selectedObject.type === "mg_stable_gate" ? "Ahır Kapısı" :
+                      selectedObject.type === "mg_stable_gate_lb" ? "Açık K. Ahır Kapısı" :
+                      selectedObject.type === "mg_well" ? "Kuyu" :
+                      selectedObject.type === "mg_crate_1" ? "Tahta Sandık 1" :
+                      selectedObject.type === "mg_crate_2" ? "Tahta Sandık 2" :
+                      selectedObject.type === "mg_wooden_gate" ? "Tahta Kapı" :
                       selectedObject.type.startsWith("vfx_") ? `Yaprak Efekti (${selectedObject.type.replace("vfx_leaves_", "").replace("_", " ")})` :
                       selectedObject.type.startsWith("decor_grass_") ? `Dekor (Çiçek/Çimen #${selectedObject.type.replace("decor_grass_", "")})` :
                       "Market"
@@ -438,6 +444,13 @@ const App: React.FC = () => {
                   onClick={() => setActiveTab("effects")}
                 >
                   ✨ Efekt (GIF)
+                </button>
+                <button
+                  className={`tab-btn ${activeTab === "materials" ? "tab-btn--active" : ""}`}
+                  onClick={() => setActiveTab("materials")}
+                  style={{ fontSize: "9px" }}
+                >
+                  📦 Malzeme Gift
                 </button>
               </div>
 
@@ -569,6 +582,54 @@ const App: React.FC = () => {
                   >
                     <img src="/assets/gift/Stone_Oven_Smoke_Effect_16x16.gif" alt="smoke" className="obj-thumb" />
                     <span>Fırın Dumanı</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Tab 4: Material Gift (Gifs) */}
+              {activeTab === "materials" && (
+                <div className="object-grid" style={{ gridTemplateColumns: "repeat(2, 1fr)" }}>
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "mg_stable_gate" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("mg_stable_gate")}
+                  >
+                    <img src="/assets/material_gift/Stable_Gate_16x16.gif" alt="stable gate" className="obj-thumb" />
+                    <span>Ahır Kapısı</span>
+                  </button>
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "mg_stable_gate_lb" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("mg_stable_gate_lb")}
+                  >
+                    <img src="/assets/material_gift/Stable_Gate_Light_Brown_16x16.gif" alt="stable gate lb" className="obj-thumb" />
+                    <span>Açık K. Kapı</span>
+                  </button>
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "mg_well" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("mg_well")}
+                  >
+                    <img src="/assets/material_gift/Well_16x16.gif" alt="well" className="obj-thumb" />
+                    <span>Kuyu</span>
+                  </button>
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "mg_crate_1" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("mg_crate_1")}
+                  >
+                    <img src="/assets/material_gift/Wooden_Crate_1_16x16.gif" alt="crate 1" className="obj-thumb" />
+                    <span>Tahta Sandık 1</span>
+                  </button>
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "mg_crate_2" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("mg_crate_2")}
+                  >
+                    <img src="/assets/material_gift/Wooden_Crate_2_16x16.gif" alt="crate 2" className="obj-thumb" />
+                    <span>Tahta Sandık 2</span>
+                  </button>
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "mg_wooden_gate" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("mg_wooden_gate")}
+                  >
+                    <img src="/assets/material_gift/Wooden_Gate_16x16.gif" alt="wooden gate" className="obj-thumb" />
+                    <span>Tahta Kapı</span>
                   </button>
                 </div>
               )}
