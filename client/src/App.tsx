@@ -44,8 +44,10 @@ const App: React.FC = () => {
     game.events.on("editor-object-selected", handleObjectSelected);
     game.events.on("editor-object-deselected", handleObjectDeselected);
 
-    // Check for legacy local storage maps
-    if ((window as any).mmorpg_legacy_map) {
+    // Check for legacy local storage maps directly
+    const rawMap = localStorage.getItem("mmorpg_map_data");
+    const rawObjs = localStorage.getItem("mmorpg_placed_objects");
+    if (rawMap || rawObjs) {
       setHasLegacyMap(true);
     }
 
@@ -166,17 +168,17 @@ const App: React.FC = () => {
   };
 
   const handleMigrateLegacyMap = () => {
-    const legacy = (window as any).mmorpg_legacy_map;
-    if (legacy && room) {
+    const rawMap = localStorage.getItem("mmorpg_map_data");
+    const rawObjs = localStorage.getItem("mmorpg_placed_objects");
+    if ((rawMap || rawObjs) && room) {
       room.send("tile-update-bulk", {
-        mapData: legacy.mapData || {},
-        placedObjects: legacy.placedObjects || []
+        mapData: rawMap ? JSON.parse(rawMap) : {},
+        placedObjects: rawObjs ? JSON.parse(rawObjs) : []
       });
       setHasLegacyMap(false);
       // Remove legacy items to avoid prompting again
       localStorage.removeItem("mmorpg_map_data");
       localStorage.removeItem("mmorpg_placed_objects");
-      delete (window as any).mmorpg_legacy_map;
       alert("Yerel haritanız sunucuya başarıyla taşındı!");
     }
   };
