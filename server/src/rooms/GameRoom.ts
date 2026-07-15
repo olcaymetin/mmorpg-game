@@ -1,5 +1,5 @@
 import { Room, Client } from "colyseus";
-import { GameState, Player, PlacedObjectState } from "../schema/GameState";
+import { GameState, Player, PlacedObjectState, CropState } from "../schema/GameState";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -83,11 +83,28 @@ interface ObjectDeleteMessage {
   id: string;
 }
 
+interface CropPlantMessage {
+  x: number;
+  y: number;
+  cropType: string;
+}
+
+interface CropHarvestMessage {
+  x: number;
+  y: number;
+}
+
+// Growth stage duration in milliseconds (30 seconds per stage)
+const GROWTH_INTERVAL_MS = 30_000;
+// Total stages 0-6, stage 6 = fully grown / harvestable
+const MAX_CROP_STAGE = 6;
+
 // ─── Room ─────────────────────────────────────────────────────────────────────
 
 export class GameRoom extends Room<GameState> {
   private colorIndex = 0;
   private saveTimeout: NodeJS.Timeout | null = null;
+  private growthTimer: NodeJS.Timeout | null = null;
 
   /**
    * onCreate — called once when the room is first created.
@@ -101,6 +118,9 @@ export class GameRoom extends Room<GameState> {
 
     // Load persisted map & buildings data if save file exists
     this.loadSaveData();
+
+    // Start crop growth timer (checks every 10 seconds)
+    this.growthTimer = setInterval(() => this.tickCropGrowth(), 10_000);
 
     /**
      * "move" message handler (authoritative server movement).
@@ -256,6 +276,39 @@ export class GameRoom extends Room<GameState> {
       this.state.placedObjects.delete(msg.id);
       this.triggerDebouncedSave();
     });
+
+    /**
+     * "crop-plant" handler - plant a crop on a farm tile
+     */
+    this.onMessage("crop-plant", (client: Client, msg: CropPlantMessage) => {
+      const key = `${msg.x},${msg.y}`;
+      // Don't overwrite an existing crop
+      if (this.state.crops.has(key)) return;
+
+      const crop = new CropState();
+      crop.key = key;
+      crop.cropType = msg.cropType;
+      crop.stage = 0;
+      crop.plantedAt = Date.now();
+      this.state.crops.set(key, crop);
+      this.triggerDebouncedSave();
+      console.log(`[Crop] ${msg.cropType} planted at ${key}`);
+    });
+
+    /**
+     * "crop-harvest" handler - harvest a fully grown crop
+     */
+    this.onMessage("crop-harvest", (client: Client, msg: CropHarvestMessage) => {
+      const key = `${msg.x},${msg.y}`;
+      const crop = this.state.crops.get(key);
+      if (!crop) return;
+
+      if (crop.stage >= MAX_CROP_STAGE) {
+        this.state.crops.delete(key);
+        this.triggerDebouncedSave();
+        console.log(`[Crop] Harvested ${crop.cropType} at ${key}`);
+      }
+    });
   }
 
   /**
@@ -288,6 +341,36 @@ export class GameRoom extends Room<GameState> {
     console.log(`[LEAVE] ${client.sessionId.slice(0, 8)}…`);
   }
 
+  onDispose(): void {
+    if (this.growthTimer) clearInterval(this.growthTimer);
+    if (this.saveTimeout) clearTimeout(this.saveTimeout);
+  }
+
+  // ─── Crop Growth ──────────────────────────────────────────────────────────────
+
+  private tickCropGrowth(): void {
+    const now = Date.now();
+    let changed = false;
+
+    this.state.crops.forEach((crop, key) => {
+      if (crop.stage >= MAX_CROP_STAGE) return;
+
+      const elapsed = now - crop.plantedAt;
+      const expectedStage = Math.min(
+        MAX_CROP_STAGE,
+        Math.floor(elapsed / GROWTH_INTERVAL_MS)
+      );
+
+      if (expectedStage > crop.stage) {
+        crop.stage = expectedStage;
+        changed = true;
+        console.log(`[Crop] ${crop.cropType} at ${key} grew to stage ${crop.stage}`);
+      }
+    });
+
+    if (changed) this.triggerDebouncedSave();
+  }
+
   // ─── Persistence ─────────────────────────────────────────────────────────────
 
   private triggerDebouncedSave(): void {
@@ -302,37 +385,26 @@ export class GameRoom extends Room<GameState> {
   private saveData(): void {
     try {
       const mapData: { [key: string]: number } = {};
-      this.state.mapData.forEach((val, key) => {
-        mapData[key] = val;
-      });
+      this.state.mapData.forEach((val, key) => { mapData[key] = val; });
 
       const decorData: { [key: string]: number } = {};
-      this.state.decorData.forEach((val, key) => {
-        decorData[key] = val;
+      this.state.decorData.forEach((val, key) => { decorData[key] = val; });
+
+      const placedObjects: Array<{ id: string; type: string; x: number; y: number; scale: number }> = [];
+      this.state.placedObjects.forEach((val) => {
+        placedObjects.push({ id: val.id, type: val.type, x: val.x, y: val.y, scale: val.scale });
       });
 
-      const placedObjects: Array<{
-        id: string;
-        type: string;
-        x: number;
-        y: number;
-        scale: number;
-      }> = [];
-      this.state.placedObjects.forEach((val, key) => {
-        placedObjects.push({
-          id: val.id,
-          type: val.type,
-          x: val.x,
-          y: val.y,
-          scale: val.scale,
-        });
+      const crops: Array<{ key: string; cropType: string; stage: number; plantedAt: number }> = [];
+      this.state.crops.forEach((val) => {
+        crops.push({ key: val.key, cropType: val.cropType, stage: val.stage, plantedAt: val.plantedAt });
       });
 
-      const payload = { mapData, decorData, placedObjects };
+      const payload = { mapData, decorData, placedObjects, crops };
       fs.writeFileSync(SAVE_FILE_PATH, JSON.stringify(payload, null, 2), "utf8");
-      console.log(`[Persistence] Saved map configurations successfully to: ${SAVE_FILE_PATH}`);
+      console.log(`[Persistence] Saved successfully. Tiles: ${this.state.mapData.size}, Crops: ${this.state.crops.size}`);
     } catch (e) {
-      console.error("[Persistence] Failed to write save_data.json file", e);
+      console.error("[Persistence] Failed to write save_data.json", e);
     }
   }
 
@@ -361,16 +433,22 @@ export class GameRoom extends Room<GameState> {
       if (parsed.placedObjects) {
         parsed.placedObjects.forEach((o: any) => {
           const obj = new PlacedObjectState();
-          obj.id = o.id;
-          obj.type = o.type;
-          obj.x = o.x;
-          obj.y = o.y;
-          obj.scale = o.scale;
+          obj.id = o.id; obj.type = o.type;
+          obj.x = o.x; obj.y = o.y; obj.scale = o.scale;
           this.state.placedObjects.set(o.id, obj);
         });
       }
 
-      console.log(`[Persistence] Loaded save data successfully. Tiles: ${this.state.mapData.size}, Objects: ${this.state.placedObjects.size}`);
+      if (parsed.crops) {
+        parsed.crops.forEach((c: any) => {
+          const crop = new CropState();
+          crop.key = c.key; crop.cropType = c.cropType;
+          crop.stage = c.stage; crop.plantedAt = c.plantedAt;
+          this.state.crops.set(c.key, crop);
+        });
+      }
+
+      console.log(`[Persistence] Loaded. Tiles: ${this.state.mapData.size}, Objects: ${this.state.placedObjects.size}, Crops: ${this.state.crops.size}`);
     } catch (e) {
       console.error("[Persistence] Failed to read/parse save_data.json file", e);
     }

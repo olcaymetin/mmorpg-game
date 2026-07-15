@@ -9,6 +9,22 @@
  */
 import { Schema, MapSchema, defineTypes } from "@colyseus/schema";
 
+// ─── CropState ───────────────────────────────────────────────────────────────
+
+export class CropState extends Schema {
+  key!: string;
+  cropType!: string;
+  stage!: number;
+  plantedAt!: number;
+}
+
+defineTypes(CropState, {
+  key: "string",
+  cropType: "string",
+  stage: "int32",
+  plantedAt: "float64",
+});
+
 // ─── PlacedObjectState ────────────────────────────────────────────────────────
 
 export class PlacedObjectState extends Schema {
@@ -56,6 +72,7 @@ export class GameState extends Schema {
   mapData!: MapSchema<number>;
   decorData!: MapSchema<number>;
   placedObjects!: MapSchema<PlacedObjectState>;
+  crops!: MapSchema<CropState>;
 }
 
 defineTypes(GameState, {
@@ -63,4 +80,5 @@ defineTypes(GameState, {
   mapData: { map: "int32" },
   decorData: { map: "int32" },
   placedObjects: { map: PlacedObjectState },
+  crops: { map: CropState },
 });

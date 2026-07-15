@@ -24,7 +24,7 @@ const App: React.FC = () => {
   const [selectedObject, setSelectedObject] = useState<{ id: string; type: string; scale: number } | null>(null);
 
   // Active tab inside spawning objects selector
-  const [activeTab, setActiveTab] = useState<"structures" | "decorations" | "effects" | "materials">("structures");
+  const [activeTab, setActiveTab] = useState<"structures" | "decorations" | "effects" | "materials" | "seeds">("structures");
 
   // Selection box start/end for multi-tile selection
   const [selectionStart, setSelectionStart] = useState<{ col: number; row: number } | null>(null);
@@ -480,6 +480,17 @@ const App: React.FC = () => {
                 >
                   📦 Malzeme Gift
                 </button>
+                <button
+                  className={`tab-btn ${activeTab === "seeds" ? "tab-btn--active" : ""}`}
+                  onClick={() => {
+                    setActiveTab("seeds");
+                    // Clear any object brush when switching to seeds
+                    if (game) game.events.emit("editor-brush-selected", { type: "seed", cropType: "" });
+                  }}
+                  style={{ fontSize: "9px" }}
+                >
+                  🌾 Tohum Ek
+                </button>
               </div>
 
               {/* Tab 1: Structures & NPCs */}
@@ -684,6 +695,56 @@ const App: React.FC = () => {
                     <img src="/assets/material_gift/Wooden_Gate_16x16.gif" alt="wooden gate" className="obj-thumb" />
                     <span>Tahta Kapı</span>
                   </button>
+                </div>
+              )}
+
+              {/* Tab 5: Tohum (Crop Seeds) */}
+              {activeTab === "seeds" && (
+                <div className="object-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "6px" }}>
+                  {[
+                    { id: "Cabbage",      label: "Lahana",         frameH: 32 },
+                    { id: "Carrot",       label: "Havuç",          frameH: 32 },
+                    { id: "Cauliflower",  label: "Karnabahar",     frameH: 32 },
+                    { id: "Coffee",       label: "Kahve",          frameH: 64 },
+                    { id: "Corn",         label: "Mısır",          frameH: 64 },
+                    { id: "Cotton",       label: "Pamuk",          frameH: 32 },
+                    { id: "Grape",        label: "Üzüm",           frameH: 96 },
+                    { id: "Onion",        label: "Soğan",          frameH: 64 },
+                    { id: "Pepper",       label: "Biber",          frameH: 32 },
+                    { id: "Pineapple",    label: "Ananas",         frameH: 64 },
+                    { id: "Prickly_Pear", label: "Kaktüs",         frameH: 96 },
+                    { id: "Pumpkin",      label: "Kabak",          frameH: 64 },
+                    { id: "Radish",       label: "Turp",           frameH: 32 },
+                    { id: "Strawberry",   label: "Çilek",          frameH: 32 },
+                    { id: "Tomato",       label: "Domates",        frameH: 64 },
+                    { id: "Turnip",       label: "Şalgam",         frameH: 48 },
+                    { id: "Watermelon",   label: "Karpuz",         frameH: 64 },
+                    { id: "Wheat",        label: "Buğday",         frameH: 32 },
+                    { id: "Zuchini",      label: "Kabak (Z)",      frameH: 64 },
+                  ].map(crop => (
+                    <button
+                      key={crop.id}
+                      className={`obj-btn obj-btn--small ${selectedObjectName === `seed_${crop.id}` ? "obj-btn--active" : ""}`}
+                      onClick={() => {
+                        setSelectedObjectName(`seed_${crop.id}`);
+                        setSelectedTile(-3);
+                        if (game) game.events.emit("editor-brush-selected", { type: "seed", cropType: crop.id });
+                      }}
+                      title={`${crop.label} — Sol tıkla: ek, Sağ tıkla (olgunsa): hasat`}
+                    >
+                      <div style={{
+                        width: "16px",
+                        height: `${Math.min(crop.frameH, 32)}px`,
+                        backgroundImage: `url('/assets/crops/${crop.id}_Growth_Stages_16x16.png')`,
+                        backgroundSize: `${7 * 16}px ${crop.frameH}px`,
+                        backgroundPosition: `-${6 * 16}px 0px`,
+                        imageRendering: "pixelated",
+                        margin: "0 auto",
+                        overflow: "hidden",
+                      }} />
+                      <span style={{ fontSize: "6px" }}>{crop.label}</span>
+                    </button>
+                  ))}
                 </div>
               )}
 

@@ -76,6 +76,25 @@ export class GameScene extends Phaser.Scene {
   private lastSentMs = 0;
   private isMoving = false;
 
+  // ── Crop Farming ───────────────────────────────────────────────────────────
+  // Maps tile key "x,y" -> the sprite shown on that tile
+  private cropSprites = new Map<string, Phaser.GameObjects.Sprite>();
+  private selectedSeed = ""; // empty = not in seed mode
+
+  // Crop metadata: frameHeight for each crop
+  static readonly CROP_META: Record<string, { frameH: number }> = {
+    Cabbage:     { frameH: 32 }, Carrot:      { frameH: 32 },
+    Cauliflower: { frameH: 32 }, Coffee:      { frameH: 64 },
+    Corn:        { frameH: 64 }, Cotton:      { frameH: 32 },
+    Grape:       { frameH: 96 }, Onion:       { frameH: 64 },
+    Pepper:      { frameH: 32 }, Pineapple:   { frameH: 64 },
+    Prickly_Pear:{ frameH: 96 }, Pumpkin:     { frameH: 64 },
+    Radish:      { frameH: 32 }, Strawberry:  { frameH: 32 },
+    Tomato:      { frameH: 64 }, Turnip:      { frameH: 48 },
+    Watermelon:  { frameH: 64 }, Wheat:       { frameH: 32 },
+    Zuchini:     { frameH: 64 },
+  };
+
   constructor() {
     super({ key: "GameScene" });
   }
@@ -135,6 +154,16 @@ export class GameScene extends Phaser.Scene {
     this.load.spritesheet("mg_crate_1", "assets/material_gift/Wooden_Crate_1_16x16.png", { frameWidth: 32, frameHeight: 48 });
     this.load.spritesheet("mg_crate_2", "assets/material_gift/Wooden_Crate_2_16x16.png", { frameWidth: 32, frameHeight: 48 });
     this.load.spritesheet("mg_wooden_gate", "assets/material_gift/Wooden_Gate_16x16.png", { frameWidth: 32, frameHeight: 32 });
+
+    // Load crop growth stage spritesheets (7 frames each, 16px wide)
+    for (const cropName of Object.keys(GameScene.CROP_META)) {
+      const meta = GameScene.CROP_META[cropName];
+      const fileName = `${cropName}_Growth_Stages_16x16.png`;
+      this.load.spritesheet(`crop_${cropName}`, `assets/crops/${fileName}`, {
+        frameWidth: 16,
+        frameHeight: meta.frameH,
+      });
+    }
   }
 
   private getDefaultScaleForType(type: string): number {
@@ -191,13 +220,17 @@ export class GameScene extends Phaser.Scene {
     this.setupEditorInputs();
 
     // 9. React editor events
-    this.game.events.on("editor-brush-selected", (brush: { type: string; index?: number; name?: string }) => {
+    this.game.events.on("editor-brush-selected", (brush: { type: string; index?: number; name?: string; cropType?: string }) => {
       this.currentBrushType = brush.type;
       if (brush.type === "tile" && brush.index !== undefined) {
         this.currentTileIndex = brush.index;
         this.currentTileStamp = null;
+        this.selectedSeed = "";
       } else if (brush.type === "object" && brush.name) {
         this.currentObjectName = brush.name;
+        this.selectedSeed = "";
+      } else if (brush.type === "seed") {
+        this.selectedSeed = brush.cropType || "";
       }
     });
 
@@ -237,7 +270,7 @@ export class GameScene extends Phaser.Scene {
     const sheet = this.textures.get("decor_sheet_gorsel");
     if (sheet) {
       for (let i = 0; i < 44; i++) {
-        const frame = sheet.frames[i];
+        const frame = (sheet.frames as Record<number, Phaser.Textures.Frame>)[i];
         if (frame) {
           const canvas = document.createElement("canvas");
           canvas.width = 16;
@@ -284,6 +317,52 @@ export class GameScene extends Phaser.Scene {
         this.cameras.main.setZoom(minZoom);
       }
     });
+
+    // 12. Crop state synchronization
+    if (this.room) {
+      this.room.state.crops.onAdd((crop: any, key: string) => {
+        this.renderCropSprite(key, crop.cropType, crop.stage);
+        crop.onChange(() => { this.renderCropSprite(key, crop.cropType, crop.stage); });
+      });
+      this.room.state.crops.onRemove((_crop: any, key: string) => {
+        const sprite = this.cropSprites.get(key);
+        if (sprite) { sprite.destroy(); this.cropSprites.delete(key); }
+      });
+      this.room.state.crops.forEach((crop: any, key: string) => {
+        this.renderCropSprite(key, crop.cropType, crop.stage);
+        crop.onChange(() => { this.renderCropSprite(key, crop.cropType, crop.stage); });
+      });
+    }
+  }
+
+  // ─── Crop Farming Helpers ─────────────────────────────────────────────────
+
+  /** Called by React HUD to set the selected seed type and switch to seed brush */
+  public setSelectedSeed(cropType: string): void {
+    this.selectedSeed = cropType;
+    this.currentBrushType = cropType ? "seed" : "tile";
+    // Expose to HUD
+    (window as any).mmorpg_selected_seed = cropType;
+  }
+
+  /** Render or update a crop sprite at tile position encoded as "x,y" */
+  private renderCropSprite(key: string, cropType: string, stage: number): void {
+    const [tx, ty] = key.split(",").map(Number);
+    const meta = GameScene.CROP_META[cropType];
+    if (!meta) return;
+
+    const textureKey = `crop_${cropType}`;
+    const worldX = tx * 16 + 8; // center of tile
+    const worldY = ty * 16 + meta.frameH / 2; // bottom-aligned
+
+    let sprite = this.cropSprites.get(key);
+    if (!sprite) {
+      sprite = this.add.sprite(worldX, worldY, textureKey, stage);
+      sprite.setDepth(5); // above terrain, below players
+      this.cropSprites.set(key, sprite);
+    } else {
+      sprite.setFrame(stage);
+    }
   }
 
   // ─── Animation Helper ─────────────────────────────────────────────────────
@@ -406,6 +485,14 @@ export class GameScene extends Phaser.Scene {
               y: pointer.worldY,
               scale: defaultScale
             });
+          } else if (this.currentBrushType === "seed" && this.selectedSeed) {
+            // Plant a crop on the clicked tile
+            const tileX = Math.floor(pointer.worldX / 16);
+            const tileY = Math.floor(pointer.worldY / 16);
+            const tileKey = `${tileX},${tileY}`;
+            if (!this.room?.state.crops.has(tileKey)) {
+              this.room?.send("crop-plant", { x: tileX, y: tileY, cropType: this.selectedSeed });
+            }
           } else {
             handlePaint(pointer);
           }
@@ -420,6 +507,17 @@ export class GameScene extends Phaser.Scene {
         this.dragStartY = pointer.y;
         this.cameraStartX = this.cameras.main.scrollX;
         this.cameraStartY = this.cameras.main.scrollY;
+
+        // Also check harvest if in seed mode
+        if (this.currentBrushType === "seed") {
+          const tileX = Math.floor(pointer.worldX / 16);
+          const tileY = Math.floor(pointer.worldY / 16);
+          const tileKey = `${tileX},${tileY}`;
+          const crop = this.room?.state.crops.get(tileKey);
+          if (crop && crop.stage >= 6) {
+            this.room?.send("crop-harvest", { x: tileX, y: tileY });
+          }
+        }
       }
     });
 
@@ -520,6 +618,7 @@ export class GameScene extends Phaser.Scene {
     if (obj && obj.imageObj) {
       const bounds = obj.imageObj.getBounds();
       // Draw green dashed-like selector border
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       this.selectionGraphics.lineStyle(2, 0x55ff22, 1);
       this.selectionGraphics.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
       

@@ -1,6 +1,16 @@
 import { Schema, MapSchema, type } from "@colyseus/schema";
 
 /**
+ * CropState — represents a planted crop on a farm tile.
+ */
+export class CropState extends Schema {
+  @type("string")  key: string = "";        // "x,y" coordinate
+  @type("string")  cropType: string = "";   // "Pumpkin", "Tomato", etc.
+  @type("int32")   stage: number = 0;       // 0-6 growth stage
+  @type("float64") plantedAt: number = 0;   // Unix timestamp (ms)
+}
+
+/**
  * PlacedObjectState — represents a building object (marketplace, bank, games, blacksmith)
  * placed in the game world, synchronized to all clients.
  */
@@ -30,7 +40,8 @@ export class Player extends Schema {
  */
 export class GameState extends Schema {
   @type({ map: Player }) players = new MapSchema<Player>();
-  @type({ map: "int32" }) mapData = new MapSchema<number>(); // Key is "x,y" coordinate string, Value is tile index
-  @type({ map: "int32" }) decorData = new MapSchema<number>(); // Key is "x,y" coordinate string, Value is fence/decor tile index
-  @type({ map: PlacedObjectState }) placedObjects = new MapSchema<PlacedObjectState>(); // Key is object ID
+  @type({ map: "int32" }) mapData = new MapSchema<number>();
+  @type({ map: "int32" }) decorData = new MapSchema<number>();
+  @type({ map: PlacedObjectState }) placedObjects = new MapSchema<PlacedObjectState>();
+  @type({ map: CropState }) crops = new MapSchema<CropState>(); // Key is "x,y"
 }
