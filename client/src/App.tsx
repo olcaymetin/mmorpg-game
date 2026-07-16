@@ -140,7 +140,7 @@ const App: React.FC = () => {
   const [afkKickReason, setAfkKickReason] = useState("");
 
   // Active tab inside spawning objects selector
-  const [activeTab, setActiveTab] = useState<"structures" | "decorations" | "effects" | "materials" | "seeds">("structures");
+  const [activeTab, setActiveTab] = useState<"structures" | "decorations" | "effects" | "materials" | "seeds" | "mining">("structures");
 
   // Selection box start/end for multi-tile selection
   const [selectionStart, setSelectionStart] = useState<{ col: number; row: number } | null>(null);
@@ -828,6 +828,15 @@ const App: React.FC = () => {
                       selectedObject.type === "mg_wooden_gate" ? "Tahta Kapı" :
                       selectedObject.type === "silo" ? "Silo 1" :
                       selectedObject.type === "silo2" ? "Silo 2" :
+                      selectedObject.type === "rock_big" ? "Büyük Kaya" :
+                      selectedObject.type === "rock_big_blue" ? "Mavi Kaya (Büyük)" :
+                      selectedObject.type === "rock_big_red" ? "Kızıl Kaya (Büyük)" :
+                      selectedObject.type === "rock_medium" ? "Orta Kaya" :
+                      selectedObject.type === "rock_medium_gold" ? "Altın Kaya (Orta)" :
+                      selectedObject.type === "rock_medium_silver" ? "Gümüş Kaya (Orta)" :
+                      selectedObject.type === "rock_small" ? "Küçük Kaya" :
+                      selectedObject.type === "rock_small_bronze" ? "Bronz Kaya (Küçük)" :
+                      selectedObject.type === "rock_small_silver" ? "Gümüş Kaya (Küçük)" :
                       selectedObject.type.startsWith("vfx_") ? `Yaprak Efekti (${selectedObject.type.replace("vfx_leaves_", "").replace("_", " ")})` :
                       selectedObject.type.startsWith("decor_grass_") ? `Dekor (Çiçek/Çimen #${selectedObject.type.replace("decor_grass_", "")})` :
                       selectedObject.type.startsWith("decor_gorsel_") ? `Görsel Dekor #${selectedObject.type.replace("decor_gorsel_", "")}` :
@@ -847,7 +856,8 @@ const App: React.FC = () => {
                         selectedObject.type.startsWith("decor_gorsel_") ||
                         selectedObject.type.startsWith("vfx_") ||
                         selectedObject.type.startsWith("mg_") ||
-                        selectedObject.type.startsWith("silo")
+                        selectedObject.type.startsWith("silo") ||
+                        selectedObject.type.startsWith("rock_")
                           ? "0.5"
                           : "0.05"
                       }
@@ -856,7 +866,8 @@ const App: React.FC = () => {
                         selectedObject.type.startsWith("decor_gorsel_") ||
                         selectedObject.type.startsWith("vfx_") ||
                         selectedObject.type.startsWith("mg_") ||
-                        selectedObject.type.startsWith("silo")
+                        selectedObject.type.startsWith("silo") ||
+                        selectedObject.type.startsWith("rock_")
                           ? "5.0"
                           : "0.50"
                       }
@@ -865,7 +876,8 @@ const App: React.FC = () => {
                         selectedObject.type.startsWith("decor_gorsel_") ||
                         selectedObject.type.startsWith("vfx_") ||
                         selectedObject.type.startsWith("mg_") ||
-                        selectedObject.type.startsWith("silo")
+                        selectedObject.type.startsWith("silo") ||
+                        selectedObject.type.startsWith("rock_")
                           ? "0.1"
                           : "0.01"
                       }
@@ -920,6 +932,13 @@ const App: React.FC = () => {
                   onClick={() => setActiveTab("effects")}
                 >
                   ✨ Efekt (GIF)
+                </button>
+                <button
+                  className={`tab-btn ${activeTab === "mining" ? "tab-btn--active" : ""}`}
+                  onClick={() => setActiveTab("mining")}
+                  style={{ fontSize: "9px" }}
+                >
+                  ⛏️ Maden
                 </button>
                 <button
                   className={`tab-btn ${activeTab === "materials" ? "tab-btn--active" : ""}`}
@@ -1244,6 +1263,32 @@ const App: React.FC = () => {
                         margin: "0 auto",
                       }} />
                       <span style={{ fontSize: "6px" }}>{crop.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Tab 6: Maden (Mining Rocks) */}
+              {activeTab === "mining" && (
+                <div className="object-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "6px" }}>
+                  {[
+                    { id: "rock_big",            label: "Büyük Kaya" },
+                    { id: "rock_big_blue",       label: "Mavi Kaya (B)" },
+                    { id: "rock_big_red",        label: "Kızıl Kaya (B)" },
+                    { id: "rock_medium",         label: "Orta Kaya" },
+                    { id: "rock_medium_gold",    label: "Altın Kaya (O)" },
+                    { id: "rock_medium_silver",  label: "Gümüş Kaya (O)" },
+                    { id: "rock_small",          label: "Küçük Kaya" },
+                    { id: "rock_small_bronze",   label: "Bronz Kaya (K)" },
+                    { id: "rock_small_silver",   label: "Gümüş Kaya (K)" },
+                  ].map(rock => (
+                    <button
+                      key={rock.id}
+                      className={`obj-btn obj-btn--small ${selectedTile === -2 && selectedObjectName === rock.id ? "obj-btn--active" : ""}`}
+                      onClick={() => handleSelectObjectBrush(rock.id)}
+                    >
+                      <img src={`/assets/${rock.id}.png`} alt={rock.label} className="obj-thumb obj-thumb--small" style={{ objectFit: "contain", height: "24px" }} />
+                      <span style={{ fontSize: "6px" }}>{rock.label}</span>
                     </button>
                   ))}
                 </div>

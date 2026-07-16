@@ -152,6 +152,17 @@ export class GameScene extends Phaser.Scene {
     this.load.image("yon_left", "assets/yon_left.png");
     this.load.image("yon_right", "assets/yon_right.png");
 
+    // Preload mine assets
+    this.load.image("rock_big", "assets/rock_big.png");
+    this.load.image("rock_big_blue", "assets/rock_big_blue.png");
+    this.load.image("rock_big_red", "assets/rock_big_red.png");
+    this.load.image("rock_medium", "assets/rock_medium.png");
+    this.load.image("rock_medium_gold", "assets/rock_medium_gold.png");
+    this.load.image("rock_medium_silver", "assets/rock_medium_silver.png");
+    this.load.image("rock_small", "assets/rock_small.png");
+    this.load.image("rock_small_bronze", "assets/rock_small_bronze.png");
+    this.load.image("rock_small_silver", "assets/rock_small_silver.png");
+
     // Load gift effects as spritesheets
     this.load.spritesheet("vfx_leaf_single", "assets/gift/Modern_Farm_vfx_Falling_Leaf_16x16.png", { frameWidth: 16, frameHeight: 16 });
     this.load.spritesheet("vfx_leaves_1", "assets/gift/Modern_Farm_vfx_Falling_Leaves_16x16.png", { frameWidth: 48, frameHeight: 48 });
@@ -193,7 +204,7 @@ export class GameScene extends Phaser.Scene {
     if (type.startsWith("silo")) {
       return 1.0;
     }
-    if (type.startsWith("decor_grass_") || type.startsWith("decor_gorsel_") || type.startsWith("vfx_") || type.startsWith("mg_")) {
+    if (type.startsWith("decor_grass_") || type.startsWith("decor_gorsel_") || type.startsWith("vfx_") || type.startsWith("mg_") || type.startsWith("rock_")) {
       return 2.0;
     }
     return 0.15;
