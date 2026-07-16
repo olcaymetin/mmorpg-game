@@ -843,7 +843,6 @@ const App: React.FC = () => {
                     { id: "Turnip",       label: "Şalgam",         frameH: 48 },
                     { id: "Watermelon",   label: "Karpuz",         frameH: 64 },
                     { id: "Wheat",        label: "Buğday",         frameH: 32 },
-                    { id: "Zuchini",      label: "Kabak (Z)",      frameH: 64 },
                   ].map(crop => (
                     <button
                       key={crop.id}
