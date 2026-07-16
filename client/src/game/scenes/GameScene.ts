@@ -715,7 +715,10 @@ export class GameScene extends Phaser.Scene {
             const terrainGid = terrainTile ? terrainTile.index : -1;
             const decorGid = decorTile ? decorTile.index : -1;
             
-            const isFarmland = (terrainGid === 227 || terrainGid === 451 || decorGid === 227 || decorGid === 451);
+            const isFarmland = (
+              terrainGid === 227 || terrainGid === 228 || terrainGid === 451 || terrainGid === 452 ||
+              decorGid === 227 || decorGid === 228 || decorGid === 451 || decorGid === 452
+            );
             if (!isFarmland) {
               alert("⚠️ Sadece hazırlanmış tarla toprağı üzerine ekim yapabilirsiniz!");
               return;
@@ -747,7 +750,10 @@ export class GameScene extends Phaser.Scene {
               const terrainGid = terrainTile ? terrainTile.index : -1;
               const decorGid = decorTile ? decorTile.index : -1;
               
-              const isFarmland = (terrainGid === 227 || terrainGid === 451 || decorGid === 227 || decorGid === 451);
+              const isFarmland = (
+                terrainGid === 227 || terrainGid === 228 || terrainGid === 451 || terrainGid === 452 ||
+                decorGid === 227 || decorGid === 228 || decorGid === 451 || decorGid === 452
+              );
               if (!isFarmland) {
                 alert("⚠️ Sadece hazırlanmış tarla toprağı üzerine ekim yapabilirsiniz!");
                 return;

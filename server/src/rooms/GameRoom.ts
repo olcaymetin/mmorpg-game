@@ -429,9 +429,12 @@ export class GameRoom extends Room<GameState> {
       const decorTile = (this.state as any).decorData.get(key);
       const decorGid = decorTile !== undefined ? (decorTile & 0xFFFF) : -1;
 
-      const isFarmland = (groundGid === 227 || groundGid === 451 || decorGid === 227 || decorGid === 451);
+      const isFarmland = (
+        groundGid === 227 || groundGid === 228 || groundGid === 451 || groundGid === 452 ||
+        decorGid === 227 || decorGid === 228 || decorGid === 451 || decorGid === 452
+      );
       if (!isFarmland) {
-        console.log(`[Crop] Rejecting plant at ${key}: ground is GID ${groundGid}, decor is GID ${decorGid} (must be 227 or 451)`);
+        console.log(`[Crop] Rejecting plant at ${key}: ground is GID ${groundGid}, decor is GID ${decorGid} (must be 227, 228, 451, or 452)`);
         return;
       }
 
