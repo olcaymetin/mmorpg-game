@@ -945,7 +945,20 @@ export class GameScene extends Phaser.Scene {
     
     img.setScale(scale);
     img.setOrigin(0.5, 0.8);
-    img.setInteractive({ draggable: true });
+    // Precise hit area for structures to prevent click-stealing through transparent space
+    const isStructure = type === "bank" || type === "games" || type === "blacksmith" || type === "shop" || type === "gem_trader" || type === "farmer_npc" || type === "marketplace" || type === "nft_house";
+    if (isStructure) {
+      const width = img.width;
+      const height = img.height;
+      // Define a hit area that is centered horizontally and covers the bottom-middle part where the building sits
+      const hitWidth = width * 0.45;
+      const hitHeight = height * 0.45;
+      const hitX = (width - hitWidth) / 2;
+      const hitY = height * 0.45;
+      img.setInteractive(new Phaser.Geom.Rectangle(hitX, hitY, hitWidth, hitHeight), Phaser.Geom.Rectangle.Contains);
+    } else {
+      img.setInteractive({ draggable: true });
+    }
     img.setData("id", id);
     img.setData("type", type);
 
