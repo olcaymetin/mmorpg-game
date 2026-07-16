@@ -652,6 +652,10 @@ export class GameScene extends Phaser.Scene {
         if (pointer.button === 0 && (type === "marketplace" || type === "shop")) {
           this.game.events.emit("open-marketplace");
         }
+        if (pointer.button === 0 && type === "player") {
+          const sid = gameObject.getData("sessionId");
+          this.game.events.emit("open-player-profile", { sessionId: sid });
+        }
         return;
       }
       this.clickedGameObject = true;
@@ -973,6 +977,13 @@ export class GameScene extends Phaser.Scene {
 
     container.add([shadow, sprite, tag]);
     this.entities.set(sessionId, { container, sprite });
+
+    if (!isLocal) {
+      container.setSize(32, 48);
+      container.setInteractive();
+      container.setData("type", "player");
+      container.setData("sessionId", sessionId);
+    }
 
     if (isLocal) {
       this.cameras.main.startFollow(container, true, 0.08, 0.08);

@@ -1,6 +1,6 @@
 /* ── Leaderboard Modal ──────────────────────────────────────────────────────── */
 .leaderboard-modal {
-  width: 500px; max-width: 96vw; max-height: 80vh;
+  width: 600px; max-width: 96vw; max-height: 80vh;
   background: rgba(10,15,30,0.97);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 20px;
@@ -11,11 +11,43 @@
 
 .leaderboard-header {
   display: flex; align-items: center; gap: 12px;
-  padding: 18px 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.07);
+  padding: 18px 20px 10px;
   background: linear-gradient(135deg, rgba(251,191,36,0.08), transparent);
 }
 .leaderboard-header h2 { flex:1; margin:0; font-size:18px; color:#fbbf24; }
+
+.leaderboard-tabs-bar {
+  display: flex;
+  gap: 6px;
+  padding: 8px 16px;
+  overflow-x: auto;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.leaderboard-tabs-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.lb-tab-btn {
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.6);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.lb-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+.lb-tab-btn.active {
+  background: rgba(251, 191, 36, 0.15);
+  border-color: rgba(251, 191, 36, 0.4);
+  color: #fde047;
+}
 
 .leaderboard-list {
   flex:1; overflow-y:auto;

@@ -12,13 +12,14 @@ export interface CraftTimerEntry {
 interface CraftTimerProps {
   timers: CraftTimerEntry[];
   onRemove: (id: string) => void;
+  onInstant?: (id: string, remainingSeconds: number) => void;
 }
 
-const CraftTimer: React.FC<CraftTimerProps> = ({ timers, onRemove }) => {
+const CraftTimer: React.FC<CraftTimerProps> = ({ timers, onRemove, onInstant }) => {
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
-    const iv = setInterval(() => setNow(Date.now()), 500);
+    const iv = setInterval(() => setNow(Date.now()), 250);
     return () => clearInterval(iv);
   }, []);
 
@@ -41,6 +42,7 @@ const CraftTimer: React.FC<CraftTimerProps> = ({ timers, onRemove }) => {
         const progress = Math.min(1, elapsed / t.durationMs);
         const remaining = Math.max(0, Math.ceil((t.durationMs - elapsed) / 1000));
         const done = progress >= 1;
+        const instantCost = Math.max(1, Math.ceil(remaining / 10));
 
         return (
           <div key={t.id} className={`craft-timer-card ${done ? "done" : ""}`}>
@@ -48,9 +50,20 @@ const CraftTimer: React.FC<CraftTimerProps> = ({ timers, onRemove }) => {
             <div className="craft-timer-info">
               <span className="craft-timer-label">{t.label}</span>
               {done ? (
-                <span className="craft-timer-done">✅ Done!</span>
+                <span className="craft-timer-done">✅ Tamamlandı!</span>
               ) : (
-                <span className="craft-timer-remaining">{remaining}s remaining</span>
+                <div className="craft-timer-row">
+                  <span className="craft-timer-remaining">{remaining}s kaldı</span>
+                  {onInstant && (
+                    <button
+                      className="craft-timer-instant-btn"
+                      onClick={() => onInstant(t.id, remaining)}
+                      title="Anında bitir"
+                    >
+                      ⚡ {instantCost} FARM
+                    </button>
+                  )}
+                </div>
               )}
               <div className="craft-timer-bar">
                 <div className="craft-timer-fill" style={{ width: `${progress * 100}%` }} />

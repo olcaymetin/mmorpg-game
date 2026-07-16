@@ -1,5 +1,5 @@
 import { Room, Client } from "colyseus";
-import { GameState, Player, PlacedObjectState, CropState, MarketListing, ChatMessage, SkillState } from "../schema/GameState";
+import { GameState, Player, PlacedObjectState, CropState, MarketListing, ChatMessage, SkillState, MarketHistory, AchievementState } from "../schema/GameState";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -390,6 +390,7 @@ export class GameRoom extends Room<GameState> {
           player.inventory.set(cropType, currentCount + 1);
           // Grant farming XP (with boost)
           this.addSkillXP(player, "farming", 25);
+          this.addActionCount(player, "harvestCount", client.sessionId);
           console.log(`[Inventory] Player ${client.sessionId.slice(0, 8)} harvested 1 ${cropType}. Total: ${currentCount + 1}`);
         }
         this.state.crops.delete(key);
@@ -535,7 +536,23 @@ export class GameRoom extends Room<GameState> {
 
       // Pay seller
       const seller = this.state.players.get(listing.sellerId);
-      if (seller) { seller.coin += totalCost; }
+      if (seller) {
+        seller.coin += totalCost;
+        seller.marketSaleCount += qty;
+        seller.marketSaleVolume += totalCost;
+        this.addActionCount(seller, "marketSales", listing.sellerId);
+      }
+
+      // Record Market History
+      const hist = new MarketHistory();
+      hist.itemType = listing.itemType;
+      hist.quantity = qty;
+      hist.pricePerUnit = listing.pricePerUnit;
+      hist.timestamp = Date.now();
+      this.state.marketHistory.push(hist);
+      if (this.state.marketHistory.length > 200) {
+        this.state.marketHistory.shift();
+      }
 
       // Update listing quantity
       listing.quantity -= qty;
@@ -627,6 +644,57 @@ export class GameRoom extends Room<GameState> {
       player.skillBoosts.set(msg.skill, currentBoost + tier.bonus);
       console.log(`[Boost] ${player.username || client.sessionId.slice(0,6)} boosted ${msg.skill} by +${tier.bonus}% (total: ${currentBoost + tier.bonus}%)`);
     });
+
+    // Instant Craft / Action speed-up using FARM coin
+    this.onMessage("instant-craft", (client: Client, msg: { craftId: string; remainingSeconds: number }) => {
+      const player = this.state.players.get(client.sessionId);
+      if (!player) return;
+      const cost = Math.max(1, Math.ceil(msg.remainingSeconds / 10)); // kalan_saniye / 10 FARM coin
+      if (player.coin < cost) {
+        client.send("craft-error", { message: `Need ${cost} FARM coin.` });
+        return;
+      }
+      player.coin -= cost;
+      // Increment crafting action count
+      this.addActionCount(player, "craftCount", client.sessionId);
+      this.addSkillXP(player, "crafting", 40);
+      client.send("craft-instanted", { craftId: msg.craftId });
+    });
+
+    // Fishing Cast handling with weights
+    this.onMessage("fish-cast", (client: Client) => {
+      const player = this.state.players.get(client.sessionId);
+      if (!player) return;
+
+      const rodLimits = [0, 5, 15, 40, 100]; // Rod T1, T2, T3, T4 max limits
+      const tier = Math.max(1, Math.min(4, player.rodTier || 1));
+      const maxWeight = rodLimits[tier];
+
+      // A random fish weight between 1 and (tier * 15)
+      const weight = +(Math.random() * (tier * 15) + 1).toFixed(2);
+
+      if (weight > maxWeight) {
+        client.send("fish-result", { success: false, message: `Balık Kaçtı! Çok ağır (${weight} kg). Limit: ${maxWeight} kg.` });
+      } else {
+        const currentFish = player.inventory.get("Fish") || 0;
+        player.inventory.set("Fish", currentFish + 1);
+        this.addSkillXP(player, "fishing", 25);
+        this.addActionCount(player, "fishCount", client.sessionId);
+        client.send("fish-result", { success: true, weight, message: `🐟 ${weight} kg ağırlığında balık yakaladın!` });
+      }
+    });
+
+    // Upgrade Fishing Rod
+    this.onMessage("upgrade-rod", (client: Client) => {
+      const player = this.state.players.get(client.sessionId);
+      if (!player) return;
+      if (player.rodTier >= 4) { client.send("rod-error", { message: "Maximum Rod Tier reached." }); return; }
+      const cost = player.rodTier * 50; // T1->T2: 50, T2->T3: 100, T3->T4: 150
+      if (player.coin < cost) { client.send("rod-error", { message: `Upgrade costs ${cost} FARM coin.` }); return; }
+      player.coin -= cost;
+      player.rodTier += 1;
+      client.send("rod-upgraded", { tier: player.rodTier });
+    });
   }
 
   /**
@@ -648,6 +716,13 @@ export class GameRoom extends Room<GameState> {
     player.gem = 5;   // starter gems
     player.coin = 50; // starter FARM coin
 
+    // HP / Shield
+    player.hp = 100; player.maxHp = 100;
+    player.shield = 100; player.maxShield = 100;
+    player.rodTier = 1;
+    player.marketSaleCount = 0;
+    player.marketSaleVolume = 0;
+
     // Initialize all profession skills
     for (const skill of ["farming", "combat", "woodcutting", "mining", "fishing", "crafting"]) {
       const s = new SkillState();
@@ -657,6 +732,14 @@ export class GameRoom extends Room<GameState> {
       player.skills.set(skill, s);
     }
     player.totalLevel = 1;
+
+    // Initialize action counters
+    for (const action of ["harvestCount","woodcutCount","mineCount","fishCount","craftCount","pvpWins","marketSales"]) {
+      player.actionCounts.set(action, 0);
+    }
+
+    // Initialize all achievements (locked)
+    this.initAchievements(player);
 
     this.state.players.set(client.sessionId, player);
     console.log(
@@ -680,12 +763,81 @@ export class GameRoom extends Room<GameState> {
     const boost = player.skillBoosts.get(skillName) || 0;
     const earned = Math.floor(baseXP * (1 + boost / 100));
     skill.xp += earned;
-    // Level up formula: level = floor(1 + sqrt(xp / 50))
     skill.level = Math.max(1, Math.floor(1 + Math.sqrt(skill.xp / 50)));
-    // Recalculate total level as average of all skills
     let sum = 0; let count = 0;
     player.skills.forEach(s => { sum += s.level; count++; });
     player.totalLevel = count > 0 ? Math.max(1, Math.floor(sum / count)) : 1;
+  }
+
+  private addActionCount(player: Player, action: string, sessionId: string): void {
+    const current = player.actionCounts.get(action) || 0;
+    player.actionCounts.set(action, current + 1);
+    this.checkAchievements(player, sessionId);
+  }
+
+  // ─── Achievement Definitions ─────────────────────────────────────────────────
+
+  private static readonly ACHIEVEMENT_DEFS = [
+    // Farming
+    { id:"farm_10",   name:"Sprout",        emoji:"🌱", description:"Harvest 10 crops",    action:"harvestCount", threshold:10   },
+    { id:"farm_50",   name:"Green Thumb",   emoji:"🌿", description:"Harvest 50 crops",    action:"harvestCount", threshold:50   },
+    { id:"farm_100",  name:"Farmer",        emoji:"🌾", description:"Harvest 100 crops",   action:"harvestCount", threshold:100  },
+    { id:"farm_500",  name:"Master Farmer", emoji:"🏅", description:"Harvest 500 crops",   action:"harvestCount", threshold:500  },
+    { id:"farm_1000", name:"Legend Farmer", emoji:"🥇", description:"Harvest 1000 crops",  action:"harvestCount", threshold:1000 },
+    // Woodcutting
+    { id:"wood_10",   name:"Lumberjack Jr", emoji:"🌲", description:"Cut 10 trees",       action:"woodcutCount", threshold:10  },
+    { id:"wood_50",   name:"Lumberjack",    emoji:"🪓", description:"Cut 50 trees",       action:"woodcutCount", threshold:50  },
+    { id:"wood_100",  name:"Woodcutter",    emoji:"🏅", description:"Cut 100 trees",      action:"woodcutCount", threshold:100 },
+    { id:"wood_500",  name:"Forest Master", emoji:"🥇", description:"Cut 500 trees",      action:"woodcutCount", threshold:500 },
+    // Mining
+    { id:"mine_10",   name:"Rock Breaker",  emoji:"⛏️", description:"Mine 10 ores",       action:"mineCount", threshold:10  },
+    { id:"mine_50",   name:"Miner",         emoji:"⚒️", description:"Mine 50 ores",       action:"mineCount", threshold:50  },
+    { id:"mine_100",  name:"Expert Miner",  emoji:"🏅", description:"Mine 100 ores",      action:"mineCount", threshold:100 },
+    { id:"mine_500",  name:"Deep Miner",    emoji:"🥇", description:"Mine 500 ores",      action:"mineCount", threshold:500 },
+    // Fishing
+    { id:"fish_5",    name:"Fisherman",     emoji:"🎣", description:"Catch 5 fish",       action:"fishCount", threshold:5   },
+    { id:"fish_25",   name:"Angler",        emoji:"🐟", description:"Catch 25 fish",      action:"fishCount", threshold:25  },
+    { id:"fish_100",  name:"Expert Angler", emoji:"🏅", description:"Catch 100 fish",     action:"fishCount", threshold:100 },
+    { id:"fish_500",  name:"Master Fisher", emoji:"🥇", description:"Catch 500 fish",     action:"fishCount", threshold:500 },
+    // Crafting
+    { id:"craft_5",   name:"Craftsman",     emoji:"⚙️", description:"Craft 5 items",      action:"craftCount", threshold:5   },
+    { id:"craft_25",  name:"Artisan",       emoji:"🔨", description:"Craft 25 items",     action:"craftCount", threshold:25  },
+    { id:"craft_100", name:"Master Crafter",emoji:"🏅", description:"Craft 100 items",    action:"craftCount", threshold:100 },
+    { id:"craft_500", name:"Grand Master",  emoji:"🥇", description:"Craft 500 items",    action:"craftCount", threshold:500 },
+    // PvP
+    { id:"pvp_1",     name:"Fighter",       emoji:"⚔️", description:"Win 1 PvP fight",    action:"pvpWins", threshold:1   },
+    { id:"pvp_10",    name:"Warrior",       emoji:"🛡️", description:"Win 10 PvP fights",  action:"pvpWins", threshold:10  },
+    { id:"pvp_50",    name:"Champion",      emoji:"🏅", description:"Win 50 PvP fights",  action:"pvpWins", threshold:50  },
+    { id:"pvp_250",   name:"Legend",        emoji:"🥇", description:"Win 250 PvP fights", action:"pvpWins", threshold:250 },
+    // Market
+    { id:"mkt_1",     name:"Merchant",      emoji:"🛒", description:"Make 1 market sale",    action:"marketSales", threshold:1   },
+    { id:"mkt_10",    name:"Trader",        emoji:"💼", description:"Make 10 market sales",   action:"marketSales", threshold:10  },
+    { id:"mkt_50",    name:"Broker",        emoji:"🏅", description:"Make 50 market sales",   action:"marketSales", threshold:50  },
+    { id:"mkt_250",   name:"Market King",   emoji:"🥇", description:"Make 250 market sales",  action:"marketSales", threshold:250 },
+  ];
+
+  private initAchievements(player: Player): void {
+    for (const def of GameRoom.ACHIEVEMENT_DEFS) {
+      const a = new AchievementState();
+      a.id = def.id; a.name = def.name; a.emoji = def.emoji;
+      a.description = def.description; a.unlocked = false; a.unlockedAt = 0;
+      player.achievements.set(def.id, a);
+    }
+  }
+
+  private checkAchievements(player: Player, sessionId: string): void {
+    const client = this.clients.find(c => c.sessionId === sessionId);
+    for (const def of GameRoom.ACHIEVEMENT_DEFS) {
+      const ach = player.achievements.get(def.id);
+      if (!ach || ach.unlocked) continue;
+      const count = player.actionCounts.get(def.action) || 0;
+      if (count >= def.threshold) {
+        ach.unlocked = true;
+        ach.unlockedAt = Date.now();
+        client?.send("achievement-unlocked", { id: def.id, name: def.name, emoji: def.emoji, description: def.description });
+        console.log(`[Achievement] ${player.username || sessionId.slice(0,6)} unlocked: ${def.name}`);
+      }
+    }
   }
 
   onDispose(): void {

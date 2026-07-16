@@ -28,8 +28,20 @@
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 20px;
   box-shadow: 0 32px 80px rgba(0,0,0,0.6);
-  display: flex; flex-direction: column; overflow: hidden;
+  display: flex; overflow: hidden;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   animation: modalIn 0.25s cubic-bezier(0.16,1,0.3,1);
+}
+
+.marketplace-modal.with-details {
+  width: 940px;
+}
+
+.marketplace-main-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 @keyframes modalIn {
@@ -158,3 +170,106 @@
 }
 .history-cost { margin-left:auto; color:#fbbf24; font-weight:600; }
 .history-time { font-size:11px; color:rgba(255,255,255,0.3); }
+
+/* Details Panel */
+.market-details-panel {
+  width: 280px;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.4);
+  display: flex;
+  flex-direction: column;
+  animation: detailIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+@keyframes detailIn {
+  from { width: 0; opacity: 0; }
+  to   { width: 280px; opacity: 1; }
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.detail-header h3 {
+  margin: 0;
+  font-size: 14px;
+  color: #fff;
+  font-weight: 700;
+}
+.detail-close {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.detail-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+}
+
+.detail-chart-box h4 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.chart-info {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.3);
+  text-align: center;
+  padding: 20px 0;
+}
+
+.history-svg {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.chart-dot {
+  cursor: pointer;
+  transition: r 0.1s ease;
+}
+.chart-dot:hover {
+  r: 6px;
+}
+
+.detail-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.detail-stat-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+.detail-stat-row span {
+  color: rgba(255, 255, 255, 0.55);
+}
+.detail-stat-row strong {
+  color: #fff;
+}
+
+.listing-card.selected {
+  border-color: rgba(129, 140, 248, 0.4);
+  background: rgba(129, 140, 248, 0.04);
+}
+

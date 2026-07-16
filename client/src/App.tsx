@@ -8,6 +8,10 @@ import MarketplaceModal from "./components/MarketplaceModal";
 import SettingsModal from "./components/SettingsModal";
 import LeaderboardModal from "./components/LeaderboardModal";
 import CraftTimer, { CraftTimerEntry } from "./components/CraftTimer";
+import CharacterStats from "./components/CharacterStats";
+import FriendsPanel from "./components/FriendsPanel";
+import PlayerProfileModal from "./components/PlayerProfileModal";
+
 
 const cropLabels: Record<string, string> = {
   Cabbage: "Lahana",
@@ -162,10 +166,17 @@ const App: React.FC = () => {
   const [totalLevel, setTotalLevel] = useState(1);
   const [allPlayers, setAllPlayers] = useState<any[]>([]);
 
-  // ── Modals ──────────────────────────────────────────────────────────────────
+  // ── Stats ──────────────────────────────────────────────────────────────────
+  const [hp, setHp] = useState(100);
+  const [maxHp, setMaxHp] = useState(100);
+  const [shield, setShield] = useState(100);
+  const [maxShield, setMaxShield] = useState(100);
+
+  // ── Modals & Profiles ────────────────────────────────────────────────────────
   const [isMarketOpen, setIsMarketOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
 
   // ── Craft timers ────────────────────────────────────────────────────────────
   const [craftTimers, setCraftTimers] = useState<CraftTimerEntry[]>([]);
@@ -205,11 +216,16 @@ const App: React.FC = () => {
       setCraftTimers(prev => [...prev, entry]);
     };
 
+    const handleOpenPlayerProfile = (data: { sessionId: string }) => {
+      setSelectedProfileId(data.sessionId);
+    };
+
     game.events.on("editor-object-selected", handleObjectSelected);
     game.events.on("editor-object-deselected", handleObjectDeselected);
     game.events.on("open-farmer-shop", handleOpenShop);
     game.events.on("open-marketplace", handleOpenMarket);
     game.events.on("crop-planted", handleCropPlanted);
+    game.events.on("open-player-profile", handleOpenPlayerProfile);
 
     // Check for legacy local storage maps directly
     const rawMap = localStorage.getItem("mmorpg_map_data");
@@ -224,8 +240,29 @@ const App: React.FC = () => {
       game.events.off("open-farmer-shop", handleOpenShop);
       game.events.off("open-marketplace", handleOpenMarket);
       game.events.off("crop-planted", handleCropPlanted);
+      game.events.off("open-player-profile", handleOpenPlayerProfile);
     };
   }, [game]);
+
+  // Colyseus message listeners
+  useEffect(() => {
+    if (!room) return;
+
+    const handleAchievement = (ach: { id: string; name: string; emoji: string; description: string }) => {
+      alert(`🏅 BAŞARIM KİLİDİ AÇILDI: ${ach.emoji} ${ach.name} - ${ach.description}`);
+    };
+
+    const handleCraftInstanted = (d: { craftId: string }) => {
+      removeCraftTimer(d.craftId);
+    };
+
+    room.onMessage("achievement-unlocked", handleAchievement);
+    room.onMessage("craft-instanted", handleCraftInstanted);
+
+    return () => {
+      // room doesn't require explicit listener off since room object handles it or we'll re-instantiate
+    };
+  }, [room, removeCraftTimer]);
 
 
   // Synchronize player inventory, gold, and seeds from Colyseus GameState
@@ -241,6 +278,11 @@ const App: React.FC = () => {
         setMyUsername(player.username || "");
         setUsernameSet(!!player.usernameSet);
         setTotalLevel(player.totalLevel || 1);
+
+        setHp(player.hp !== undefined ? player.hp : 100);
+        setMaxHp(player.maxHp !== undefined ? player.maxHp : 100);
+        setShield(player.shield !== undefined ? player.shield : 100);
+        setMaxShield(player.maxShield !== undefined ? player.maxShield : 100);
 
         if (player.inventory) {
           const inv: Record<string, number> = {};
@@ -268,13 +310,22 @@ const App: React.FC = () => {
       }
 
       // Collect all players for leaderboard
-      const players: any[] = [];
+      const playersList: any[] = [];
       room.state.players.forEach((p: any, sid: string) => {
         const sk: Record<string, { level: number }> = {};
         if (p.skills) p.skills.forEach((s: any, n: string) => { sk[n] = { level: s.level }; });
-        players.push({ sessionId: sid, username: p.username || "", totalLevel: p.totalLevel || 1, skills: sk });
+        playersList.push({
+          sessionId: sid,
+          username: p.username || "",
+          totalLevel: p.totalLevel || 1,
+          gold: p.gold || 0,
+          gem: p.gem || 0,
+          coin: p.coin || 0,
+          marketSaleCount: p.marketSaleCount || 0,
+          skills: sk
+        });
       });
-      setAllPlayers(players);
+      setAllPlayers(playersList);
     };
 
     // Initial check
@@ -508,6 +559,73 @@ const App: React.FC = () => {
       localStorage.removeItem("mmorpg_placed_objects");
       alert("Yerel haritanız sunucuya başarıyla taşındı!");
     }
+  };
+
+  const getProfilePlayerData = () => {
+    if (!room || !selectedProfileId) return null;
+    const p = room.state.players.get(selectedProfileId);
+    if (!p) return null;
+
+    const sk: Record<string, { level: number; xp: number }> = {};
+    if (p.skills) {
+      p.skills.forEach((s: any, name: string) => {
+        sk[name] = { level: s.level, xp: s.xp };
+      });
+    }
+
+    const ac: Record<string, number> = {};
+    if (p.actionCounts) {
+      p.actionCounts.forEach((v: number, k: string) => {
+        ac[k] = v;
+      });
+    }
+
+    const achs: any[] = [];
+    if (p.achievements) {
+      p.achievements.forEach((a: any) => {
+        achs.push({
+          id: a.id,
+          name: a.name,
+          emoji: a.emoji,
+          description: a.description,
+          unlocked: !!a.unlocked,
+          unlockedAt: a.unlockedAt
+        });
+      });
+    }
+
+    return {
+      sessionId: selectedProfileId,
+      username: p.username || "",
+      totalLevel: p.totalLevel || 1,
+      color: p.color || "#ffffff",
+      skin: p.skin || "farmer_1",
+      hp: p.hp !== undefined ? p.hp : 100,
+      maxHp: p.maxHp !== undefined ? p.maxHp : 100,
+      shield: p.shield !== undefined ? p.shield : 100,
+      maxShield: p.maxShield !== undefined ? p.maxShield : 100,
+      rodTier: p.rodTier !== undefined ? p.rodTier : 1,
+      marketSaleCount: p.marketSaleCount || 0,
+      marketSaleVolume: p.marketSaleVolume || 0,
+      skills: sk,
+      actionCounts: ac,
+      achievements: achs
+    };
+  };
+
+  const profileData = getProfilePlayerData();
+  const myPlayerObj = room?.state.players.get(sessionId || "");
+  const isFriendRelation = !!(myPlayerObj?.friends.has(selectedProfileId || ""));
+  const hasSentFriendRequest = !!(room?.state.players.get(selectedProfileId || "")?.friendRequests.has(sessionId || ""));
+
+  const handleAddFriend = (targetId: string) => {
+    if (!room) return;
+    room.send("friend-request", { targetSessionId: targetId });
+  };
+
+  const handleInstantCraft = (id: string, remainingSeconds: number) => {
+    if (!room) return;
+    room.send("instant-craft", { craftId: id, remainingSeconds });
   };
 
   return (
@@ -1404,8 +1522,25 @@ const App: React.FC = () => {
         <ChatPanel room={room} myName={myUsername || `Player_${sessionId?.slice(0,6) || "?"}`} />
       )}
 
+      {/* ── Friends List Panel ──────────────────────────────────────────── */}
+      {room && sessionId && (
+        <FriendsPanel room={room} players={allPlayers} mySessionId={sessionId} />
+      )}
+
+      {/* ── Character HUD Stats ─────────────────────────────────────────── */}
+      {isLoggedIn && (
+        <CharacterStats
+          hp={hp}
+          maxHp={maxHp}
+          shield={shield}
+          maxShield={maxShield}
+          username={myUsername}
+          totalLevel={totalLevel}
+        />
+      )}
+
       {/* ── Craft Timer HUD ─────────────────────────────────────────────── */}
-      <CraftTimer timers={craftTimers} onRemove={removeCraftTimer} />
+      <CraftTimer timers={craftTimers} onRemove={removeCraftTimer} onInstant={handleInstantCraft} />
 
       {/* ── Marketplace Modal ───────────────────────────────────────────── */}
       {isMarketOpen && room && (
@@ -1440,6 +1575,22 @@ const App: React.FC = () => {
           players={allPlayers}
           mySessionId={sessionId || ""}
           onClose={() => setIsLeaderboardOpen(false)}
+          onPlayerClick={(sid) => {
+            setIsLeaderboardOpen(false);
+            setSelectedProfileId(sid);
+          }}
+        />
+      )}
+
+      {/* ── Player Profile Modal ────────────────────────────────────────── */}
+      {selectedProfileId && profileData && (
+        <PlayerProfileModal
+          player={profileData}
+          isMe={selectedProfileId === sessionId}
+          isFriend={isFriendRelation}
+          hasSentRequest={hasSentFriendRequest}
+          onAddFriend={handleAddFriend}
+          onClose={() => setSelectedProfileId(null)}
         />
       )}
     </div>

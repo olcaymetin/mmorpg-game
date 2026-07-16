@@ -1,18 +1,12 @@
 ﻿import { Schema, MapSchema, ArraySchema, type } from "@colyseus/schema";
 
-/**
- * CropState — represents a planted crop on a farm tile.
- */
 export class CropState extends Schema {
-  @type("string")  key: string = "";        // "x,y" coordinate
-  @type("string")  cropType: string = "";   // "Pumpkin", "Tomato", etc.
-  @type("int32")   stage: number = 0;       // 0-6 growth stage
-  @type("float64") plantedAt: number = 0;   // Unix timestamp (ms)
+  @type("string")  key: string = "";
+  @type("string")  cropType: string = "";
+  @type("int32")   stage: number = 0;
+  @type("float64") plantedAt: number = 0;
 }
 
-/**
- * PlacedObjectState — represents a building object placed in the game world.
- */
 export class PlacedObjectState extends Schema {
   @type("string")  id: string = "";
   @type("string")  type: string = "";
@@ -22,18 +16,12 @@ export class PlacedObjectState extends Schema {
   @type("float32") animSpeed: number = 1.0;
 }
 
-/**
- * SkillState — XP and level for a single profession.
- */
 export class SkillState extends Schema {
   @type("string")  name: string = "";
   @type("int32")   xp: number = 0;
   @type("int32")   level: number = 1;
 }
 
-/**
- * MarketListing — a single item listed on the marketplace.
- */
 export class MarketListing extends Schema {
   @type("string")  id: string = "";
   @type("string")  sellerId: string = "";
@@ -45,9 +33,14 @@ export class MarketListing extends Schema {
   @type("float64") listedAt: number = 0;
 }
 
-/**
- * ChatMessage — a single chat message.
- */
+/** MarketHistory — one completed trade record for charting */
+export class MarketHistory extends Schema {
+  @type("string")  itemType: string = "";
+  @type("int32")   quantity: number = 1;
+  @type("int32")   pricePerUnit: number = 1;
+  @type("float64") timestamp: number = 0;
+}
+
 export class ChatMessage extends Schema {
   @type("string")  id: string = "";
   @type("string")  senderId: string = "";
@@ -57,9 +50,16 @@ export class ChatMessage extends Schema {
   @type("float64") timestamp: number = 0;
 }
 
-/**
- * Player — represents one connected player in the game world.
- */
+/** AchievementState — one achievement entry for a player */
+export class AchievementState extends Schema {
+  @type("string")  id: string = "";
+  @type("string")  name: string = "";
+  @type("string")  description: string = "";
+  @type("string")  emoji: string = "";
+  @type("boolean") unlocked: boolean = false;
+  @type("float64") unlockedAt: number = 0;
+}
+
 export class Player extends Schema {
   @type("float32") x: number = 400;
   @type("float32") y: number = 300;
@@ -69,35 +69,46 @@ export class Player extends Schema {
   @type("string")  direction: string = "down";
   @type("string")  skin: string = "farmer_1";
 
-  // Username (set once, permanent)
   @type("string")  username: string = "";
   @type("boolean") usernameSet: boolean = false;
-
-  // Language preference
   @type("string")  language: string = "en";
 
   // Economy
   @type({ map: "int32" }) inventory = new MapSchema<number>();
   @type("int32") gold: number = 100;
   @type("int32") gem: number = 0;
-  @type("int32") coin: number = 0; // FARM coin
+  @type("int32") coin: number = 0;
   @type({ map: "int32" }) seeds = new MapSchema<number>();
 
-  // Skills (farming, combat, woodcutting, mining, fishing, crafting)
+  // Stats
+  @type("int32") hp: number = 100;
+  @type("int32") maxHp: number = 100;
+  @type("int32") shield: number = 100;
+  @type("int32") maxShield: number = 100;
+
+  // Skills
   @type({ map: SkillState }) skills = new MapSchema<SkillState>();
   @type("int32") totalLevel: number = 1;
-
-  // Skill boosts (permanent XP multipliers per skill, stored as % bonus)
   @type({ map: "int32" }) skillBoosts = new MapSchema<number>();
 
-  // Friend system
-  @type({ map: "string" }) friends = new MapSchema<string>();        // sessionId -> username
-  @type({ map: "string" }) friendRequests = new MapSchema<string>(); // fromSessionId -> fromUsername
+  // Action counters (harvestCount, woodcutCount, mineCount, fishCount, craftCount, pvpWins, marketSales)
+  @type({ map: "int32" }) actionCounts = new MapSchema<number>();
+
+  // Marketplace stats
+  @type("int32") marketSaleCount: number = 0;
+  @type("int32") marketSaleVolume: number = 0; // total FARM earned from sales
+
+  // Achievements
+  @type({ map: AchievementState }) achievements = new MapSchema<AchievementState>();
+
+  // Friends
+  @type({ map: "string" }) friends = new MapSchema<string>();
+  @type({ map: "string" }) friendRequests = new MapSchema<string>();
+
+  // Fishing
+  @type("int32") rodTier: number = 1; // 1=T1(5kg), 2=T2(15kg), 3=T3(40kg), 4=T4(100kg)
 }
 
-/**
- * GameState — the root state object for a GameRoom.
- */
 export class GameState extends Schema {
   @type({ map: Player }) players = new MapSchema<Player>();
   @type({ map: "int32" }) mapData = new MapSchema<number>();
@@ -106,4 +117,5 @@ export class GameState extends Schema {
   @type({ map: CropState }) crops = new MapSchema<CropState>();
   @type({ map: MarketListing }) marketListings = new MapSchema<MarketListing>();
   @type([ChatMessage]) chatMessages = new ArraySchema<ChatMessage>();
+  @type([MarketHistory]) marketHistory = new ArraySchema<MarketHistory>();
 }
