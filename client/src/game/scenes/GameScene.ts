@@ -182,7 +182,7 @@ export class GameScene extends Phaser.Scene {
       return 0.12;
     }
     if (type === "yon_up" || type === "yon_down" || type === "yon_left" || type === "yon_right") {
-      return 0.1; // 512x512 scaled down to ~51px
+      return 0.15; // 296x374 scaled to ~44x56px
     }
     if (type.startsWith("silo")) {
       return 1.0;
