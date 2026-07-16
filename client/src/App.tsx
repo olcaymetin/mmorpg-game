@@ -47,6 +47,46 @@ const cropCoordinates: Record<string, { col: number; row: number }> = {
   Zuchini:      { col: 5,  row: 2 }, // Zucchini / squash
 };
 
+const cropSeedBagIndices: Record<string, number> = {
+  Cabbage: 0,
+  Carrot: 1,
+  Corn: 2,
+  Cauliflower: 3,
+  Coffee: 4,
+  Cotton: 5,
+  Grape: 6,
+  Onion: 7,
+  Pepper: 8,
+  Prickly_Pear: 9,
+  Pumpkin: 10,
+  Radish: 11,
+  Strawberry: 12,
+  Tomato: 13,
+  Turnip: 14,
+  Watermelon: 15,
+  Wheat: 16,
+};
+
+const CROP_PRICES: Record<string, { buySeed: number; sellCrop: number }> = {
+  Cabbage:      { buySeed: 5,  sellCrop: 12 },
+  Carrot:       { buySeed: 8,  sellCrop: 18 },
+  Cauliflower:  { buySeed: 10, sellCrop: 22 },
+  Coffee:       { buySeed: 12, sellCrop: 28 },
+  Corn:         { buySeed: 15, sellCrop: 35 },
+  Cotton:       { buySeed: 18, sellCrop: 42 },
+  Grape:        { buySeed: 25, sellCrop: 60 },
+  Onion:        { buySeed: 12, sellCrop: 28 },
+  Pepper:       { buySeed: 10, sellCrop: 22 },
+  Prickly_Pear: { buySeed: 30, sellCrop: 75 },
+  Pumpkin:      { buySeed: 20, sellCrop: 50 },
+  Radish:       { buySeed: 6,  sellCrop: 14 },
+  Strawberry:   { buySeed: 15, sellCrop: 35 },
+  Tomato:       { buySeed: 10, sellCrop: 24 },
+  Turnip:       { buySeed: 8,  sellCrop: 18 },
+  Watermelon:   { buySeed: 22, sellCrop: 55 },
+  Wheat:        { buySeed: 4,  sellCrop: 9 },
+};
+
 /**
  * App — root React component.
  *
@@ -67,8 +107,18 @@ const App: React.FC = () => {
   // Selected object properties (for scaling/deletion)
   const [selectedObject, setSelectedObject] = useState<{ id: string; type: string; scale: number; animSpeed?: number } | null>(null);
 
-  // Local player's inventory
+  // Local player's inventory, gold, and seeds
   const [inventory, setInventory] = useState<Record<string, number>>({});
+  const [gold, setGold] = useState(100);
+  const [seeds, setSeeds] = useState<Record<string, number>>({});
+  const [selectedInventorySeed, setSelectedInventorySeed] = useState<string | null>(null);
+
+  // Shop state
+  const [isShopOpen, setIsShopOpen] = useState(false);
+  const [shopTab, setShopTab] = useState<"buy" | "sell">("buy");
+
+  // Inventory UI tabs: "crops" (mahsuller) or "seeds" (tohumlar)
+  const [inventoryTab, setInventoryTab] = useState<"crops" | "seeds">("crops");
 
   // Active tab inside spawning objects selector
   const [activeTab, setActiveTab] = useState<"structures" | "decorations" | "effects" | "materials" | "seeds">("structures");
@@ -87,7 +137,7 @@ const App: React.FC = () => {
   // File input ref for importing map
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Bind game events for selection sync
+  // Bind game events for selection sync and shop opening
   useEffect(() => {
     if (!game) return;
 
@@ -99,8 +149,13 @@ const App: React.FC = () => {
       setSelectedObject(null);
     };
 
+    const handleOpenShop = () => {
+      setIsShopOpen(true);
+    };
+
     game.events.on("editor-object-selected", handleObjectSelected);
     game.events.on("editor-object-deselected", handleObjectDeselected);
+    game.events.on("open-farmer-shop", handleOpenShop);
 
     // Check for legacy local storage maps directly
     const rawMap = localStorage.getItem("mmorpg_map_data");
@@ -112,30 +167,43 @@ const App: React.FC = () => {
     return () => {
       game.events.off("editor-object-selected", handleObjectSelected);
       game.events.off("editor-object-deselected", handleObjectDeselected);
+      game.events.off("open-farmer-shop", handleOpenShop);
     };
   }, [game]);
 
-  // Synchronize player inventory from Colyseus GameState
+  // Synchronize player inventory, gold, and seeds from Colyseus GameState
   useEffect(() => {
     if (!room) return;
 
-    const updateInventory = () => {
+    const updatePlayerState = () => {
       const player = room.state.players.get(room.sessionId);
-      if (player && player.inventory) {
-        const inv: Record<string, number> = {};
-        player.inventory.forEach((val, key) => {
-          inv[key] = val;
-        });
-        setInventory(inv);
+      if (player) {
+        setGold(player.gold !== undefined ? player.gold : 100);
+
+        if (player.inventory) {
+          const inv: Record<string, number> = {};
+          player.inventory.forEach((val, key) => {
+            inv[key] = val;
+          });
+          setInventory(inv);
+        }
+
+        if (player.seeds) {
+          const sd: Record<string, number> = {};
+          player.seeds.forEach((val, key) => {
+            sd[key] = val;
+          });
+          setSeeds(sd);
+        }
       }
     };
 
     // Initial check
-    updateInventory();
+    updatePlayerState();
 
     // Subscribe to state change
     const unsubscribe = room.onStateChange(() => {
-      updateInventory();
+      updatePlayerState();
     });
 
     return () => {
@@ -191,6 +259,20 @@ const App: React.FC = () => {
     if (selectedObject && game) {
       setSelectedObject({ ...selectedObject, animSpeed: newSpeed });
       game.events.emit("editor-object-speed-changed", { id: selectedObject.id, speed: newSpeed });
+    }
+  };
+
+  const handleSelectInventorySeed = (cropId: string) => {
+    if (selectedInventorySeed === cropId) {
+      setSelectedInventorySeed(null);
+      if (game) {
+        game.events.emit("editor-brush-selected", { type: "none" });
+      }
+    } else {
+      setSelectedInventorySeed(cropId);
+      if (game) {
+        game.events.emit("editor-brush-selected", { type: "seed", cropType: cropId });
+      }
     }
   };
 
@@ -362,6 +444,13 @@ const App: React.FC = () => {
               : "Connecting…"}
           </span>
         </div>
+
+        {/* Gold chip */}
+        {connected && (
+          <div className="chip" style={{ background: "rgba(241, 196, 15, 0.2)", border: "1px solid rgba(241, 196, 15, 0.4)", color: "#f1c40f", fontWeight: "bold" }}>
+            🪙 {gold} Altın
+          </div>
+        )}
 
         {/* Edit mode toggle */}
         {connected && (
@@ -971,35 +1060,211 @@ const App: React.FC = () => {
         </div>
       )}
 
+      {/* ── Farmer Shop Modal ── */}
+      {isShopOpen && (
+        <div className="shop-overlay">
+          <div className="shop-modal">
+            <div className="shop-header">
+              <span className="shop-title">🌾 Çiftçi NPC Pazarı</span>
+              <button className="shop-close" onClick={() => setIsShopOpen(false)}>✕</button>
+            </div>
+            
+            <div className="shop-gold-display">
+              🪙 Kalan Altın: <span className="gold-amount">{gold} Altın</span>
+            </div>
+
+            <div className="shop-tabs">
+              <button
+                className={`shop-tab-btn ${shopTab === "buy" ? "shop-tab-btn--active" : ""}`}
+                onClick={() => setShopTab("buy")}
+              >
+                📥 Tohum Satın Al
+              </button>
+              <button
+                className={`shop-tab-btn ${shopTab === "sell" ? "shop-tab-btn--active" : ""}`}
+                onClick={() => setShopTab("sell")}
+              >
+                📤 Mahsul Satış
+              </button>
+            </div>
+
+            <div className="shop-body">
+              {shopTab === "buy" ? (
+                <div className="shop-list">
+                  {Object.entries(CROP_PRICES).map(([cropName, price]) => {
+                    const label = cropLabels[cropName] || cropName;
+                    const bagIndex = cropSeedBagIndices[cropName] || 0;
+                    return (
+                      <div key={cropName} className="shop-item">
+                        <div
+                          className="shop-item-icon"
+                          style={{
+                            backgroundImage: "url('/assets/seed_bags_32x32.png')",
+                            backgroundSize: "544px 32px",
+                            backgroundPosition: `-${bagIndex * 32}px 0px`,
+                            imageRendering: "pixelated",
+                          }}
+                        />
+                        <div className="shop-item-info">
+                          <span className="shop-item-name">{label} Tohumu</span>
+                          <span className="shop-item-price">💰 {price.buySeed} Altın</span>
+                        </div>
+                        <button
+                          className="shop-action-btn shop-action-btn--buy"
+                          disabled={gold < price.buySeed}
+                          onClick={() => room?.send("shop-buy-seed", { cropType: cropName })}
+                        >
+                          Satın Al
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="shop-list">
+                  {Object.entries(CROP_PRICES).map(([cropName, price]) => {
+                    const label = cropLabels[cropName] || cropName;
+                    const qty = inventory[cropName] || 0;
+                    const colRow = cropCoordinates[cropName] || { col: 0, row: 0 };
+                    return (
+                      <div key={cropName} className="shop-item" style={{ opacity: qty > 0 ? 1 : 0.5 }}>
+                        <div
+                          className="shop-item-icon"
+                          style={{
+                            backgroundImage: "url('/assets/pickup_items.png')",
+                            backgroundSize: "224px 160px",
+                            backgroundPosition: `-${colRow.col * 16}px -${colRow.row * 16}px`,
+                            imageRendering: "pixelated",
+                          }}
+                        />
+                        <div className="shop-item-info">
+                          <span className="shop-item-name">{label}</span>
+                          <span className="shop-item-price">💰 {price.sellCrop} Altın</span>
+                          <span className="shop-item-stock">Envanter: x{qty}</span>
+                        </div>
+                        <button
+                          className="shop-action-btn shop-action-btn--sell"
+                          disabled={qty <= 0}
+                          onClick={() => room?.send("shop-sell-crop", { cropType: cropName })}
+                        >
+                          Sat
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Inventory Panel ── */}
       {connected && (
         <div className="inventory-card">
           <div className="inventory-title">🎒 Envanterim (Çantam)</div>
+          
+          {/* Sub-tabs inside inventory card */}
+          <div style={{ display: "flex", gap: "4px", marginBottom: "8px" }}>
+            <button
+              onClick={() => {
+                setInventoryTab("crops");
+                setSelectedInventorySeed(null);
+                if (game) game.events.emit("editor-brush-selected", { type: "none" });
+              }}
+              style={{
+                flex: 1,
+                background: inventoryTab === "crops" ? "rgba(74, 222, 128, 0.2)" : "rgba(255,255,255,0.05)",
+                border: "1px solid " + (inventoryTab === "crops" ? "rgba(74, 222, 128, 0.4)" : "rgba(255,255,255,0.1)"),
+                borderRadius: "6px",
+                color: inventoryTab === "crops" ? "#4ade80" : "rgba(255,255,255,0.7)",
+                fontSize: "10px",
+                padding: "4px",
+                fontWeight: "bold",
+                cursor: "pointer"
+              }}
+            >
+              🥦 Mahsuller
+            </button>
+            <button
+              onClick={() => setInventoryTab("seeds")}
+              style={{
+                flex: 1,
+                background: inventoryTab === "seeds" ? "rgba(74, 222, 128, 0.2)" : "rgba(255,255,255,0.05)",
+                border: "1px solid " + (inventoryTab === "seeds" ? "rgba(74, 222, 128, 0.4)" : "rgba(255,255,255,0.1)"),
+                borderRadius: "6px",
+                color: inventoryTab === "seeds" ? "#4ade80" : "rgba(255,255,255,0.7)",
+                fontSize: "10px",
+                padding: "4px",
+                fontWeight: "bold",
+                cursor: "pointer"
+              }}
+            >
+              🌱 Tohumlar
+            </button>
+          </div>
+
           <div className="inventory-items">
-            {Object.keys(inventory).length === 0 || Object.values(inventory).every(qty => qty <= 0) ? (
-              <div className="inventory-empty">Çanta boş. Ekin topla!</div>
-            ) : (
-              Object.entries(inventory).map(([cropName, qty]) => {
-                if (qty <= 0) return null;
-                const label = cropLabels[cropName] || cropName;
-                return (
-                  <div key={cropName} className="inventory-item">
-                    <div
-                      className="inventory-thumb"
-                      style={{
-                        backgroundImage: "url('/assets/pickup_items.png')",
-                        backgroundSize: "224px 160px",
-                        backgroundPosition: `-${(cropCoordinates[cropName]?.col || 0) * 16}px -${(cropCoordinates[cropName]?.row || 0) * 16}px`,
-                        imageRendering: "pixelated",
-                      }}
-                    />
-                    <div className="inventory-details">
-                      <span className="inventory-name" title={label}>{label}</span>
-                      <span className="inventory-qty">x{qty}</span>
+            {inventoryTab === "crops" ? (
+              Object.keys(inventory).length === 0 || Object.values(inventory).every(qty => qty <= 0) ? (
+                <div className="inventory-empty">Çanta boş. Ekin topla!</div>
+              ) : (
+                Object.entries(inventory).map(([cropName, qty]) => {
+                  if (qty <= 0) return null;
+                  const label = cropLabels[cropName] || cropName;
+                  return (
+                    <div key={cropName} className="inventory-item">
+                      <div
+                        className="inventory-thumb"
+                        style={{
+                          backgroundImage: "url('/assets/pickup_items.png')",
+                          backgroundSize: "224px 160px",
+                          backgroundPosition: `-${(cropCoordinates[cropName]?.col || 0) * 16}px -${(cropCoordinates[cropName]?.row || 0) * 16}px`,
+                          imageRendering: "pixelated",
+                        }}
+                      />
+                      <div className="inventory-details">
+                        <span className="inventory-name" title={label}>{label}</span>
+                        <span className="inventory-qty">x{qty}</span>
+                      </div>
                     </div>
-                  </div>
-                );
-              })
+                  );
+                })
+              )
+            ) : (
+              Object.keys(seeds).length === 0 || Object.values(seeds).every(qty => qty <= 0) ? (
+                <div className="inventory-empty">Tohum yok. NPC'den satın al!</div>
+              ) : (
+                Object.entries(seeds).map(([cropName, qty]) => {
+                  if (qty <= 0) return null;
+                  const label = cropLabels[cropName] || cropName;
+                  const bagIndex = cropSeedBagIndices[cropName] || 0;
+                  const isSelected = selectedInventorySeed === cropName;
+                  return (
+                    <div
+                      key={cropName}
+                      className={`inventory-item ${isSelected ? "inventory-item--selected" : ""}`}
+                      style={{ cursor: "pointer" }}
+                      onClick={() => handleSelectInventorySeed(cropName)}
+                      title="Ekmek için seç / iptal et"
+                    >
+                      <div
+                        className="inventory-thumb"
+                        style={{
+                          backgroundImage: "url('/assets/seed_bags_32x32.png')",
+                          backgroundSize: "544px 32px",
+                          backgroundPosition: `-${bagIndex * 32}px 0px`,
+                          imageRendering: "pixelated",
+                        }}
+                      />
+                      <div className="inventory-details">
+                        <span className="inventory-name" title={`${label} Tohumu`}>{label} Toh.</span>
+                        <span className="inventory-qty">x{qty}</span>
+                      </div>
+                    </div>
+                  );
+                })
+              )
             )}
           </div>
         </div>

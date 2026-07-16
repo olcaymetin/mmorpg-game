@@ -35,6 +35,8 @@ export class Player extends Schema {
   @type("string")  direction: string = "down";   // "down", "up", "left", "right"
   @type("string")  skin: string = "farmer_1";    // "farmer_1", "farmer_2", "body_2"
   @type({ map: "int32" }) inventory = new MapSchema<number>(); // cropType -> quantity
+  @type("int32") gold: number = 100;
+  @type({ map: "int32" }) seeds = new MapSchema<number>();     // cropType -> seed bags
 }
 
 /**

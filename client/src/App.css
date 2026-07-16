@@ -757,3 +757,191 @@ kbd {
   color: #f7dc6f;
 }
 
+/* ── Farmer Shop Modal ──────────────────────────────────────────────────────── */
+.shop-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.shop-modal {
+  width: 480px;
+  max-height: 80vh;
+  background: rgba(18, 25, 18, 0.96);
+  border: 2px solid rgba(74, 222, 128, 0.4);
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(15px);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+}
+
+.shop-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 10px;
+}
+
+.shop-title {
+  font-family: "Inter", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #4ade80;
+}
+
+.shop-close {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 18px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+.shop-close:hover {
+  color: #f87171;
+}
+
+.shop-gold-display {
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  margin-bottom: 16px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.gold-amount {
+  font-weight: 700;
+  color: #f1c40f;
+}
+
+.shop-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.shop-tab-btn {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.shop-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+.shop-tab-btn--active {
+  background: rgba(74, 222, 128, 0.2) !important;
+  border: 1px solid rgba(74, 222, 128, 0.4) !important;
+  color: #4ade80 !important;
+}
+
+.shop-body {
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 4px;
+}
+
+.shop-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shop-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 8px 12px;
+  transition: all 0.2s ease;
+}
+.shop-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.shop-item-icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.shop-item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.shop-item-name {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.shop-item-price {
+  font-size: 11px;
+  color: #f39c12;
+  font-weight: 600;
+}
+
+.shop-item-stock {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.shop-action-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: #000;
+}
+.shop-action-btn--buy {
+  background: #2ecc71;
+}
+.shop-action-btn--buy:hover:not(:disabled) {
+  background: #27ae60;
+}
+.shop-action-btn--sell {
+  background: #f1c40f;
+}
+.shop-action-btn--sell:hover:not(:disabled) {
+  background: #f39c12;
+}
+.shop-action-btn:disabled {
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.3);
+  cursor: not-allowed;
+}
+
+/* ── Active seed bag selection border in inventory ── */
+.inventory-item--selected {
+  outline: 2px solid #4ade80;
+  box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+  border-radius: 4px;
+}
+

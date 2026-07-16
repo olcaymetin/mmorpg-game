@@ -548,6 +548,14 @@ export class GameScene extends Phaser.Scene {
           return;
         }
 
+        // Play mode seed planting! (Requires and consumes purchased seeds)
+        if (!this.editorMode && this.selectedSeed) {
+          if (!crop) {
+            this.room?.send("crop-plant", { x: tileX, y: tileY, cropType: this.selectedSeed, free: false });
+          }
+          return;
+        }
+
         if (this.editorMode && !this.clickedGameObject) {
           if (this.currentBrushType === "object") {
             // Place building object on server
@@ -563,7 +571,7 @@ export class GameScene extends Phaser.Scene {
           } else if (this.currentBrushType === "seed" && this.selectedSeed) {
             // Plant a crop on the clicked tile
             if (!crop) {
-              this.room?.send("crop-plant", { x: tileX, y: tileY, cropType: this.selectedSeed });
+              this.room?.send("crop-plant", { x: tileX, y: tileY, cropType: this.selectedSeed, free: true });
             }
           } else {
             handlePaint(pointer);
@@ -621,11 +629,18 @@ export class GameScene extends Phaser.Scene {
 
     // ─── Object Click / Drag handlers ───
     this.input.on("gameobjectdown", (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject) => {
-      if (!this.editorMode) return;
+      const type = gameObject.getData("type");
+      const id = gameObject.getData("id");
+
+      if (!this.editorMode) {
+        if (pointer.button === 0 && type === "farmer_npc") {
+          this.game.events.emit("open-farmer-shop");
+        }
+        return;
+      }
       this.clickedGameObject = true;
 
       if (pointer.button === 0) { // Left click on object
-        const id = gameObject.getData("id");
         if (this.currentBrushType === "eraser") {
           this.room.send("object-delete", { id });
         } else {
@@ -719,6 +734,7 @@ export class GameScene extends Phaser.Scene {
     img.setOrigin(0.5, 0.8);
     img.setInteractive({ draggable: true });
     img.setData("id", id);
+    img.setData("type", type);
 
     if (isAnimated) {
       const sprite = img as Phaser.GameObjects.Sprite;

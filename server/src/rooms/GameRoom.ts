@@ -89,7 +89,28 @@ interface CropPlantMessage {
   x: number;
   y: number;
   cropType: string;
+  free?: boolean;
 }
+
+const CROP_PRICES: Record<string, { buySeed: number; sellCrop: number }> = {
+  Cabbage:      { buySeed: 5,  sellCrop: 12 },
+  Carrot:       { buySeed: 8,  sellCrop: 18 },
+  Cauliflower:  { buySeed: 10, sellCrop: 22 },
+  Coffee:       { buySeed: 12, sellCrop: 28 },
+  Corn:         { buySeed: 15, sellCrop: 35 },
+  Cotton:       { buySeed: 18, sellCrop: 42 },
+  Grape:        { buySeed: 25, sellCrop: 60 },
+  Onion:        { buySeed: 12, sellCrop: 28 },
+  Pepper:       { buySeed: 10, sellCrop: 22 },
+  Prickly_Pear: { buySeed: 30, sellCrop: 75 },
+  Pumpkin:      { buySeed: 20, sellCrop: 50 },
+  Radish:       { buySeed: 6,  sellCrop: 14 },
+  Strawberry:   { buySeed: 15, sellCrop: 35 },
+  Tomato:       { buySeed: 10, sellCrop: 24 },
+  Turnip:       { buySeed: 8,  sellCrop: 18 },
+  Watermelon:   { buySeed: 22, sellCrop: 55 },
+  Wheat:        { buySeed: 4,  sellCrop: 9 },
+};
 
 interface CropHarvestMessage {
   x: number;
@@ -294,6 +315,19 @@ export class GameRoom extends Room<GameState> {
       // Don't overwrite an existing crop
       if (this.state.crops.has(key)) return;
 
+      const player = this.state.players.get(client.sessionId);
+      if (!player) return;
+
+      // Seed consumption check (skipped if msg.free is true, e.g. in editor mode)
+      if (!msg.free) {
+        const seedCount = player.seeds.get(msg.cropType) || 0;
+        if (seedCount < 1) {
+          console.log(`[Crop] Player ${client.sessionId.slice(0, 8)} tried to plant ${msg.cropType} but has no seeds.`);
+          return;
+        }
+        player.seeds.set(msg.cropType, seedCount - 1);
+      }
+
       const crop = new CropState();
       crop.key = key;
       crop.cropType = msg.cropType;
@@ -301,7 +335,43 @@ export class GameRoom extends Room<GameState> {
       crop.plantedAt = Date.now();
       this.state.crops.set(key, crop);
       this.triggerDebouncedSave();
-      console.log(`[Crop] ${msg.cropType} planted at ${key}`);
+      console.log(`[Crop] ${msg.cropType} planted at ${key} (free=${!!msg.free})`);
+    });
+
+    /**
+     * "shop-buy-seed" handler - purchase seed bag from NPC shop
+     */
+    this.onMessage("shop-buy-seed", (client: Client, msg: { cropType: string }) => {
+      const player = this.state.players.get(client.sessionId);
+      if (!player) return;
+
+      const prices = CROP_PRICES[msg.cropType];
+      if (!prices) return;
+
+      if (player.gold >= prices.buySeed) {
+        player.gold -= prices.buySeed;
+        const currentSeeds = player.seeds.get(msg.cropType) || 0;
+        player.seeds.set(msg.cropType, currentSeeds + 1);
+        console.log(`[Shop] Player ${client.sessionId.slice(0, 8)} bought 1 ${msg.cropType} seed for ${prices.buySeed} gold.`);
+      }
+    });
+
+    /**
+     * "shop-sell-crop" handler - sell harvested crop for gold
+     */
+    this.onMessage("shop-sell-crop", (client: Client, msg: { cropType: string }) => {
+      const player = this.state.players.get(client.sessionId);
+      if (!player) return;
+
+      const prices = CROP_PRICES[msg.cropType];
+      if (!prices) return;
+
+      const currentCrops = player.inventory.get(msg.cropType) || 0;
+      if (currentCrops >= 1) {
+        player.inventory.set(msg.cropType, currentCrops - 1);
+        player.gold += prices.sellCrop;
+        console.log(`[Shop] Player ${client.sessionId.slice(0, 8)} sold 1 ${msg.cropType} for ${prices.sellCrop} gold.`);
+      }
     });
 
     /**
