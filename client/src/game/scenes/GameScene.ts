@@ -261,7 +261,10 @@ export class GameScene extends Phaser.Scene {
       this.selectionGraphics.clear();
       if (!enabled) {
         this.deselectObject();
-        this.cameras.main.startFollow(this.entities.get(this.localId)!.container, true, 0.08, 0.08);
+        const player = this.entities.get(this.localId);
+        if (player && player.container) {
+          this.cameras.main.startFollow(player.container, true, 0.08, 0.08);
+        }
       }
     });
 
