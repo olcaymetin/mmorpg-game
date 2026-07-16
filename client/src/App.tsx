@@ -665,17 +665,19 @@ const App: React.FC = () => {
       {/* ── HUD overlay ─────────────────────────────────────────────────── */}
       <div className="hud" aria-label="HUD">
         {/* Status chip */}
-        <div className="chip chip--status">
-          <span className={`dot ${connected ? "dot--on" : "dot--off"}`} aria-hidden="true" />
-          <span>
-            {connected
-              ? `Online · ${playerCount} player${playerCount !== 1 ? "s" : ""}`
-              : "Connecting…"}
-          </span>
-        </div>
+        {connected && !editMode && (
+          <div className="chip chip--status">
+            <span className={`dot ${connected ? "dot--on" : "dot--off"}`} aria-hidden="true" />
+            <span>
+              {connected
+                ? `Online · ${playerCount} player${playerCount !== 1 ? "s" : ""}`
+                : "Connecting…"}
+            </span>
+          </div>
+        )}
 
         {/* Currency chips */}
-        {connected && (
+        {connected && !editMode && (
           <>
             <div className="chip" style={{ background: "rgba(241,196,15,0.2)", border: "1px solid rgba(241,196,15,0.4)", color: "#f1c40f", fontWeight: "bold" }}>
               🥇 {gold} Gold
@@ -690,7 +692,7 @@ const App: React.FC = () => {
         )}
 
         {/* HUD action buttons */}
-        {connected && (
+        {connected && !editMode && (
           <>
             <button className="chip chip--clickable" onClick={() => setIsMarketOpen(true)}>🛒 Market</button>
             <button className="chip chip--clickable" onClick={() => setIsLeaderboardOpen(true)}>🏆 Leaderboard</button>
@@ -698,14 +700,14 @@ const App: React.FC = () => {
           </>
         )}
 
-        {/* Edit mode toggle — only shown for admin */}
+        {/* Edit mode toggle — only shown for admin (always visible to toggle back!) */}
         {connected && isAdmin && (
           <button
             className={`chip chip--clickable chip--edit ${editMode ? "chip--active" : ""}`}
             onClick={handleToggleEditMode}
             aria-label="Toggle Edit Mode"
           >
-            <span>{editMode ? "🛠️ Editör Açık" : "🧱 Haritayı Düzenle"}</span>
+            <span>{editMode ? "🧱 Editörden Çık" : "🧱 Haritayı Düzenle"}</span>
           </button>
         )}
 
@@ -733,7 +735,7 @@ const App: React.FC = () => {
         )}
 
         {/* Session ID (shown once connected) */}
-        {sessionId && (
+        {sessionId && !editMode && (
           <div className="chip chip--id">
             ID&nbsp;<code className="id-badge">{sessionId.slice(0, 8)}</code>
           </div>
@@ -1460,7 +1462,7 @@ const App: React.FC = () => {
       )}
 
       {/* ── Inventory Panel ── */}
-      {connected && (
+      {connected && !editMode && (
         <div className="inventory-card">
           <div className="inventory-title">🎒 Envanterim (Çantam)</div>
           
