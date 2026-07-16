@@ -422,7 +422,7 @@ const App: React.FC = () => {
     }
   };
 
-  const getTabBtnStyle = (tabName: string) => {
+  const getTabBtnStyle = (tabName: "structures" | "decorations" | "effects" | "materials" | "seeds" | "mining" | "ahir") => {
     const isActive = activeTab === tabName;
     return {
       flex: "1 1 auto",
@@ -2093,7 +2093,7 @@ const App: React.FC = () => {
                   </div>
                 </div>
               </div>
-            )}}
+            )}
           </div>
         </div>
       )}
