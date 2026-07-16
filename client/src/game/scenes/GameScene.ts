@@ -73,6 +73,11 @@ export class GameScene extends Phaser.Scene {
   private cameraStartY = 0;
 
   // ── State variables ────────────────────────────────────────────────────────
+  public virtualLeft = false;
+  public virtualRight = false;
+  public virtualUp = false;
+  public virtualDown = false;
+
   private lastSentMs = 0;
   private isMoving = false;
 
@@ -1015,10 +1020,10 @@ export class GameScene extends Phaser.Scene {
     }
 
     // 2. Read movement inputs
-    const left  = this.cursors.left.isDown  || this.keyA.isDown;
-    const right = this.cursors.right.isDown || this.keyD.isDown;
-    const up    = this.cursors.up.isDown    || this.keyW.isDown;
-    const down  = this.cursors.down.isDown  || this.keyS.isDown;
+    const left  = this.cursors.left.isDown  || this.keyA.isDown || this.virtualLeft;
+    const right = this.cursors.right.isDown || this.keyD.isDown || this.virtualRight;
+    const up    = this.cursors.up.isDown    || this.keyW.isDown || this.virtualUp;
+    const down  = this.cursors.down.isDown  || this.keyS.isDown || this.virtualDown;
 
     const dx = right ? 1 : left ? -1 : 0;
     const dy = down  ? 1 : up   ? -1 : 0;

@@ -12,6 +12,7 @@ import CharacterStats from "./components/CharacterStats";
 import FriendsPanel from "./components/FriendsPanel";
 import PlayerProfileModal from "./components/PlayerProfileModal";
 import GuildPanel from "./components/GuildPanel";
+import VirtualDPad from "./components/VirtualDPad";
 
 
 
@@ -1696,6 +1697,11 @@ const App: React.FC = () => {
       {/* ── Guild System Panel ──────────────────────────────────────────── */}
       {room && sessionId && !editMode && (
         <GuildPanel room={room} coin={coin} mySessionId={sessionId} />
+      )}
+
+      {/* ── Virtual D-Pad Overlay ───────────────────────────────────────── */}
+      {room && sessionId && !editMode && (
+        <VirtualDPad game={game} />
       )}
 
       {/* ── Craft Timer HUD ─────────────────────────────────────────────── */}

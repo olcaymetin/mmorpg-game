@@ -1,0 +1,111 @@
+.dpad-container {
+  position: fixed;
+  bottom: 24px;
+  left: 330px; /* Sits beautifully next to the 280px wide inventory card */
+  z-index: 1050;
+  user-select: none;
+  pointer-events: auto;
+}
+
+/* Glassmorphism background for the cross layout */
+.dpad-cross {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  background: rgba(10, 15, 30, 0.65);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 50%;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4), inset 0 0 12px rgba(59, 130, 246, 0.1);
+  backdrop-filter: blur(10px);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  padding: 6px;
+  box-sizing: border-box;
+}
+
+/* Base button style */
+.dpad-btn {
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.15s ease-in-out;
+  position: relative;
+}
+
+/* Arrow SVGs */
+.arrow-svg {
+  width: 28px;
+  height: 28px;
+  fill: #3b82f6; /* Darker blue */
+  filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.4));
+  transition: fill 0.15s, filter 0.15s, transform 0.1s;
+}
+
+/* Grid placements */
+.dpad-up {
+  grid-column: 2;
+  grid-row: 1;
+}
+.dpad-up:active {
+  transform: translateY(-2px);
+}
+
+.dpad-left {
+  grid-column: 1;
+  grid-row: 2;
+}
+.dpad-left:active {
+  transform: translateX(-2px);
+}
+
+.dpad-right {
+  grid-column: 3;
+  grid-row: 2;
+}
+.dpad-right:active {
+  transform: translateX(2px);
+}
+
+.dpad-down {
+  grid-column: 2;
+  grid-row: 3;
+}
+.dpad-down:active {
+  transform: translateY(2px);
+}
+
+/* Center core decorator - matches the dark center space */
+.dpad-center {
+  grid-column: 2;
+  grid-row: 2;
+  background: rgba(10, 15, 30, 0.9);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  border-radius: 6px;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+}
+
+/* Glowing Neon Active States matching the user's attachment */
+.dpad-btn:active .arrow-svg {
+  fill: #60a5fa; /* Neon Cyan-Blue arrow */
+  filter: drop-shadow(0 0 8px #60a5fa) drop-shadow(0 0 16px #3b82f6);
+}
+
+/* Hover effects for desktop users who test it with mouse */
+.dpad-btn:hover .arrow-svg {
+  fill: #60a5fa;
+  filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.6));
+}
+
+/* Responsiveness: Shift position to bottom-center or bottom-left on smaller mobile screens */
+@media (max-width: 768px) {
+  .dpad-container {
+    left: 20px;
+    bottom: 20px;
+  }
+}
