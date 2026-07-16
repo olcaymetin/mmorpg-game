@@ -251,13 +251,20 @@ export class GameRoom extends Room<GameState> {
      * "tile-update-multi" handler - for painting multiple tiles (stamp/brush)
      */
     this.onMessage("tile-update-multi", (client: Client, msg: TileUpdateMultiMessage) => {
-            targetMap.delete(key);
-          } else {
-            targetMap.set(key, u.tileIndex);
-          }
-        });
-        this.triggerDebouncedSave();
-      }
+       const player = this.state.players.get(client.sessionId);
+       const mapId = player?.currentMap || "main";
+       if (msg.updates) {
+         msg.updates.forEach(u => {
+           const key = `${mapId}:${u.x},${u.y}`;
+           const targetMap = u.layer === "decor" ? this.state.decorData : this.state.mapData;
+           if (u.tileIndex === -1) {
+             targetMap.delete(key);
+           } else {
+             targetMap.set(key, u.tileIndex);
+           }
+         });
+         this.triggerDebouncedSave();
+       }
     });
 
     /**
