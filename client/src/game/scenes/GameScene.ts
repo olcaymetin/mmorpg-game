@@ -1063,8 +1063,8 @@ export class GameScene extends Phaser.Scene {
       try {
         const parsed = this.parseTileSchemaKey(arg1, arg2);
         if (parsed && parsed.mapId === this.currentMapId) {
-          // Determine tileIndex (the one that isn't the string key)
-          const tileIndex = typeof arg1 === "number" ? arg1 : (typeof arg2 === "number" ? arg2 : 0);
+          const tileIndex = typeof arg1 === "number" ? arg1 : (typeof arg2 === "number" ? arg2 : null);
+          if (tileIndex === null || tileIndex === undefined) return;
           console.log(`[Sync Map] onAdd tile:${tileIndex} at x:${parsed.tx}, y:${parsed.ty}`);
           this.putTileWithEncoding(tileIndex, parsed.tx, parsed.ty, this.layer);
         }
@@ -1077,7 +1077,8 @@ export class GameScene extends Phaser.Scene {
       try {
         const parsed = this.parseTileSchemaKey(arg1, arg2);
         if (parsed && parsed.mapId === this.currentMapId) {
-          const tileIndex = typeof arg1 === "number" ? arg1 : (typeof arg2 === "number" ? arg2 : 0);
+          const tileIndex = typeof arg1 === "number" ? arg1 : (typeof arg2 === "number" ? arg2 : null);
+          if (tileIndex === null || tileIndex === undefined) return;
           console.log(`[Sync Map] onChange tile:${tileIndex} at x:${parsed.tx}, y:${parsed.ty}`);
           this.putTileWithEncoding(tileIndex, parsed.tx, parsed.ty, this.layer);
         }
@@ -1105,7 +1106,8 @@ export class GameScene extends Phaser.Scene {
         try {
           const parsed = this.parseTileSchemaKey(arg1, arg2);
           if (parsed && parsed.mapId === this.currentMapId) {
-            const tileIndex = typeof arg1 === "number" ? arg1 : (typeof arg2 === "number" ? arg2 : 0);
+            const tileIndex = typeof arg1 === "number" ? arg1 : (typeof arg2 === "number" ? arg2 : null);
+            if (tileIndex === null || tileIndex === undefined) return;
             console.log(`[Sync Decor] onAdd tile:${tileIndex} at x:${parsed.tx}, y:${parsed.ty}`);
             this.putTileWithEncoding(tileIndex, parsed.tx, parsed.ty, this.decorLayer);
           }
@@ -1118,7 +1120,8 @@ export class GameScene extends Phaser.Scene {
         try {
           const parsed = this.parseTileSchemaKey(arg1, arg2);
           if (parsed && parsed.mapId === this.currentMapId) {
-            const tileIndex = typeof arg1 === "number" ? arg1 : (typeof arg2 === "number" ? arg2 : 0);
+            const tileIndex = typeof arg1 === "number" ? arg1 : (typeof arg2 === "number" ? arg2 : null);
+            if (tileIndex === null || tileIndex === undefined) return;
             console.log(`[Sync Decor] onChange tile:${tileIndex} at x:${parsed.tx}, y:${parsed.ty}`);
             this.putTileWithEncoding(tileIndex, parsed.tx, parsed.ty, this.decorLayer);
           }
