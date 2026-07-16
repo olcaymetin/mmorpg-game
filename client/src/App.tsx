@@ -763,6 +763,14 @@ const App: React.FC = () => {
                     <img src="/assets/silo2.png" alt="silo2" className="obj-thumb" style={{ height: "48px", objectFit: "contain" }} />
                     <span>Silo 2</span>
                   </button>
+
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "nft_house" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("nft_house")}
+                  >
+                    <img src="/assets/nft_house.png" alt="nft house" className="obj-thumb" style={{ height: "48px", objectFit: "contain" }} />
+                    <span>NFT Evi</span>
+                  </button>
                 </div>
               )}
 
