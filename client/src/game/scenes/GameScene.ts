@@ -141,6 +141,14 @@ export class GameScene extends Phaser.Scene {
       frameWidth: 16,
       frameHeight: 16,
     });
+    this.load.spritesheet("iskele", "assets/iskele.png", {
+      frameWidth: 16,
+      frameHeight: 16,
+    });
+    this.load.spritesheet("dekor2", "assets/dekor2.png", {
+      frameWidth: 16,
+      frameHeight: 16,
+    });
 
     // Load building images
     this.load.image("marketplace", "assets/marketplace.png");
@@ -211,7 +219,7 @@ export class GameScene extends Phaser.Scene {
 
   private getLayerForTileIndex(tileIndex: number): "terrain" | "decor" {
     const cleanIndex = tileIndex & 0xFFFF;
-    if (cleanIndex >= 2000 && cleanIndex < 3000) {
+    if ((cleanIndex >= 2000 && cleanIndex < 3000) || cleanIndex >= 4000) {
       return "decor";
     }
     return "terrain";
@@ -253,10 +261,13 @@ export class GameScene extends Phaser.Scene {
     const tileset = this.map.addTilesetImage("terrains", "terrains", 16, 16)!;
     const fencesTileset = this.map.addTilesetImage("fences", "fences", 16, 16, 0, 0, 2000)!;
     const zemin2Tileset = this.map.addTilesetImage("zemin2", "zemin2", 16, 16, 0, 0, 3000)!;
+    const iskeleTileset = this.map.addTilesetImage("iskele", "iskele", 16, 16, 0, 0, 4000)!;
+    const dekor2Tileset = this.map.addTilesetImage("dekor2", "dekor2", 16, 16, 0, 0, 5000)!;
+
     this.layer = this.map.createBlankLayer("terrain_layer", [tileset, zemin2Tileset])!;
     this.layer.setScale(2); // Scale 16x16 tiles to 32x32
 
-    this.decorLayer = this.map.createBlankLayer("decor_layer", fencesTileset)!;
+    this.decorLayer = this.map.createBlankLayer("decor_layer", [fencesTileset, iskeleTileset, dekor2Tileset])!;
     this.decorLayer.setScale(2);
 
     // 4. Initialize Selection Graphics Overlay

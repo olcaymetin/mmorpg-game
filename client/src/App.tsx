@@ -148,7 +148,7 @@ const App: React.FC = () => {
   const [isSelectingTileset, setIsSelectingTileset] = useState(false);
 
   // Active tileset tab (terrains or fences)
-  const [activeTileset, setActiveTileset] = useState<"terrains" | "fences" | "zemin2">("terrains");
+  const [activeTileset, setActiveTileset] = useState<"terrains" | "fences" | "zemin2" | "iskele" | "dekor2">("terrains");
 
   // Legacy map migration state
   const [hasLegacyMap, setHasLegacyMap] = useState(false);
@@ -464,8 +464,8 @@ const App: React.FC = () => {
 
     const col = Math.floor(clickX / 16);
     const row = Math.floor(clickY / 16);
-    const maxRow = activeTileset === "fences" ? 17 : (activeTileset === "zemin2" ? 27 : 23);
-    const maxCol = activeTileset === "zemin2" ? 5 : 32;
+    const maxRow = activeTileset === "fences" ? 17 : (activeTileset === "zemin2" ? 27 : (activeTileset === "iskele" ? 4 : (activeTileset === "dekor2" ? 12 : 23)));
+    const maxCol = activeTileset === "zemin2" ? 5 : (activeTileset === "iskele" ? 9 : (activeTileset === "dekor2" ? 7 : 32));
 
     if (col >= 0 && col < maxCol && row >= 0 && row < maxRow) {
       setSelectionStart({ col, row });
@@ -481,8 +481,8 @@ const App: React.FC = () => {
     const clickX = e.clientX - rect.left;
     const clickY = e.clientY - rect.top;
 
-    const maxRow = activeTileset === "fences" ? 16 : (activeTileset === "zemin2" ? 26 : 22);
-    const maxCol = activeTileset === "zemin2" ? 4 : 31;
+    const maxRow = activeTileset === "fences" ? 16 : (activeTileset === "zemin2" ? 26 : (activeTileset === "iskele" ? 3 : (activeTileset === "dekor2" ? 11 : 22)));
+    const maxCol = activeTileset === "zemin2" ? 4 : (activeTileset === "iskele" ? 8 : (activeTileset === "dekor2" ? 6 : 31));
     const col = Math.max(0, Math.min(maxCol, Math.floor(clickX / 16)));
     const row = Math.max(0, Math.min(maxRow, Math.floor(clickY / 16)));
 
@@ -500,8 +500,8 @@ const App: React.FC = () => {
 
     const w = colEnd - colStart + 1;
     const h = rowEnd - rowStart + 1;
-    const startGid = activeTileset === "fences" ? 2000 : (activeTileset === "zemin2" ? 3000 : 0);
-    const colsCount = activeTileset === "zemin2" ? 5 : 32;
+    const startGid = activeTileset === "fences" ? 2000 : (activeTileset === "zemin2" ? 3000 : (activeTileset === "iskele" ? 4000 : (activeTileset === "dekor2" ? 5000 : 0)));
+    const colsCount = activeTileset === "zemin2" ? 5 : (activeTileset === "iskele" ? 9 : (activeTileset === "dekor2" ? 7 : 32));
 
     if (w === 1 && h === 1) {
       // Single tile selection
@@ -1392,6 +1392,26 @@ const App: React.FC = () => {
                 >
                   🧱 Zemin 2
                 </button>
+                <button
+                  className={`tab-btn ${activeTileset === "iskele" ? "tab-btn--active" : ""}`}
+                  onClick={() => {
+                    setActiveTileset("iskele");
+                    setSelectedTile(4000);
+                    if (game) game.events.emit("editor-brush-selected", { type: "tile", index: 4000 });
+                  }}
+                >
+                  🪵 İskele
+                </button>
+                <button
+                  className={`tab-btn ${activeTileset === "dekor2" ? "tab-btn--active" : ""}`}
+                  onClick={() => {
+                    setActiveTileset("dekor2");
+                    setSelectedTile(5000);
+                    if (game) game.events.emit("editor-brush-selected", { type: "tile", index: 5000 });
+                  }}
+                >
+                  🏡 Dekor 2
+                </button>
               </div>
 
               <div className="tileset-container">
@@ -1399,8 +1419,8 @@ const App: React.FC = () => {
                   className="tileset-wrapper"
                   style={{
                     position: "relative",
-                    width: activeTileset === "zemin2" ? "80px" : "512px",
-                    height: activeTileset === "zemin2" ? "432px" : (activeTileset === "fences" ? "272px" : "368px"),
+                    width: activeTileset === "zemin2" ? "80px" : (activeTileset === "iskele" ? "144px" : (activeTileset === "dekor2" ? "112px" : "512px")),
+                    height: activeTileset === "zemin2" ? "432px" : (activeTileset === "iskele" ? "64px" : (activeTileset === "dekor2" ? "192px" : (activeTileset === "fences" ? "272px" : "368px"))),
                     cursor: "pointer"
                   }}
                   onMouseDown={handleTilesetMouseDown}
@@ -1409,21 +1429,23 @@ const App: React.FC = () => {
                   onMouseLeave={handleTilesetMouseUp}
                 >
                   <img
-                    src={activeTileset === "zemin2" ? "/assets/zemin2.png" : (activeTileset === "fences" ? "/assets/fences.png" : "/assets/terrains.png")}
+                    src={activeTileset === "zemin2" ? "/assets/zemin2.png" : (activeTileset === "iskele" ? "/assets/iskele.png" : (activeTileset === "dekor2" ? "/assets/dekor2.png" : (activeTileset === "fences" ? "/assets/fences.png" : "/assets/terrains.png")))}
                     alt="tileset"
                     draggable={false}
                     onDragStart={(e) => e.preventDefault()}
                     style={{
                       display: "block",
-                      width: activeTileset === "zemin2" ? "80px" : "512px",
-                      height: activeTileset === "zemin2" ? "432px" : (activeTileset === "fences" ? "272px" : "368px"),
+                      width: activeTileset === "zemin2" ? "80px" : (activeTileset === "iskele" ? "144px" : (activeTileset === "dekor2" ? "112px" : "512px")),
+                      height: activeTileset === "zemin2" ? "432px" : (activeTileset === "iskele" ? "64px" : (activeTileset === "dekor2" ? "192px" : (activeTileset === "fences" ? "272px" : "368px"))),
                       imageRendering: "pixelated",
                       userSelect: "none",
                     }}
                   />
                   
                   {/* Active single selection highlighting box */}
-                  {((selectedTile >= 3000 && activeTileset === "zemin2") ||
+                  {((selectedTile >= 5000 && activeTileset === "dekor2") ||
+                    (selectedTile >= 4000 && selectedTile < 5000 && activeTileset === "iskele") ||
+                    (selectedTile >= 3000 && selectedTile < 4000 && activeTileset === "zemin2") ||
                     (selectedTile >= 2000 && selectedTile < 3000 && activeTileset === "fences") || 
                     (selectedTile >= 0 && selectedTile < 2000 && activeTileset === "terrains")) && (
                     <div
@@ -1434,8 +1456,8 @@ const App: React.FC = () => {
                         boxShadow: "0 0 6px rgba(85, 255, 34, 0.9)",
                         width: "16px",
                         height: "16px",
-                        left: `${((selectedTile >= 3000 ? selectedTile - 3000 : (selectedTile >= 2000 ? selectedTile - 2000 : selectedTile)) % (activeTileset === "zemin2" ? 5 : 32)) * 16}px`,
-                        top: `${Math.floor((selectedTile >= 3000 ? selectedTile - 3000 : (selectedTile >= 2000 ? selectedTile - 2000 : selectedTile)) / (activeTileset === "zemin2" ? 5 : 32)) * 16}px`,
+                        left: `${((selectedTile >= 5000 ? selectedTile - 5000 : (selectedTile >= 4000 ? selectedTile - 4000 : (selectedTile >= 3000 ? selectedTile - 3000 : (selectedTile >= 2000 ? selectedTile - 2000 : selectedTile)))) % (activeTileset === "zemin2" ? 5 : (activeTileset === "iskele" ? 9 : (activeTileset === "dekor2" ? 7 : 32)))) * 16}px`,
+                        top: `${Math.floor((selectedTile >= 5000 ? selectedTile - 5000 : (selectedTile >= 4000 ? selectedTile - 4000 : (selectedTile >= 3000 ? selectedTile - 3000 : (selectedTile >= 2000 ? selectedTile - 2000 : selectedTile)))) / (activeTileset === "zemin2" ? 5 : (activeTileset === "iskele" ? 9 : (activeTileset === "dekor2" ? 7 : 32)))) * 16}px`,
                         pointerEvents: "none",
                       }}
                     />
