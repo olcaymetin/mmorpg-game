@@ -57,6 +57,9 @@ export class GameScene extends Phaser.Scene {
   private currentTileIndex = 0;
   private currentTileStamp: { width: number; height: number; tiles: number[][] } | null = null;
   private currentObjectName = "marketplace";
+  private activeBrushRotationStep = 0;
+  private activeBrushFlipX = false;
+  private activeBrushFlipY = false;
 
   // Placed Objects list
   private placedObjects: PlacedObject[] = [];
@@ -267,6 +270,9 @@ export class GameScene extends Phaser.Scene {
     // 9. React editor events
     this.game.events.on("editor-brush-selected", (brush: { type: string; index?: number; name?: string; cropType?: string }) => {
       this.currentBrushType = brush.type;
+      this.activeBrushRotationStep = 0;
+      this.activeBrushFlipX = false;
+      this.activeBrushFlipY = false;
       if (brush.type === "tile" && brush.index !== undefined) {
         this.currentTileIndex = brush.index;
         this.currentTileStamp = null;
@@ -599,7 +605,8 @@ export class GameScene extends Phaser.Scene {
             }
           } else {
             const layer = this.currentTileIndex >= 2000 ? "decor" : "terrain";
-            this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: this.currentTileIndex, layer });
+            const encodedIndex = this.currentTileIndex + (this.activeBrushRotationStep << 16) + (this.activeBrushFlipX ? 1 << 18 : 0) + (this.activeBrushFlipY ? 1 << 19 : 0);
+            this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: encodedIndex, layer });
           }
         } else if (this.currentBrushType === "eraser" && !this.clickedGameObject) {
           this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: -1, layer: "decor" });
@@ -756,6 +763,72 @@ export class GameScene extends Phaser.Scene {
       this.isDraggingObject = false;
       const id = gameObject.getData("id");
       this.room.send("object-move", { id, x: gameObject.x, y: gameObject.y });
+    });
+
+    // R Key - Rotate hovered tile in editor mode
+    this.input.keyboard!.on("keydown-R", () => {
+      if (!this.editorMode) return;
+      
+      const pointer = this.input.activePointer;
+      const tileX = Math.floor(pointer.worldX / TILE_SIZE);
+      const tileY = Math.floor(pointer.worldY / TILE_SIZE);
+      const maxCols = this.mapWidth / TILE_SIZE;
+      const maxRows = this.mapHeight / TILE_SIZE;
+
+      if (tileX >= 0 && tileX < maxCols && tileY >= 0 && tileY < maxRows) {
+        let tile = this.map.getTileAt(tileX, tileY, true, this.decorLayer);
+        let layer: "decor" | "terrain" = "decor";
+        
+        if (!tile || tile.index === -1) {
+          tile = this.map.getTileAt(tileX, tileY, true, this.layer);
+          layer = "terrain";
+        }
+
+        if (tile && tile.index !== -1) {
+          const currentRotStep = Math.round(tile.rotation / (Math.PI / 2)) % 4;
+          const nextRotStep = (currentRotStep + 1) % 4;
+          const isFlipX = tile.flipX ? 1 : 0;
+          const isFlipY = tile.flipY ? 1 : 0;
+          const encodedIndex = tile.index + (nextRotStep << 16) + (isFlipX << 18) + (isFlipY << 19);
+          
+          this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: encodedIndex, layer });
+        }
+      }
+      
+      // Also update brush rotation if they are holding a tile
+      this.activeBrushRotationStep = (this.activeBrushRotationStep + 1) % 4;
+    });
+
+    // F Key - Flip hovered tile horizontally in editor mode
+    this.input.keyboard!.on("keydown-F", () => {
+      if (!this.editorMode) return;
+
+      const pointer = this.input.activePointer;
+      const tileX = Math.floor(pointer.worldX / TILE_SIZE);
+      const tileY = Math.floor(pointer.worldY / TILE_SIZE);
+      const maxCols = this.mapWidth / TILE_SIZE;
+      const maxRows = this.mapHeight / TILE_SIZE;
+
+      if (tileX >= 0 && tileX < maxCols && tileY >= 0 && tileY < maxRows) {
+        let tile = this.map.getTileAt(tileX, tileY, true, this.decorLayer);
+        let layer: "decor" | "terrain" = "decor";
+        
+        if (!tile || tile.index === -1) {
+          tile = this.map.getTileAt(tileX, tileY, true, this.layer);
+          layer = "terrain";
+        }
+
+        if (tile && tile.index !== -1) {
+          const currentRotStep = Math.round(tile.rotation / (Math.PI / 2)) % 4;
+          const nextFlipX = tile.flipX ? 0 : 1;
+          const isFlipY = tile.flipY ? 1 : 0;
+          const encodedIndex = tile.index + (currentRotStep << 16) + (nextFlipX << 18) + (isFlipY << 19);
+
+          this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: encodedIndex, layer });
+        }
+      }
+
+      this.activeBrushFlipX = !this.activeBrushFlipX;
     });
   }
 
@@ -928,7 +1001,7 @@ export class GameScene extends Phaser.Scene {
         const [xStr, yStr] = coords.split(",");
         const tx = parseInt(xStr, 10);
         const ty = parseInt(yStr, 10);
-        this.map.putTileAt(tileIndex, tx, ty, true, this.layer);
+        this.putTileWithEncoding(tileIndex, tx, ty, this.layer);
       }
     });
 
@@ -944,7 +1017,7 @@ export class GameScene extends Phaser.Scene {
         const [xStr, yStr] = coords.split(",");
         const tx = parseInt(xStr, 10);
         const ty = parseInt(yStr, 10);
-        this.map.putTileAt(tileIndex, tx, ty, true, this.layer);
+        this.putTileWithEncoding(tileIndex, tx, ty, this.layer);
       }
     });
 
@@ -979,7 +1052,7 @@ export class GameScene extends Phaser.Scene {
           const [xStr, yStr] = coords.split(",");
           const tx = parseInt(xStr, 10);
           const ty = parseInt(yStr, 10);
-          this.map.putTileAt(tileIndex, tx, ty, true, this.decorLayer);
+          this.putTileWithEncoding(tileIndex, tx, ty, this.decorLayer);
         }
       });
 
@@ -995,7 +1068,7 @@ export class GameScene extends Phaser.Scene {
           const [xStr, yStr] = coords.split(",");
           const tx = parseInt(xStr, 10);
           const ty = parseInt(yStr, 10);
-          this.map.putTileAt(tileIndex, tx, ty, true, this.decorLayer);
+          this.putTileWithEncoding(tileIndex, tx, ty, this.decorLayer);
         }
       });
 
@@ -1165,6 +1238,24 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
+  private putTileWithEncoding(tileIndex: number, tx: number, ty: number, layer: Phaser.Tilemaps.TilemapLayer): void {
+    if (tileIndex === -1) {
+      this.map.removeTileAt(tx, ty, true, true, layer);
+      return;
+    }
+    const cleanIndex = tileIndex & 0xFFFF;
+    const rotVal = (tileIndex >> 16) & 3;
+    const flipX = ((tileIndex >> 18) & 1) === 1;
+    const flipY = ((tileIndex >> 19) & 1) === 1;
+
+    const tile = this.map.putTileAt(cleanIndex, tx, ty, true, layer);
+    if (tile) {
+      tile.rotation = rotVal * (Math.PI / 2);
+      tile.flipX = flipX;
+      tile.flipY = flipY;
+    }
+  }
+
   private redrawMap(): void {
     // Clear tilemap (terrain & decor)
     for (let x = 0; x < 100; x++) {
@@ -1202,7 +1293,7 @@ export class GameScene extends Phaser.Scene {
         const [xStr, yStr] = coords.split(",");
         const tx = parseInt(xStr, 10);
         const ty = parseInt(yStr, 10);
-        this.map.putTileAt(tileIndex, tx, ty, true, this.layer);
+        this.putTileWithEncoding(tileIndex, tx, ty, this.layer);
       }
     });
 
@@ -1221,7 +1312,7 @@ export class GameScene extends Phaser.Scene {
           const [xStr, yStr] = coords.split(",");
           const tx = parseInt(xStr, 10);
           const ty = parseInt(yStr, 10);
-          this.map.putTileAt(tileIndex, tx, ty, true, this.decorLayer);
+          this.putTileWithEncoding(tileIndex, tx, ty, this.decorLayer);
         }
       });
     }
