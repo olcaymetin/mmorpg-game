@@ -422,6 +422,14 @@ export class GameRoom extends Room<GameState> {
       // Don't overwrite an existing crop
       if (this.state.crops.has(key)) return;
 
+      // Farmland check: GID 227 is the hoed/plowed farm soil tile
+      const groundTile = this.state.mapData.get(key);
+      const groundGid = groundTile !== undefined ? (groundTile & 0xFFFF) : -1;
+      if (groundGid !== 227) {
+        console.log(`[Crop] Rejecting plant at ${key}: ground is GID ${groundGid} (must be 227)`);
+        return;
+      }
+
       // Seed consumption check (skipped if msg.free is true, e.g. in editor mode)
       if (!msg.free) {
         const seedCount = player.seeds.get(msg.cropType) || 0;

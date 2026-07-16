@@ -709,6 +709,13 @@ export class GameScene extends Phaser.Scene {
         // Play mode seed planting! (Requires and consumes purchased seeds)
         if (!this.editorMode && this.selectedSeed) {
           if (!crop) {
+            // Check if ground tile is farmland (GID 227)
+            const tile = this.map.getTileAt(tileX, tileY, true, this.layer);
+            const tileGid = tile ? tile.index : -1;
+            if (tileGid !== 227) {
+              alert("⚠️ Sadece sürülmüş tarla toprağı üzerine ekim yapabilirsiniz!");
+              return;
+            }
             this.room?.send("crop-plant", { x: tileX, y: tileY, cropType: this.selectedSeed, free: false });
             this.game.events.emit("crop-planted", { cropType: this.selectedSeed });
           }
@@ -730,6 +737,13 @@ export class GameScene extends Phaser.Scene {
           } else if (this.currentBrushType === "seed" && this.selectedSeed) {
             // Plant a crop on the clicked tile
             if (!crop) {
+              // Check if ground tile is farmland (GID 227)
+              const tile = this.map.getTileAt(tileX, tileY, true, this.layer);
+              const tileGid = tile ? tile.index : -1;
+              if (tileGid !== 227) {
+                alert("⚠️ Sadece sürülmüş tarla toprağı üzerine ekim yapabilirsiniz!");
+                return;
+              }
               this.room?.send("crop-plant", { x: tileX, y: tileY, cropType: this.selectedSeed, free: true });
             }
           } else {
