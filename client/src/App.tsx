@@ -406,7 +406,14 @@ const App: React.FC = () => {
     const newScale = parseFloat(e.target.value);
     if (selectedObject && game) {
       setSelectedObject({ ...selectedObject, scale: newScale });
-      game.events.emit("editor-object-scale-changed", { id: selectedObject.id, scale: newScale });
+      game.events.emit("editor-object-scale-changed", { id: selectedObject.id, scale: newScale, save: false });
+    }
+  };
+
+  const handleObjectScaleRelease = () => {
+    if (selectedObject && game) {
+      console.log("[React App.tsx] Scale released, saving to server:", selectedObject.scale);
+      game.events.emit("editor-object-scale-changed", { id: selectedObject.id, scale: selectedObject.scale, save: true });
     }
   };
 
@@ -414,7 +421,15 @@ const App: React.FC = () => {
     const newSpeed = parseFloat(e.target.value);
     if (selectedObject && game) {
       setSelectedObject({ ...selectedObject, animSpeed: newSpeed });
-      game.events.emit("editor-object-speed-changed", { id: selectedObject.id, speed: newSpeed });
+      game.events.emit("editor-object-speed-changed", { id: selectedObject.id, speed: newSpeed, save: false });
+    }
+  };
+
+  const handleObjectSpeedRelease = () => {
+    if (selectedObject && game) {
+      const speed = selectedObject.animSpeed !== undefined ? selectedObject.animSpeed : 1.0;
+      console.log("[React App.tsx] Speed released, saving to server:", speed);
+      game.events.emit("editor-object-speed-changed", { id: selectedObject.id, speed: speed, save: true });
     }
   };
 
@@ -433,6 +448,7 @@ const App: React.FC = () => {
   };
 
   const handleObjectDelete = () => {
+    console.log("[React App.tsx] handleObjectDelete triggered for:", selectedObject?.id);
     if (selectedObject && game) {
       game.events.emit("editor-object-delete-requested", selectedObject.id);
       setSelectedObject(null);
@@ -939,6 +955,8 @@ const App: React.FC = () => {
                       }
                       value={selectedObject.scale}
                       onChange={handleObjectScaleChange}
+                      onMouseUp={handleObjectScaleRelease}
+                      onTouchEnd={handleObjectScaleRelease}
                     />
                   </div>
 
@@ -956,6 +974,8 @@ const App: React.FC = () => {
                         step="0.1"
                         value={selectedObject.animSpeed !== undefined ? selectedObject.animSpeed : 1.0}
                         onChange={handleObjectSpeedChange}
+                        onMouseUp={handleObjectSpeedRelease}
+                        onTouchEnd={handleObjectSpeedRelease}
                       />
                     </div>
                   )}

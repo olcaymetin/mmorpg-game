@@ -386,10 +386,16 @@ export class GameRoom extends Room<GameState> {
     /**
      * "object-delete" handler - for removing a building
      */
-    this.onMessage("object-delete", (client: Client, msg: ObjectDeleteMessage) => {
-      this.state.placedObjects.delete(msg.id);
-      this.triggerDebouncedSave();
-    });
+     this.onMessage("object-delete", (client: Client, msg: ObjectDeleteMessage) => {
+       console.log(`[Server GameRoom] Received object-delete for ID: ${msg.id}`);
+       const exists = this.state.placedObjects.has(msg.id);
+       console.log(`[Server GameRoom] Object exists in placedObjects? ${exists}`);
+       if (exists) {
+         this.state.placedObjects.delete(msg.id);
+         console.log(`[Server GameRoom] Object ${msg.id} deleted successfully.`);
+       }
+       this.triggerDebouncedSave();
+     });
 
     /**
      * "player-teleport" handler - teleport to another map/island

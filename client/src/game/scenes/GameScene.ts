@@ -339,10 +339,12 @@ export class GameScene extends Phaser.Scene {
     });
 
     this.game.events.on("editor-object-delete-requested", (id: string) => {
+      console.log("[Client GameScene] editor-object-delete-requested received for ID:", id);
       this.room.send("object-delete", { id });
     });
 
-    this.game.events.on("editor-object-scale-changed", (payload: { id: string; scale: number }) => {
+    this.game.events.on("editor-object-scale-changed", (payload: { id: string; scale: number; save?: boolean }) => {
+      console.log("[Client GameScene] editor-object-scale-changed:", payload);
       const obj = this.placedObjects.find(o => o.id === payload.id);
       if (obj) {
         obj.scale = payload.scale;
@@ -351,33 +353,40 @@ export class GameScene extends Phaser.Scene {
         }
         this.drawSelectionOutline();
 
-        const stateObj = this.room.state.placedObjects.get(obj.id);
-        const animSpeed = stateObj ? stateObj.animSpeed : 1.0;
-        this.room.send("object-place", {
-          id: obj.id,
-          type: obj.type,
-          x: obj.x,
-          y: obj.y,
-          scale: obj.scale,
-          animSpeed: animSpeed
-        });
+        // Only save to server when dragging ends (payload.save === true)
+        if (payload.save) {
+          const stateObj = this.room.state.placedObjects.get(obj.id);
+          const animSpeed = stateObj ? stateObj.animSpeed : 1.0;
+          this.room.send("object-place", {
+            id: obj.id,
+            type: obj.type,
+            x: obj.x,
+            y: obj.y,
+            scale: obj.scale,
+            animSpeed: animSpeed
+          });
+        }
       }
     });
 
-    this.game.events.on("editor-object-speed-changed", (payload: { id: string; speed: number }) => {
+    this.game.events.on("editor-object-speed-changed", (payload: { id: string; speed: number; save?: boolean }) => {
+      console.log("[Client GameScene] editor-object-speed-changed:", payload);
       const obj = this.placedObjects.find(o => o.id === payload.id);
       if (obj) {
         if (obj.imageObj && (obj.type.startsWith("vfx_") || obj.type.startsWith("mg_"))) {
           (obj.imageObj as Phaser.GameObjects.Sprite).anims.timeScale = payload.speed;
         }
-        this.room.send("object-place", {
-          id: obj.id,
-          type: obj.type,
-          x: obj.x,
-          y: obj.y,
-          scale: obj.scale,
-          animSpeed: payload.speed
-        });
+        // Only save to server when dragging ends (payload.save === true)
+        if (payload.save) {
+          this.room.send("object-place", {
+            id: obj.id,
+            type: obj.type,
+            x: obj.x,
+            y: obj.y,
+            scale: obj.scale,
+            animSpeed: payload.speed
+          });
+        }
       }
     });
 
