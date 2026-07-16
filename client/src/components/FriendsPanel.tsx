@@ -42,9 +42,10 @@ const FriendsPanel: React.FC<FriendsPanelProps> = ({ room, players, mySessionId 
     syncFriends();
 
     // Listen to changes
-    const unsub = room.onStateChange(() => {
+    const syncFriendsCallback = () => {
       syncFriends();
-    });
+    };
+    room.onStateChange(syncFriendsCallback);
 
     // Listen to incoming DMs
     const handleDm = (msg: { fromSessionId: string; fromName: string; text: string; timestamp: number }) => {
@@ -59,10 +60,15 @@ const FriendsPanel: React.FC<FriendsPanelProps> = ({ room, players, mySessionId 
         setUnreadCount(c => c + 1);
       }
     };
-    room.onMessage("dm-received", handleDm);
+    const dmListener = room.onMessage("dm-received", handleDm);
 
     return () => {
-      unsub();
+      try {
+        room.onStateChange.remove(syncFriendsCallback);
+      } catch (e) {}
+      try {
+        dmListener.clear();
+      } catch (e) {}
     };
   }, [room, mySessionId, activeDm]);
 

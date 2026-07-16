@@ -354,12 +354,15 @@ const App: React.FC = () => {
     updatePlayerState();
 
     // Subscribe to state change
-    const unsubscribe = room.onStateChange(() => {
+    const onStateChangeCallback = () => {
       updatePlayerState();
-    });
+    };
+    room.onStateChange(onStateChangeCallback);
 
     return () => {
-      unsubscribe();
+      try {
+        room.onStateChange.remove(onStateChangeCallback);
+      } catch (e) {}
     };
   }, [room, sessionId]);
 
@@ -1666,7 +1669,7 @@ const App: React.FC = () => {
 
       {/* ── Game or loading state ────────────────────────────────────────── */}
       {room && sessionId ? (
-        <PhaserGame room={room} sessionId={sessionId} onGameReady={setGame} />
+        <PhaserGame key="phaser-game-instance" room={room} sessionId={sessionId} onGameReady={setGame} />
       ) : !error ? (
         <div className="loader" aria-label="Connecting">
           <div className="spinner" aria-hidden="true" />

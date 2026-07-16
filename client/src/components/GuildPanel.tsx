@@ -77,13 +77,21 @@ const GuildPanel: React.FC<GuildPanelProps> = ({ room, coin, mySessionId }) => {
     };
 
     syncGuilds();
-    const unsub = room.onStateChange(syncGuilds);
+    room.onStateChange(syncGuilds);
 
-    room.onMessage("guild-error", (d: any) => showMsg(d.message, true));
-    room.onMessage("guild-created", () => showMsg("🎉 Klan başarıyla kuruldu!"));
+    const errListener = room.onMessage("guild-error", (d: any) => showMsg(d.message, true));
+    const createListener = room.onMessage("guild-created", () => showMsg("🎉 Klan başarıyla kuruldu!"));
 
     return () => {
-      unsub();
+      try {
+        room.onStateChange.remove(syncGuilds);
+      } catch (e) {}
+      try {
+        errListener.clear();
+      } catch (e) {}
+      try {
+        createListener.clear();
+      } catch (e) {}
     };
   }, [room, mySessionId]);
 
