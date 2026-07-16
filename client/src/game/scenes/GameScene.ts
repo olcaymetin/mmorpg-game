@@ -864,7 +864,7 @@ export class GameScene extends Phaser.Scene {
           if (serverMap !== this.currentMapId) {
             this.currentMapId = serverMap;
             // Update boundaries
-            if (this.currentMapId === "sub_island" || this.currentMapId === "boss_island") {
+            if (this.currentMapId === "sub_island" || this.currentMapId === "boss_island" || this.currentMapId === "right_island") {
               this.mapWidth = 25 * TILE_SIZE;
               this.mapHeight = 20 * TILE_SIZE;
             } else if (this.currentMapId === "bottom_island") {
@@ -1371,6 +1371,27 @@ export class GameScene extends Phaser.Scene {
               });
 
               this.room.send("player-teleport", { mapId: "bottom_island", x: targetX, y: targetY });
+              break;
+            } else if (obj.type === "yon_right" && this.currentMapId === "main") {
+              console.log(`[Teleport] Right arrow triggered on main. Teleporting to right_island...`);
+              this.lastTeleportTime = time;
+              this.room.send("player-teleport", { mapId: "right_island", x: 100, y: obj.y }); // spawn near the left of right_island
+              break;
+            } else if (obj.type === "yon_left" && this.currentMapId === "right_island") {
+              console.log(`[Teleport] Left arrow triggered on right_island. Teleporting to main...`);
+              this.lastTeleportTime = time;
+              
+              // Find target position on main map (near first yon_right on main)
+              let targetX = 1500;
+              let targetY = 600;
+              this.room.state.placedObjects.forEach((val: any) => {
+                if (val.type === "yon_right" && (val.mapId || "main") === "main") {
+                  targetX = val.x - 48; // Offset to the left so we don't immediately re-teleport
+                  targetY = val.y;
+                }
+              });
+
+              this.room.send("player-teleport", { mapId: "main", x: targetX, y: targetY });
               break;
             }
           }

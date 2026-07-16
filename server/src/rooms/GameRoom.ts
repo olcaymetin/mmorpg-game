@@ -211,7 +211,7 @@ export class GameRoom extends Room<GameState> {
         const mapId = player.currentMap || "main";
         let mapW = WORLD_W;
         let mapH = WORLD_H;
-        if (mapId === "sub_island" || mapId === "boss_island") {
+        if (mapId === "sub_island" || mapId === "boss_island" || mapId === "right_island") {
           mapW = 800;
           mapH = 640;
         } else if (mapId === "bottom_island") {
