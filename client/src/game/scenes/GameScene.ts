@@ -639,20 +639,20 @@ export class GameScene extends Phaser.Scene {
             this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: encodedIndex, layer });
           }
         } else if (this.currentBrushType === "eraser" && !this.clickedGameObject) {
-          // Smart eraser: remove top layer (decor) first, then terrain underneath
-          const decorTile = this.map.getTileAt(tileX, tileY, true, this.decorLayer);
-          const terrainTile = this.map.getTileAt(tileX, tileY, true, this.layer);
-          if (decorTile && decorTile.index !== -1) {
-            // Erase only the decor layer tile — terrain below stays intact
+          if (this.paintOnTop) {
+            // Layering mode: peel one layer at a time (decor first, then terrain)
+            const decorTile = this.map.getTileAt(tileX, tileY, true, this.decorLayer);
+            if (decorTile && decorTile.index !== -1) {
+              this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: -1, layer: "decor" });
+            } else {
+              this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: -1, layer: "terrain" });
+              this.room.send("crop-remove", { x: tileX, y: tileY });
+            }
+          } else {
+            // Normal mode: erase both layers at once
             this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: -1, layer: "decor" });
-          } else if (terrainTile && terrainTile.index !== -1) {
-            // No decor tile — erase the terrain tile
             this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: -1, layer: "terrain" });
             this.room.send("crop-remove", { x: tileX, y: tileY });
-          } else {
-            // Both empty, still try to clean up any orphaned data
-            this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: -1, layer: "decor" });
-            this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: -1, layer: "terrain" });
           }
         }
       }
