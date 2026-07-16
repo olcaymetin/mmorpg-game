@@ -133,6 +133,8 @@ export class GameScene extends Phaser.Scene {
     this.load.image("gem_trader", "assets/gem_trader.png");
     this.load.image("farmer_npc", "assets/farmer_npc.png");
     this.load.image("fences", "assets/fences.png");
+    this.load.image("silo", "assets/silo.png");
+    this.load.image("silo2", "assets/silo2.png");
 
     // Load gift effects as spritesheets
     this.load.spritesheet("vfx_leaf_single", "assets/gift/Modern_Farm_vfx_Falling_Leaf_16x16.png", { frameWidth: 16, frameHeight: 16 });
@@ -166,6 +168,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   private getDefaultScaleForType(type: string): number {
+    if (type.startsWith("silo")) {
+      return 1.0;
+    }
     if (type.startsWith("decor_grass_") || type.startsWith("decor_gorsel_") || type.startsWith("vfx_") || type.startsWith("mg_")) {
       return 2.0;
     }

@@ -477,6 +477,8 @@ const App: React.FC = () => {
                       selectedObject.type === "mg_crate_1" ? "Tahta Sandık 1" :
                       selectedObject.type === "mg_crate_2" ? "Tahta Sandık 2" :
                       selectedObject.type === "mg_wooden_gate" ? "Tahta Kapı" :
+                      selectedObject.type === "silo" ? "Silo 1" :
+                      selectedObject.type === "silo2" ? "Silo 2" :
                       selectedObject.type.startsWith("vfx_") ? `Yaprak Efekti (${selectedObject.type.replace("vfx_leaves_", "").replace("_", " ")})` :
                       selectedObject.type.startsWith("decor_grass_") ? `Dekor (Çiçek/Çimen #${selectedObject.type.replace("decor_grass_", "")})` :
                       selectedObject.type.startsWith("decor_gorsel_") ? `Görsel Dekor #${selectedObject.type.replace("decor_gorsel_", "")}` :
@@ -495,7 +497,8 @@ const App: React.FC = () => {
                         selectedObject.type.startsWith("decor_grass_") ||
                         selectedObject.type.startsWith("decor_gorsel_") ||
                         selectedObject.type.startsWith("vfx_") ||
-                        selectedObject.type.startsWith("mg_")
+                        selectedObject.type.startsWith("mg_") ||
+                        selectedObject.type.startsWith("silo")
                           ? "0.5"
                           : "0.05"
                       }
@@ -503,7 +506,8 @@ const App: React.FC = () => {
                         selectedObject.type.startsWith("decor_grass_") ||
                         selectedObject.type.startsWith("decor_gorsel_") ||
                         selectedObject.type.startsWith("vfx_") ||
-                        selectedObject.type.startsWith("mg_")
+                        selectedObject.type.startsWith("mg_") ||
+                        selectedObject.type.startsWith("silo")
                           ? "5.0"
                           : "0.50"
                       }
@@ -511,7 +515,8 @@ const App: React.FC = () => {
                         selectedObject.type.startsWith("decor_grass_") ||
                         selectedObject.type.startsWith("decor_gorsel_") ||
                         selectedObject.type.startsWith("vfx_") ||
-                        selectedObject.type.startsWith("mg_")
+                        selectedObject.type.startsWith("mg_") ||
+                        selectedObject.type.startsWith("silo")
                           ? "0.1"
                           : "0.01"
                       }
@@ -626,6 +631,22 @@ const App: React.FC = () => {
                   >
                     <img src="/assets/farmer_npc.png" alt="farmer npc" className="obj-thumb" />
                     <span>Çiftçi NPC</span>
+                  </button>
+
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "silo" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("silo")}
+                  >
+                    <img src="/assets/silo.png" alt="silo" className="obj-thumb" style={{ height: "48px", objectFit: "contain" }} />
+                    <span>Silo 1</span>
+                  </button>
+
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "silo2" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("silo2")}
+                  >
+                    <img src="/assets/silo2.png" alt="silo2" className="obj-thumb" style={{ height: "48px", objectFit: "contain" }} />
+                    <span>Silo 2</span>
                   </button>
                 </div>
               )}
