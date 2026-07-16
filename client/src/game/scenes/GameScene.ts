@@ -506,6 +506,7 @@ export class GameScene extends Phaser.Scene {
         } else if (this.currentBrushType === "eraser" && !this.clickedGameObject) {
           this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: -1, layer: "decor" });
           this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: -1, layer: "terrain" });
+          this.room.send("crop-remove", { x: tileX, y: tileY });
         }
       }
     };

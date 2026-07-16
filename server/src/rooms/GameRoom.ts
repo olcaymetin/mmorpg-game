@@ -316,6 +316,18 @@ export class GameRoom extends Room<GameState> {
         console.log(`[Crop] Harvested ${crop.cropType} at ${key}`);
       }
     });
+
+    /**
+     * \"crop-remove\" handler - erase a crop at specific tile (used by Eraser tool)
+     */
+    this.onMessage("crop-remove", (client: Client, msg: { x: number; y: number }) => {
+      const key = `${msg.x},${msg.y}`;
+      if (this.state.crops.has(key)) {
+        this.state.crops.delete(key);
+        this.triggerDebouncedSave();
+        console.log(`[Crop] Removed crop at ${key}`);
+      }
+    });
   }
 
   /**
