@@ -1,7 +1,13 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import "./App.css";
 import { useColyseus } from "./hooks/useColyseus";
 import { PhaserGame } from "./game/PhaserGame";
+import LoginScreen from "./components/LoginScreen";
+import ChatPanel from "./components/ChatPanel";
+import MarketplaceModal from "./components/MarketplaceModal";
+import SettingsModal from "./components/SettingsModal";
+import LeaderboardModal from "./components/LeaderboardModal";
+import CraftTimer, { CraftTimerEntry } from "./components/CraftTimer";
 
 const cropLabels: Record<string, string> = {
   Cabbage: "Lahana",
@@ -137,6 +143,36 @@ const App: React.FC = () => {
   // File input ref for importing map
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // ── Login ───────────────────────────────────────────────────────────────────
+  const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem("login_type"));
+  const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem("login_type") === "admin");
+
+  // ── New currency: gem & coin (FARM) ─────────────────────────────────────────
+  const [gem, setGem] = useState(0);
+  const [coin, setCoin] = useState(0);
+
+  // ── Player info ─────────────────────────────────────────────────────────────
+  const [myUsername, setMyUsername] = useState("");
+  const [usernameSet, setUsernameSet] = useState(false);
+  const [language, setLanguage] = useState("en");
+
+  // ── Skills (farming, combat, etc.) ──────────────────────────────────────────
+  const [skills, setSkills] = useState<Record<string, { level: number; xp: number }>>({});
+  const [skillBoosts, setSkillBoosts] = useState<Record<string, number>>({});
+  const [totalLevel, setTotalLevel] = useState(1);
+  const [allPlayers, setAllPlayers] = useState<any[]>([]);
+
+  // ── Modals ──────────────────────────────────────────────────────────────────
+  const [isMarketOpen, setIsMarketOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
+
+  // ── Craft timers ────────────────────────────────────────────────────────────
+  const [craftTimers, setCraftTimers] = useState<CraftTimerEntry[]>([]);
+  const removeCraftTimer = useCallback((id: string) => {
+    setCraftTimers(prev => prev.filter(t => t.id !== id));
+  }, []);
+
   // Bind game events for selection sync and shop opening
   useEffect(() => {
     if (!game) return;
@@ -153,9 +189,27 @@ const App: React.FC = () => {
       setIsShopOpen(true);
     };
 
+    const handleOpenMarket = () => {
+      setIsMarketOpen(true);
+    };
+
+    const handleCropPlanted = (data: { cropType: string }) => {
+      const growthDuration = 30_000; // 30 seconds = 6 stages × 5s
+      const entry: CraftTimerEntry = {
+        id: `crop-${Date.now()}`,
+        label: `${data.cropType} growing…`,
+        emoji: "🌱",
+        durationMs: growthDuration,
+        startedAt: Date.now(),
+      };
+      setCraftTimers(prev => [...prev, entry]);
+    };
+
     game.events.on("editor-object-selected", handleObjectSelected);
     game.events.on("editor-object-deselected", handleObjectDeselected);
     game.events.on("open-farmer-shop", handleOpenShop);
+    game.events.on("open-marketplace", handleOpenMarket);
+    game.events.on("crop-planted", handleCropPlanted);
 
     // Check for legacy local storage maps directly
     const rawMap = localStorage.getItem("mmorpg_map_data");
@@ -168,8 +222,11 @@ const App: React.FC = () => {
       game.events.off("editor-object-selected", handleObjectSelected);
       game.events.off("editor-object-deselected", handleObjectDeselected);
       game.events.off("open-farmer-shop", handleOpenShop);
+      game.events.off("open-marketplace", handleOpenMarket);
+      game.events.off("crop-planted", handleCropPlanted);
     };
   }, [game]);
+
 
   // Synchronize player inventory, gold, and seeds from Colyseus GameState
   useEffect(() => {
@@ -179,23 +236,45 @@ const App: React.FC = () => {
       const player = room.state.players.get(room.sessionId);
       if (player) {
         setGold(player.gold !== undefined ? player.gold : 100);
+        setGem(player.gem !== undefined ? player.gem : 0);
+        setCoin(player.coin !== undefined ? player.coin : 0);
+        setMyUsername(player.username || "");
+        setUsernameSet(!!player.usernameSet);
+        setTotalLevel(player.totalLevel || 1);
 
         if (player.inventory) {
           const inv: Record<string, number> = {};
-          player.inventory.forEach((val, key) => {
-            inv[key] = val;
-          });
+          player.inventory.forEach((val: number, key: string) => { inv[key] = val; });
           setInventory(inv);
         }
 
         if (player.seeds) {
           const sd: Record<string, number> = {};
-          player.seeds.forEach((val, key) => {
-            sd[key] = val;
-          });
+          player.seeds.forEach((val: number, key: string) => { sd[key] = val; });
           setSeeds(sd);
         }
+
+        if (player.skills) {
+          const sk: Record<string, { level: number; xp: number }> = {};
+          player.skills.forEach((s: any, name: string) => { sk[name] = { level: s.level, xp: s.xp }; });
+          setSkills(sk);
+        }
+
+        if (player.skillBoosts) {
+          const boosts: Record<string, number> = {};
+          player.skillBoosts.forEach((val: number, key: string) => { boosts[key] = val; });
+          setSkillBoosts(boosts);
+        }
       }
+
+      // Collect all players for leaderboard
+      const players: any[] = [];
+      room.state.players.forEach((p: any, sid: string) => {
+        const sk: Record<string, { level: number }> = {};
+        if (p.skills) p.skills.forEach((s: any, n: string) => { sk[n] = { level: s.level }; });
+        players.push({ sessionId: sid, username: p.username || "", totalLevel: p.totalLevel || 1, skills: sk });
+      });
+      setAllPlayers(players);
     };
 
     // Initial check
@@ -433,6 +512,11 @@ const App: React.FC = () => {
 
   return (
     <div className="app">
+      {/* ── Login Screen Gate ───────────────────────────────────────────── */}
+      {!isLoggedIn && (
+        <LoginScreen onLogin={(admin) => { setIsAdmin(admin); setIsLoggedIn(true); }} />
+      )}
+
       {/* ── HUD overlay ─────────────────────────────────────────────────── */}
       <div className="hud" aria-label="HUD">
         {/* Status chip */}
@@ -445,15 +529,32 @@ const App: React.FC = () => {
           </span>
         </div>
 
-        {/* Gold chip */}
+        {/* Currency chips */}
         {connected && (
-          <div className="chip" style={{ background: "rgba(241, 196, 15, 0.2)", border: "1px solid rgba(241, 196, 15, 0.4)", color: "#f1c40f", fontWeight: "bold" }}>
-            🪙 {gold} Altın
-          </div>
+          <>
+            <div className="chip" style={{ background: "rgba(241,196,15,0.2)", border: "1px solid rgba(241,196,15,0.4)", color: "#f1c40f", fontWeight: "bold" }}>
+              🥇 {gold} Gold
+            </div>
+            <div className="chip" style={{ background: "rgba(139,92,246,0.2)", border: "1px solid rgba(139,92,246,0.4)", color: "#c4b5fd", fontWeight: "bold" }}>
+              💎 {gem} Gem
+            </div>
+            <div className="chip" style={{ background: "rgba(34,197,94,0.2)", border: "1px solid rgba(34,197,94,0.4)", color: "#86efac", fontWeight: "bold" }}>
+              🪙 {coin} FARM
+            </div>
+          </>
         )}
 
-        {/* Edit mode toggle */}
+        {/* HUD action buttons */}
         {connected && (
+          <>
+            <button className="chip chip--clickable" onClick={() => setIsMarketOpen(true)}>🛒 Market</button>
+            <button className="chip chip--clickable" onClick={() => setIsLeaderboardOpen(true)}>🏆 Leaderboard</button>
+            <button className="chip chip--clickable" onClick={() => setIsSettingsOpen(true)}>⚙️ Settings</button>
+          </>
+        )}
+
+        {/* Edit mode toggle — only shown for admin */}
+        {connected && isAdmin && (
           <button
             className={`chip chip--clickable chip--edit ${editMode ? "chip--active" : ""}`}
             onClick={handleToggleEditMode}
@@ -462,6 +563,7 @@ const App: React.FC = () => {
             <span>{editMode ? "🛠️ Editör Açık" : "🧱 Haritayı Düzenle"}</span>
           </button>
         )}
+
 
         {/* Controls hint */}
         {!editMode ? (
@@ -1296,6 +1398,50 @@ const App: React.FC = () => {
           <span>Connecting to server…</span>
         </div>
       ) : null}
+
+      {/* ── Chat Panel ──────────────────────────────────────────────────── */}
+      {room && (
+        <ChatPanel room={room} myName={myUsername || `Player_${sessionId?.slice(0,6) || "?"}`} />
+      )}
+
+      {/* ── Craft Timer HUD ─────────────────────────────────────────────── */}
+      <CraftTimer timers={craftTimers} onRemove={removeCraftTimer} />
+
+      {/* ── Marketplace Modal ───────────────────────────────────────────── */}
+      {isMarketOpen && room && (
+        <MarketplaceModal
+          room={room}
+          inventory={inventory}
+          seeds={seeds}
+          coin={coin}
+          mySessionId={sessionId || ""}
+          onClose={() => setIsMarketOpen(false)}
+        />
+      )}
+
+      {/* ── Settings Modal ──────────────────────────────────────────────── */}
+      {isSettingsOpen && room && (
+        <SettingsModal
+          room={room}
+          myUsername={myUsername}
+          usernameSet={usernameSet}
+          gem={gem}
+          skills={skills}
+          skillBoosts={skillBoosts}
+          language={language}
+          onLanguageChange={setLanguage}
+          onClose={() => setIsSettingsOpen(false)}
+        />
+      )}
+
+      {/* ── Leaderboard Modal ───────────────────────────────────────────── */}
+      {isLeaderboardOpen && (
+        <LeaderboardModal
+          players={allPlayers}
+          mySessionId={sessionId || ""}
+          onClose={() => setIsLeaderboardOpen(false)}
+        />
+      )}
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import { Room, Client } from "colyseus";
-import { GameState, Player, PlacedObjectState, CropState } from "../schema/GameState";
+import { GameState, Player, PlacedObjectState, CropState, MarketListing, ChatMessage, SkillState } from "../schema/GameState";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -388,6 +388,8 @@ export class GameRoom extends Room<GameState> {
           const cropType = crop.cropType;
           const currentCount = player.inventory.get(cropType) || 0;
           player.inventory.set(cropType, currentCount + 1);
+          // Grant farming XP (with boost)
+          this.addSkillXP(player, "farming", 25);
           console.log(`[Inventory] Player ${client.sessionId.slice(0, 8)} harvested 1 ${cropType}. Total: ${currentCount + 1}`);
         }
         this.state.crops.delete(key);
@@ -397,7 +399,7 @@ export class GameRoom extends Room<GameState> {
     });
 
     /**
-     * \"crop-remove\" handler - erase a crop at specific tile (used by Eraser tool)
+     * "crop-remove" handler - erase a crop at specific tile (used by Eraser tool)
      */
     this.onMessage("crop-remove", (client: Client, msg: { x: number; y: number }) => {
       const key = `${msg.x},${msg.y}`;
@@ -406,6 +408,224 @@ export class GameRoom extends Room<GameState> {
         this.triggerDebouncedSave();
         console.log(`[Crop] Removed crop at ${key}`);
       }
+    });
+
+    // ─── Chat ────────────────────────────────────────────────────────────────
+
+    this.onMessage("chat-message", (client: Client, msg: { channel: string; text: string }) => {
+      const player = this.state.players.get(client.sessionId);
+      if (!player) return;
+      const text = (msg.text || "").trim().slice(0, 200);
+      if (!text) return;
+
+      const chatMsg = new ChatMessage();
+      chatMsg.id = `${Date.now()}-${client.sessionId.slice(0, 4)}`;
+      chatMsg.senderId = client.sessionId;
+      chatMsg.senderName = player.username || `Player_${client.sessionId.slice(0, 6)}`;
+      chatMsg.channel = msg.channel || "global";
+      chatMsg.text = text;
+      chatMsg.timestamp = Date.now();
+
+      // Keep last 100 messages
+      this.state.chatMessages.push(chatMsg);
+      if (this.state.chatMessages.length > 100) {
+        this.state.chatMessages.splice(0, 1);
+      }
+    });
+
+    // ─── Username ─────────────────────────────────────────────────────────────
+
+    this.onMessage("set-username", (client: Client, msg: { username: string }) => {
+      const player = this.state.players.get(client.sessionId);
+      if (!player || player.usernameSet) return;
+
+      const name = (msg.username || "").trim().slice(0, 20);
+      if (!name || name.length < 3) {
+        client.send("username-error", { message: "Username must be 3-20 characters." });
+        return;
+      }
+
+      // Check uniqueness
+      let taken = false;
+      this.state.players.forEach((p) => {
+        if (p.sessionId !== client.sessionId && p.username.toLowerCase() === name.toLowerCase()) {
+          taken = true;
+        }
+      });
+
+      if (taken) {
+        client.send("username-error", { message: "This username is already taken. Choose another." });
+        return;
+      }
+
+      player.username = name;
+      player.usernameSet = true;
+      client.send("username-accepted", { username: name });
+      console.log(`[Username] ${client.sessionId.slice(0, 8)} set username: ${name}`);
+    });
+
+    // ─── Marketplace ──────────────────────────────────────────────────────────
+
+    this.onMessage("market-list", (client: Client, msg: { itemType: string; itemCategory: string; quantity: number; pricePerUnit: number }) => {
+      const player = this.state.players.get(client.sessionId);
+      if (!player) return;
+
+      const qty = Math.max(1, Math.floor(msg.quantity || 1));
+      const price = Math.max(1, Math.floor(msg.pricePerUnit || 1));
+      const fee = Math.ceil(qty * price * 0.05); // 5% listing fee
+
+      // Check inventory
+      if (msg.itemCategory === "crop") {
+        const have = player.inventory.get(msg.itemType) || 0;
+        if (have < qty) { client.send("market-error", { message: "Not enough items in inventory." }); return; }
+        player.inventory.set(msg.itemType, have - qty);
+      } else if (msg.itemCategory === "seed") {
+        const have = player.seeds.get(msg.itemType) || 0;
+        if (have < qty) { client.send("market-error", { message: "Not enough seeds." }); return; }
+        player.seeds.set(msg.itemType, have - qty);
+      }
+
+      // Deduct fee in FARM coin (or gold if not enough coin)
+      if (player.coin >= fee) {
+        player.coin -= fee;
+      } else if (player.gold >= fee) {
+        player.gold -= fee;
+      } else {
+        client.send("market-error", { message: `Need ${fee} FARM coin for listing fee.` }); return;
+      }
+
+      const listing = new MarketListing();
+      listing.id = `ml-${Date.now()}-${client.sessionId.slice(0, 4)}`;
+      listing.sellerId = client.sessionId;
+      listing.sellerName = player.username || `Player_${client.sessionId.slice(0, 6)}`;
+      listing.itemType = msg.itemType;
+      listing.itemCategory = msg.itemCategory;
+      listing.quantity = qty;
+      listing.pricePerUnit = price;
+      listing.listedAt = Date.now();
+      this.state.marketListings.set(listing.id, listing);
+      client.send("market-listed", { id: listing.id });
+      console.log(`[Market] ${listing.sellerName} listed ${qty}x ${msg.itemType} @ ${price} FARM each (fee: ${fee})`);
+    });
+
+    this.onMessage("market-buy", (client: Client, msg: { listingId: string; quantity: number }) => {
+      const player = this.state.players.get(client.sessionId);
+      if (!player) return;
+      const listing = this.state.marketListings.get(msg.listingId);
+      if (!listing) { client.send("market-error", { message: "Listing not found." }); return; }
+      if (listing.sellerId === client.sessionId) { client.send("market-error", { message: "Cannot buy your own listing." }); return; }
+
+      const qty = Math.min(Math.max(1, Math.floor(msg.quantity || 1)), listing.quantity);
+      const totalCost = qty * listing.pricePerUnit;
+      const fee = Math.ceil(totalCost * 0.025); // 2.5% buy fee
+      const totalWithFee = totalCost + fee;
+
+      if (player.coin < totalWithFee) { client.send("market-error", { message: `Need ${totalWithFee} FARM coin.` }); return; }
+
+      player.coin -= totalWithFee;
+
+      // Give item to buyer
+      if (listing.itemCategory === "crop") {
+        const have = player.inventory.get(listing.itemType) || 0;
+        player.inventory.set(listing.itemType, have + qty);
+      } else if (listing.itemCategory === "seed") {
+        const have = player.seeds.get(listing.itemType) || 0;
+        player.seeds.set(listing.itemType, have + qty);
+      }
+
+      // Pay seller
+      const seller = this.state.players.get(listing.sellerId);
+      if (seller) { seller.coin += totalCost; }
+
+      // Update listing quantity
+      listing.quantity -= qty;
+      if (listing.quantity <= 0) {
+        this.state.marketListings.delete(listing.id);
+      }
+      client.send("market-bought", { itemType: listing.itemType, qty, totalCost: totalWithFee });
+      console.log(`[Market] ${player.username || client.sessionId.slice(0,6)} bought ${qty}x ${listing.itemType}`);
+    });
+
+    this.onMessage("market-cancel", (client: Client, msg: { listingId: string }) => {
+      const listing = this.state.marketListings.get(msg.listingId);
+      if (!listing || listing.sellerId !== client.sessionId) return;
+      const player = this.state.players.get(client.sessionId);
+      if (player) {
+        // Return items
+        if (listing.itemCategory === "crop") {
+          const have = player.inventory.get(listing.itemType) || 0;
+          player.inventory.set(listing.itemType, have + listing.quantity);
+        } else if (listing.itemCategory === "seed") {
+          const have = player.seeds.get(listing.itemType) || 0;
+          player.seeds.set(listing.itemType, have + listing.quantity);
+        }
+      }
+      this.state.marketListings.delete(msg.listingId);
+      client.send("market-cancelled", { listingId: msg.listingId });
+    });
+
+    // ─── Friend System ────────────────────────────────────────────────────────
+
+    this.onMessage("friend-request", (client: Client, msg: { targetSessionId: string }) => {
+      const player = this.state.players.get(client.sessionId);
+      const target = this.state.players.get(msg.targetSessionId);
+      if (!player || !target) return;
+      if (target.friends.has(client.sessionId)) return; // already friends
+      target.friendRequests.set(client.sessionId, player.username || client.sessionId.slice(0, 8));
+    });
+
+    this.onMessage("friend-accept", (client: Client, msg: { fromSessionId: string }) => {
+      const player = this.state.players.get(client.sessionId);
+      const requester = this.state.players.get(msg.fromSessionId);
+      if (!player || !requester) return;
+      player.friendRequests.delete(msg.fromSessionId);
+      player.friends.set(msg.fromSessionId, requester.username || msg.fromSessionId.slice(0, 8));
+      requester.friends.set(client.sessionId, player.username || client.sessionId.slice(0, 8));
+    });
+
+    this.onMessage("friend-reject", (client: Client, msg: { fromSessionId: string }) => {
+      const player = this.state.players.get(client.sessionId);
+      if (!player) return;
+      player.friendRequests.delete(msg.fromSessionId);
+    });
+
+    this.onMessage("dm-send", (client: Client, msg: { toSessionId: string; text: string }) => {
+      const player = this.state.players.get(client.sessionId);
+      const target = this.state.players.get(msg.toSessionId);
+      if (!player || !target) return;
+      const text = (msg.text || "").trim().slice(0, 300);
+      if (!text) return;
+      // Relay DM as a direct client message
+      const fromName = player.username || client.sessionId.slice(0, 8);
+      this.clients.find(c => c.sessionId === msg.toSessionId)?.send("dm-received", {
+        fromSessionId: client.sessionId,
+        fromName,
+        text,
+        timestamp: Date.now()
+      });
+    });
+
+    // ─── Skill Boost ──────────────────────────────────────────────────────────
+
+    // Permanent skill boost tiers (gem cost -> XP % bonus)
+    const BOOST_TIERS: Array<{ cost: number; bonus: number }> = [
+      { cost: 1,  bonus: 5  },
+      { cost: 5,  bonus: 15 },
+      { cost: 10, bonus: 30 },
+      { cost: 25, bonus: 60 },
+      { cost: 50, bonus: 100 },
+    ];
+
+    this.onMessage("skill-boost", (client: Client, msg: { skill: string; tierIndex: number }) => {
+      const player = this.state.players.get(client.sessionId);
+      if (!player) return;
+      const tier = BOOST_TIERS[msg.tierIndex];
+      if (!tier) return;
+      if (player.gem < tier.cost) { client.send("boost-error", { message: `Need ${tier.cost} Gem.` }); return; }
+      player.gem -= tier.cost;
+      const currentBoost = player.skillBoosts.get(msg.skill) || 0;
+      player.skillBoosts.set(msg.skill, currentBoost + tier.bonus);
+      console.log(`[Boost] ${player.username || client.sessionId.slice(0,6)} boosted ${msg.skill} by +${tier.bonus}% (total: ${currentBoost + tier.bonus}%)`);
     });
   }
 
@@ -424,6 +644,19 @@ export class GameRoom extends Room<GameState> {
     player.skin = skins[Math.floor(Math.random() * skins.length)];
     player.state = "idle";
     player.direction = "down";
+    player.gold = 100;
+    player.gem = 5;   // starter gems
+    player.coin = 50; // starter FARM coin
+
+    // Initialize all profession skills
+    for (const skill of ["farming", "combat", "woodcutting", "mining", "fishing", "crafting"]) {
+      const s = new SkillState();
+      s.name = skill;
+      s.xp = 0;
+      s.level = 1;
+      player.skills.set(skill, s);
+    }
+    player.totalLevel = 1;
 
     this.state.players.set(client.sessionId, player);
     console.log(
@@ -437,6 +670,22 @@ export class GameRoom extends Room<GameState> {
   onLeave(client: Client): void {
     this.state.players.delete(client.sessionId);
     console.log(`[LEAVE] ${client.sessionId.slice(0, 8)}…`);
+  }
+
+  // ─── Skill XP Helper ─────────────────────────────────────────────────────────
+
+  private addSkillXP(player: Player, skillName: string, baseXP: number): void {
+    const skill = player.skills.get(skillName);
+    if (!skill) return;
+    const boost = player.skillBoosts.get(skillName) || 0;
+    const earned = Math.floor(baseXP * (1 + boost / 100));
+    skill.xp += earned;
+    // Level up formula: level = floor(1 + sqrt(xp / 50))
+    skill.level = Math.max(1, Math.floor(1 + Math.sqrt(skill.xp / 50)));
+    // Recalculate total level as average of all skills
+    let sum = 0; let count = 0;
+    player.skills.forEach(s => { sum += s.level; count++; });
+    player.totalLevel = count > 0 ? Math.max(1, Math.floor(sum / count)) : 1;
   }
 
   onDispose(): void {

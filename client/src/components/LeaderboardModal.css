@@ -1,0 +1,52 @@
+/* ── Leaderboard Modal ──────────────────────────────────────────────────────── */
+.leaderboard-modal {
+  width: 500px; max-width: 96vw; max-height: 80vh;
+  background: rgba(10,15,30,0.97);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+  display: flex; flex-direction: column; overflow: hidden;
+  animation: modalIn 0.25s cubic-bezier(0.16,1,0.3,1);
+}
+
+.leaderboard-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 18px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  background: linear-gradient(135deg, rgba(251,191,36,0.08), transparent);
+}
+.leaderboard-header h2 { flex:1; margin:0; font-size:18px; color:#fbbf24; }
+
+.leaderboard-list {
+  flex:1; overflow-y:auto;
+  scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+.leaderboard-empty { text-align:center; color:rgba(255,255,255,0.3); padding:40px 0; font-size:14px; }
+
+.leaderboard-entry {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  transition: background 0.15s;
+}
+.leaderboard-entry:hover { background: rgba(255,255,255,0.03); }
+.leaderboard-entry.me { background: rgba(251,191,36,0.06); border-left: 3px solid rgba(251,191,36,0.5); }
+
+.lb-rank { font-size: 18px; font-weight: 800; min-width: 36px; text-align: center; }
+.lb-name { flex:1; font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.85); display:flex; align-items:center; gap:8px; }
+.lb-you {
+  font-size: 10px; font-weight: 800; color: #fbbf24;
+  background: rgba(251,191,36,0.15); border: 1px solid rgba(251,191,36,0.3);
+  border-radius: 6px; padding: 2px 6px;
+}
+.lb-level { font-size: 13px; font-weight: 700; color: #a78bfa; min-width: 50px; text-align:right; }
+.lb-skills { display: flex; gap: 4px; flex-wrap: wrap; min-width: 140px; justify-content:flex-end; }
+.lb-skill-chip {
+  font-size: 11px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  padding: 2px 6px;
+  color: rgba(255,255,255,0.55);
+}

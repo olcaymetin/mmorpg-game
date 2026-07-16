@@ -1,0 +1,85 @@
+/* ── Craft Timer HUD ──────────────────────────────────────────────────────── */
+.craft-timer-stack {
+  position: fixed;
+  bottom: 80px;
+  left: 16px;
+  z-index: 1050;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 8px;
+  max-width: 260px;
+}
+
+.craft-timer-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(10,15,30,0.92);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 10px 14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  backdrop-filter: blur(10px);
+  animation: timerIn 0.3s cubic-bezier(0.16,1,0.3,1);
+  transition: border-color 0.3s;
+}
+
+.craft-timer-card.done {
+  border-color: rgba(34,197,94,0.5);
+  animation: timerDone 0.4s ease;
+}
+
+@keyframes timerIn {
+  from { opacity:0; transform: translateX(-16px); }
+  to   { opacity:1; transform: translateX(0); }
+}
+
+@keyframes timerDone {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.06); border-color: rgba(34,197,94,0.9); }
+  100% { transform: scale(1); }
+}
+
+.craft-timer-emoji { font-size: 26px; }
+
+.craft-timer-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.craft-timer-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.85);
+}
+
+.craft-timer-remaining {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+}
+
+.craft-timer-done {
+  font-size: 12px;
+  font-weight: 700;
+  color: #86efac;
+}
+
+.craft-timer-bar {
+  height: 4px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.craft-timer-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #22c55e, #86efac);
+  border-radius: 4px;
+  transition: width 0.5s linear;
+}
+
+.craft-timer-card.done .craft-timer-fill {
+  background: linear-gradient(90deg, #34d399, #6ee7b7);
+}

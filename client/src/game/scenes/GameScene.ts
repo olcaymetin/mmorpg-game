@@ -564,6 +564,7 @@ export class GameScene extends Phaser.Scene {
         if (!this.editorMode && this.selectedSeed) {
           if (!crop) {
             this.room?.send("crop-plant", { x: tileX, y: tileY, cropType: this.selectedSeed, free: false });
+            this.game.events.emit("crop-planted", { cropType: this.selectedSeed });
           }
           return;
         }
@@ -647,6 +648,9 @@ export class GameScene extends Phaser.Scene {
       if (!this.editorMode) {
         if (pointer.button === 0 && type === "farmer_npc") {
           this.game.events.emit("open-farmer-shop");
+        }
+        if (pointer.button === 0 && (type === "marketplace" || type === "shop")) {
+          this.game.events.emit("open-marketplace");
         }
         return;
       }
