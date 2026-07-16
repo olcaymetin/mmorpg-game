@@ -1278,46 +1278,56 @@ export class GameScene extends Phaser.Scene {
       const py = localPlayer.container.y;
 
       for (const obj of this.placedObjects) {
-        const dist = Phaser.Math.Distance.Between(px, py, obj.x, obj.y);
-        if (dist < 45) {
-          if (obj.type === "yon_up" && this.currentMapId === "main") {
-            this.lastTeleportTime = time;
-            this.room.send("player-teleport", { mapId: "sub_island", x: 400, y: 580 });
-            break;
-          } else if (obj.type === "yon_down" && this.currentMapId === "sub_island") {
-            this.lastTeleportTime = time;
-            
-            // Find target position on main map (near first yon_up)
-            let targetX = 800;
-            let targetY = 1200;
-            this.room.state.placedObjects.forEach((val: any) => {
-              if (val.type === "yon_up" && (val.mapId || "main") === "main") {
-                targetX = val.x;
-                targetY = val.y + 48; // Offset down so we don't immediately re-teleport
-              }
-            });
+        if (obj.type.startsWith("yon_")) {
+          const dist = Phaser.Math.Distance.Between(px, py, obj.x, obj.y);
+          // Console log for debugging when player is near any arrow
+          if (dist < 100) {
+            console.log(`[Teleport Debug] Near ${obj.type} at (${obj.x}, ${obj.y}). Player: (${px.toFixed(1)}, ${py.toFixed(1)}). Dist: ${dist.toFixed(1)}. Map: ${this.currentMapId}`);
+          }
+          if (dist < 45) {
+            if (obj.type === "yon_up" && this.currentMapId === "main") {
+              console.log(`[Teleport] Up arrow triggered. Teleporting to sub_island...`);
+              this.lastTeleportTime = time;
+              this.room.send("player-teleport", { mapId: "sub_island", x: 400, y: 580 });
+              break;
+            } else if (obj.type === "yon_down" && this.currentMapId === "sub_island") {
+              console.log(`[Teleport] Down arrow triggered. Teleporting to main...`);
+              this.lastTeleportTime = time;
+              
+              // Find target position on main map (near first yon_up)
+              let targetX = 800;
+              let targetY = 1200;
+              this.room.state.placedObjects.forEach((val: any) => {
+                if (val.type === "yon_up" && (val.mapId || "main") === "main") {
+                  targetX = val.x;
+                  targetY = val.y + 48; // Offset down so we don't immediately re-teleport
+                }
+              });
 
-            this.room.send("player-teleport", { mapId: "main", x: targetX, y: targetY });
-            break;
-          } else if (obj.type === "yon_left" && this.currentMapId === "main") {
-            this.lastTeleportTime = time;
-            this.room.send("player-teleport", { mapId: "left_island", x: 1500, y: obj.y });
-            break;
-          } else if (obj.type === "yon_right" && this.currentMapId === "left_island") {
-            this.lastTeleportTime = time;
-            
-            // Find target position on main map (near first yon_left)
-            let targetX = 100;
-            let targetY = 600;
-            this.room.state.placedObjects.forEach((val: any) => {
-              if (val.type === "yon_left" && (val.mapId || "main") === "main") {
-                targetX = val.x + 48; // Offset to the right so we don't immediately re-teleport
-                targetY = val.y;
-              }
-            });
+              this.room.send("player-teleport", { mapId: "main", x: targetX, y: targetY });
+              break;
+            } else if (obj.type === "yon_left" && this.currentMapId === "main") {
+              console.log(`[Teleport] Left arrow triggered. Teleporting to left_island...`);
+              this.lastTeleportTime = time;
+              this.room.send("player-teleport", { mapId: "left_island", x: 1500, y: obj.y });
+              break;
+            } else if (obj.type === "yon_right" && this.currentMapId === "left_island") {
+              console.log(`[Teleport] Right arrow triggered. Teleporting to main...`);
+              this.lastTeleportTime = time;
+              
+              // Find target position on main map (near first yon_left)
+              let targetX = 100;
+              let targetY = 600;
+              this.room.state.placedObjects.forEach((val: any) => {
+                if (val.type === "yon_left" && (val.mapId || "main") === "main") {
+                  targetX = val.x + 48; // Offset to the right so we don't immediately re-teleport
+                  targetY = val.y;
+                }
+              });
 
-            this.room.send("player-teleport", { mapId: "main", x: targetX, y: targetY });
-            break;
+              this.room.send("player-teleport", { mapId: "main", x: targetX, y: targetY });
+              break;
+            }
           }
         }
       }
