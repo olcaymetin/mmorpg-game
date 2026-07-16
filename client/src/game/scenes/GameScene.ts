@@ -940,8 +940,15 @@ export class GameScene extends Phaser.Scene {
     // Destroy previous representation if it exists
     this.destroyLocalObject(id);
 
-    const isAnimated = type.startsWith("vfx_") || type.startsWith("mg_");
-    const img = isAnimated ? this.add.sprite(x, y, type) : this.add.image(x, y, type);
+    let img: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
+    if (type.startsWith("decor_gorsel_")) {
+      const frameStr = type.substring("decor_gorsel_".length);
+      const frameIdx = parseInt(frameStr, 10) || 0;
+      img = this.add.image(x, y, "decor_sheet_gorsel", frameIdx);
+    } else {
+      const isAnimated = type.startsWith("vfx_") || type.startsWith("mg_");
+      img = isAnimated ? this.add.sprite(x, y, type) : this.add.image(x, y, type);
+    }
     
     img.setScale(scale);
     img.setOrigin(0.5, 0.8);
