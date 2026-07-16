@@ -872,6 +872,13 @@ export class GameScene extends Phaser.Scene {
               this.mapHeight = 40 * TILE_SIZE;
             }
             this.cameras.main.setBounds(0, 0, this.mapWidth, this.mapHeight);
+
+            // Clamp camera zoom to the new map's minimum zoom to prevent showing black boundaries
+            const minZoom = Math.max(this.scale.width / this.mapWidth, this.scale.height / this.mapHeight);
+            if (this.cameras.main.zoom < minZoom) {
+              this.cameras.main.setZoom(minZoom);
+            }
+
             this.redrawMap();
           }
         }
