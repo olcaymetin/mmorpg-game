@@ -111,7 +111,6 @@ const App: React.FC = () => {
   const [game, setGame] = useState<Phaser.Game | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [debugLogs, setDebugLogs] = useState<string[]>([]);
 
   // Brush state: -1 = Eraser, -2 = Object, 0+ = Tile index
   const [selectedTile, setSelectedTile] = useState(0);
@@ -195,28 +194,7 @@ const App: React.FC = () => {
     setCraftTimers(prev => prev.filter(t => t.id !== id));
   }, []);
 
-  // Bind game events for selection sync and shop opening
-  useEffect(() => {
-    const originalLog = console.log;
-    const originalError = console.error;
 
-    console.log = (...args: any[]) => {
-      originalLog(...args);
-      const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
-      setDebugLogs(prev => [msg, ...prev].slice(0, 15));
-    };
-
-    console.error = (...args: any[]) => {
-      originalError(...args);
-      const msg = "❌ " + args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
-      setDebugLogs(prev => [msg, ...prev].slice(0, 15));
-    };
-
-    return () => {
-      console.log = originalLog;
-      console.error = originalError;
-    };
-  }, []);
 
   // Bind game events for selection sync and shop opening
   useEffect(() => {
@@ -890,23 +868,7 @@ const App: React.FC = () => {
                 />
               </div>
 
-              {/* ── Debug Console overlay ── */}
-              <div className="section-title" style={{ marginTop: "10px", color: "#ef4444" }}>Ağ & Silme Debug Konsolu</div>
-              <div style={{
-                background: "#0d0e12",
-                color: "#4ade80",
-                fontFamily: "Consolas, monospace",
-                fontSize: "10px",
-                padding: "8px",
-                height: "120px",
-                overflowY: "auto",
-                border: "1px solid rgba(239, 68, 68, 0.3)",
-                borderRadius: "6px",
-                whiteSpace: "pre-wrap",
-                marginBottom: "10px"
-              }}>
-                {debugLogs.length === 0 ? "İşlem yapıldıkça loglar burada belirecektir..." : debugLogs.join('\n')}
-              </div>
+
 
               {/* ── Placed Object Settings (Visible when a building is selected) ── */}
               {selectedObject && (
