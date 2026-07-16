@@ -1059,126 +1059,77 @@ export class GameScene extends Phaser.Scene {
     });
 
     // 2. Map Tiles Sync
-    mapData.onAdd((tileIndex: number, key: string) => {
+    mapData.onAdd((arg1: any, arg2: any) => {
       try {
-        let mapId = "main";
-        let coords = key;
-        if (key && key.includes(":")) {
-          const parts = key.split(":");
-          mapId = parts[0];
-          coords = parts[1];
-        }
-        if (mapId === this.currentMapId) {
-          const [xStr, yStr] = coords.split(",");
-          const tx = parseInt(xStr, 10);
-          const ty = parseInt(yStr, 10);
-          this.putTileWithEncoding(tileIndex, tx, ty, this.layer);
+        const parsed = this.parseTileSchemaKey(arg1, arg2);
+        if (parsed && parsed.mapId === this.currentMapId) {
+          // Determine tileIndex (the one that isn't the string key)
+          const tileIndex = typeof arg1 === "number" ? arg1 : (typeof arg2 === "number" ? arg2 : 0);
+          this.putTileWithEncoding(tileIndex, parsed.tx, parsed.ty, this.layer);
         }
       } catch (e) {
-        console.error("Error in mapData.onAdd:", e, "key:", key, "index:", tileIndex);
+        console.error("Error in mapData.onAdd:", e, arg1, arg2);
       }
     });
 
-    mapData.onChange((tileIndex: number, key: string) => {
+    mapData.onChange((arg1: any, arg2: any) => {
       try {
-        let mapId = "main";
-        let coords = key;
-        if (key && key.includes(":")) {
-          const parts = key.split(":");
-          mapId = parts[0];
-          coords = parts[1];
-        }
-        if (mapId === this.currentMapId) {
-          const [xStr, yStr] = coords.split(",");
-          const tx = parseInt(xStr, 10);
-          const ty = parseInt(yStr, 10);
-          this.putTileWithEncoding(tileIndex, tx, ty, this.layer);
+        const parsed = this.parseTileSchemaKey(arg1, arg2);
+        if (parsed && parsed.mapId === this.currentMapId) {
+          const tileIndex = typeof arg1 === "number" ? arg1 : (typeof arg2 === "number" ? arg2 : 0);
+          this.putTileWithEncoding(tileIndex, parsed.tx, parsed.ty, this.layer);
         }
       } catch (e) {
-        console.error("Error in mapData.onChange:", e, "key:", key, "index:", tileIndex);
+        console.error("Error in mapData.onChange:", e, arg1, arg2);
       }
     });
 
-    mapData.onRemove((_tileIndex: number, key: string) => {
+    mapData.onRemove((arg1: any, arg2: any) => {
       try {
-        let mapId = "main";
-        let coords = key;
-        if (key && key.includes(":")) {
-          const parts = key.split(":");
-          mapId = parts[0];
-          coords = parts[1];
-        }
-        if (mapId === this.currentMapId) {
-          const [xStr, yStr] = coords.split(",");
-          const tx = parseInt(xStr, 10);
-          const ty = parseInt(yStr, 10);
-          this.map.removeTileAt(tx, ty, false, true, this.layer);
+        const parsed = this.parseTileSchemaKey(arg1, arg2);
+        if (parsed && parsed.mapId === this.currentMapId) {
+          this.map.removeTileAt(parsed.tx, parsed.ty, false, true, this.layer);
         }
       } catch (e) {
-        console.error("Error in mapData.onRemove:", e, "key:", key);
+        console.error("Error in mapData.onRemove:", e, arg1, arg2);
       }
     });
 
     // 2b. Decor/Fence Tiles Sync
     const decorData = (this.room.state as any).decorData;
     if (decorData) {
-      decorData.onAdd((tileIndex: number, key: string) => {
+      decorData.onAdd((arg1: any, arg2: any) => {
         try {
-          let mapId = "main";
-          let coords = key;
-          if (key && key.includes(":")) {
-            const parts = key.split(":");
-            mapId = parts[0];
-            coords = parts[1];
-          }
-          if (mapId === this.currentMapId) {
-            const [xStr, yStr] = coords.split(",");
-            const tx = parseInt(xStr, 10);
-            const ty = parseInt(yStr, 10);
-            this.putTileWithEncoding(tileIndex, tx, ty, this.decorLayer);
+          const parsed = this.parseTileSchemaKey(arg1, arg2);
+          if (parsed && parsed.mapId === this.currentMapId) {
+            const tileIndex = typeof arg1 === "number" ? arg1 : (typeof arg2 === "number" ? arg2 : 0);
+            this.putTileWithEncoding(tileIndex, parsed.tx, parsed.ty, this.decorLayer);
           }
         } catch (e) {
-          console.error("Error in decorData.onAdd:", e, "key:", key, "index:", tileIndex);
+          console.error("Error in decorData.onAdd:", e, arg1, arg2);
         }
       });
 
-      decorData.onChange((tileIndex: number, key: string) => {
+      decorData.onChange((arg1: any, arg2: any) => {
         try {
-          let mapId = "main";
-          let coords = key;
-          if (key && key.includes(":")) {
-            const parts = key.split(":");
-            mapId = parts[0];
-            coords = parts[1];
-          }
-          if (mapId === this.currentMapId) {
-            const [xStr, yStr] = coords.split(",");
-            const tx = parseInt(xStr, 10);
-            const ty = parseInt(yStr, 10);
-            this.putTileWithEncoding(tileIndex, tx, ty, this.decorLayer);
+          const parsed = this.parseTileSchemaKey(arg1, arg2);
+          if (parsed && parsed.mapId === this.currentMapId) {
+            const tileIndex = typeof arg1 === "number" ? arg1 : (typeof arg2 === "number" ? arg2 : 0);
+            this.putTileWithEncoding(tileIndex, parsed.tx, parsed.ty, this.decorLayer);
           }
         } catch (e) {
-          console.error("Error in decorData.onChange:", e, "key:", key, "index:", tileIndex);
+          console.error("Error in decorData.onChange:", e, arg1, arg2);
         }
       });
 
-      decorData.onRemove((_tileIndex: number, key: string) => {
+      decorData.onRemove((arg1: any, arg2: any) => {
         try {
-          let mapId = "main";
-          let coords = key;
-          if (key && key.includes(":")) {
-            const parts = key.split(":");
-            mapId = parts[0];
-            coords = parts[1];
-          }
-          if (mapId === this.currentMapId) {
-            const [xStr, yStr] = coords.split(",");
-            const tx = parseInt(xStr, 10);
-            const ty = parseInt(yStr, 10);
-            this.map.removeTileAt(tx, ty, false, true, this.decorLayer);
+          const parsed = this.parseTileSchemaKey(arg1, arg2);
+          if (parsed && parsed.mapId === this.currentMapId) {
+            this.map.removeTileAt(parsed.tx, parsed.ty, false, true, this.decorLayer);
           }
         } catch (e) {
-          console.error("Error in decorData.onRemove:", e, "key:", key);
+          console.error("Error in decorData.onRemove:", e, arg1, arg2);
         }
       });
     }
@@ -1330,6 +1281,32 @@ export class GameScene extends Phaser.Scene {
         }
       }
     });
+  }
+
+  private parseTileSchemaKey(arg1: any, arg2: any): { key: string; mapId: string; tx: number; ty: number } | null {
+    let key = "";
+    if (typeof arg1 === "string" && (arg1.includes(",") || arg1.includes(":"))) {
+      key = arg1;
+    } else if (typeof arg2 === "string" && (arg2.includes(",") || arg2.includes(":"))) {
+      key = arg2;
+    }
+    if (!key) return null;
+
+    let mapId = "main";
+    let coords = key;
+    if (key.includes(":")) {
+      const parts = key.split(":");
+      mapId = parts[0];
+      coords = parts[1];
+    }
+    if (!coords || !coords.includes(",")) return null;
+
+    const [xStr, yStr] = coords.split(",");
+    const tx = parseInt(xStr, 10);
+    const ty = parseInt(yStr, 10);
+    if (isNaN(tx) || isNaN(ty)) return null;
+
+    return { key, mapId, tx, ty };
   }
 
   private putTileWithEncoding(tileIndex: number, tx: number, ty: number, layer: Phaser.Tilemaps.TilemapLayer): void {
