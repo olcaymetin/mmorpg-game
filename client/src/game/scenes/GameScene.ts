@@ -1112,7 +1112,7 @@ export class GameScene extends Phaser.Scene {
           const [xStr, yStr] = coords.split(",");
           const tx = parseInt(xStr, 10);
           const ty = parseInt(yStr, 10);
-          this.map.putTileAt(-1, tx, ty, false, this.layer);
+          this.map.removeTileAt(tx, ty, false, true, this.layer);
         }
       } catch (e) {
         console.error("Error in mapData.onRemove:", e, "key:", key);
@@ -1175,7 +1175,7 @@ export class GameScene extends Phaser.Scene {
             const [xStr, yStr] = coords.split(",");
             const tx = parseInt(xStr, 10);
             const ty = parseInt(yStr, 10);
-            this.map.putTileAt(-1, tx, ty, false, this.decorLayer);
+            this.map.removeTileAt(tx, ty, false, true, this.decorLayer);
           }
         } catch (e) {
           console.error("Error in decorData.onRemove:", e, "key:", key);
@@ -1334,7 +1334,7 @@ export class GameScene extends Phaser.Scene {
 
   private putTileWithEncoding(tileIndex: number, tx: number, ty: number, layer: Phaser.Tilemaps.TilemapLayer): void {
     if (tileIndex === -1) {
-      this.map.putTileAt(-1, tx, ty, false, layer);
+      this.map.removeTileAt(tx, ty, false, true, layer);
       return;
     }
     const cleanIndex = tileIndex & 0xFFFF;
