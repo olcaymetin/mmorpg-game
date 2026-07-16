@@ -1,52 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <script>
-      window.onerror = function(message, source, lineno, colno, error) {
-        var errDiv = document.createElement('div');
-        errDiv.style.position = 'fixed';
-        errDiv.style.top = '10px';
-        errDiv.style.left = '10px';
-        errDiv.style.right = '10px';
-        errDiv.style.background = 'rgba(220, 38, 38, 0.95)';
-        errDiv.style.color = '#fff';
-        errDiv.style.padding = '15px';
-        errDiv.style.fontFamily = 'monospace';
-        errDiv.style.fontSize = '12px';
-        errDiv.style.zIndex = '999999';
-        errDiv.style.borderRadius = '8px';
-        errDiv.style.border = '2px solid #ef4444';
-        errDiv.style.maxHeight = '80vh';
-        errDiv.style.overflowY = 'auto';
-        errDiv.style.whiteSpace = 'pre-wrap';
-        errDiv.innerHTML = '<strong>🚨 Client JavaScript Error:</strong><br>' + 
-          message + '<br><br><strong>Source:</strong> ' + source + ':' + lineno + ':' + colno + 
-          '<br><br><strong>Stack Trace:</strong><br>' + (error && error.stack ? error.stack : 'N/A');
-        document.body.appendChild(errDiv);
-        return false;
-      };
-      window.onunhandledrejection = function(event) {
-        var errDiv = document.createElement('div');
-        errDiv.style.position = 'fixed';
-        errDiv.style.top = '10px';
-        errDiv.style.left = '10px';
-        errDiv.style.right = '10px';
-        errDiv.style.background = 'rgba(220, 38, 38, 0.95)';
-        errDiv.style.color = '#fff';
-        errDiv.style.padding = '15px';
-        errDiv.style.fontFamily = 'monospace';
-        errDiv.style.fontSize = '12px';
-        errDiv.style.zIndex = '999999';
-        errDiv.style.borderRadius = '8px';
-        errDiv.style.border = '2px solid #ef4444';
-        errDiv.style.maxHeight = '80vh';
-        errDiv.style.overflowY = 'auto';
-        errDiv.style.whiteSpace = 'pre-wrap';
-        errDiv.innerHTML = '<strong>🚨 Unhandled Promise Rejection:</strong><br>' + 
-          event.reason + (event.reason && event.reason.stack ? '<br><br><strong>Stack Trace:</strong><br>' + event.reason.stack : '');
-        document.body.appendChild(errDiv);
-      };
-    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
