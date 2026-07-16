@@ -129,8 +129,9 @@ const App: React.FC = () => {
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [shopTab, setShopTab] = useState<"buy" | "sell" | "survival">("buy");
 
-  // Inventory UI tabs: "crops" (mahsuller), "seeds" (tohumlar), or "survival" (yiyecek/su)
-  const [inventoryTab, setInventoryTab] = useState<"crops" | "seeds" | "survival">("crops");
+  // Inventory UI tabs: "crops" (mahsuller), "seeds" (tohumlar), "survival" (yiyecek/su), or "tools" (araçlar)
+  const [inventoryTab, setInventoryTab] = useState<"crops" | "seeds" | "survival" | "tools">("crops");
+  const [selectedInventoryTool, setSelectedInventoryTool] = useState<string | null>(null);
 
   // Survival
   const [hunger, setHunger] = useState(100);
@@ -453,6 +454,10 @@ const App: React.FC = () => {
   };
 
   const handleSelectInventorySeed = (cropId: string) => {
+    setSelectedInventoryTool(null);
+    if (game) {
+      game.events.emit("play-tool-selected", { tool: null });
+    }
     if (selectedInventorySeed === cropId) {
       setSelectedInventorySeed(null);
       if (game) {
@@ -963,7 +968,9 @@ const App: React.FC = () => {
                         selectedObject.type === "ahir_roof_top" ? "Çatı Üst" :
                         "Bilinmeyen"
                       })` :
-                      selectedObject.type === "farm_tile" ? "Boş Tarla Toprağı (Obje)" :
+                      selectedObject.type === "farm_tile" ? "Boş Tarla Toprağı (Kuru)" :
+                      selectedObject.type === "farm_tile_hoed" ? "Boş Tarla Toprağı (Kazılmış)" :
+                      selectedObject.type === "farm_tile_watered" ? "Boş Tarla Toprağı (Sulanmış)" :
                       "Market"
                     }</b>
                   </div>
@@ -977,6 +984,8 @@ const App: React.FC = () => {
                       type="range"
                       min={
                         selectedObject.type === "farm_tile" ||
+                        selectedObject.type === "farm_tile_hoed" ||
+                        selectedObject.type === "farm_tile_watered" ||
                         selectedObject.type.startsWith("ahir_") ||
                         selectedObject.type.startsWith("decor_grass_") ||
                         selectedObject.type.startsWith("decor_gorsel_") ||
@@ -986,11 +995,13 @@ const App: React.FC = () => {
                         selectedObject.type.startsWith("rock_") ||
                         selectedObject.type.startsWith("house_") ||
                         selectedObject.type.startsWith("table_")
-                          ? "0.01" // allow fine tuning for farm_tile scale snaps (like 0.03125)
+                          ? "0.01" // allow fine tuning for farm_tile scale snaps
                           : "0.05"
                       }
                       max={
                         selectedObject.type === "farm_tile" ||
+                        selectedObject.type === "farm_tile_hoed" ||
+                        selectedObject.type === "farm_tile_watered" ||
                         selectedObject.type.startsWith("ahir_") ||
                         selectedObject.type.startsWith("decor_grass_") ||
                         selectedObject.type.startsWith("decor_gorsel_") ||
@@ -1005,6 +1016,8 @@ const App: React.FC = () => {
                       }
                       step={
                         selectedObject.type === "farm_tile" ||
+                        selectedObject.type === "farm_tile_hoed" ||
+                        selectedObject.type === "farm_tile_watered" ||
                         selectedObject.type.startsWith("ahir_") ||
                         selectedObject.type.startsWith("decor_grass_") ||
                         selectedObject.type.startsWith("decor_gorsel_") ||
@@ -1801,7 +1814,11 @@ const App: React.FC = () => {
               onClick={() => {
                 setInventoryTab("crops");
                 setSelectedInventorySeed(null);
-                if (game) game.events.emit("editor-brush-selected", { type: "none" });
+                setSelectedInventoryTool(null);
+                if (game) {
+                  game.events.emit("editor-brush-selected", { type: "none" });
+                  game.events.emit("play-tool-selected", { tool: null });
+                }
               }}
               style={{
                 flex: 1,
@@ -1818,7 +1835,11 @@ const App: React.FC = () => {
               🥦 Mahsul
             </button>
             <button
-              onClick={() => setInventoryTab("seeds")}
+              onClick={() => {
+                setInventoryTab("seeds");
+                setSelectedInventoryTool(null);
+                if (game) game.events.emit("play-tool-selected", { tool: null });
+              }}
               style={{
                 flex: 1,
                 background: inventoryTab === "seeds" ? "rgba(74, 222, 128, 0.2)" : "rgba(255,255,255,0.05)",
@@ -1834,7 +1855,15 @@ const App: React.FC = () => {
               🌱 Tohum
             </button>
             <button
-              onClick={() => setInventoryTab("survival")}
+              onClick={() => {
+                setInventoryTab("survival");
+                setSelectedInventorySeed(null);
+                setSelectedInventoryTool(null);
+                if (game) {
+                  game.events.emit("editor-brush-selected", { type: "none" });
+                  game.events.emit("play-tool-selected", { tool: null });
+                }
+              }}
               style={{
                 flex: 1,
                 background: inventoryTab === "survival" ? "rgba(74, 222, 128, 0.2)" : "rgba(255,255,255,0.05)",
@@ -1848,6 +1877,26 @@ const App: React.FC = () => {
               }}
             >
               🍗 Gıda/Su
+            </button>
+            <button
+              onClick={() => {
+                setInventoryTab("tools");
+                setSelectedInventorySeed(null);
+                if (game) game.events.emit("editor-brush-selected", { type: "none" });
+              }}
+              style={{
+                flex: 1,
+                background: inventoryTab === "tools" ? "rgba(74, 222, 128, 0.2)" : "rgba(255,255,255,0.05)",
+                border: "1px solid " + (inventoryTab === "tools" ? "rgba(74, 222, 128, 0.4)" : "rgba(255,255,255,0.1)"),
+                borderRadius: "6px",
+                color: inventoryTab === "tools" ? "#4ade80" : "rgba(255,255,255,0.7)",
+                fontSize: "9px",
+                padding: "4px 2px",
+                fontWeight: "bold",
+                cursor: "pointer"
+              }}
+            >
+              🛠️ Araçlar
             </button>
           </div>
 
@@ -1914,7 +1963,7 @@ const App: React.FC = () => {
                   );
                 })
               )
-            ) : (
+            ) : inventoryTab === "survival" ? (
               /* SURVIVAL TAB ITEMS LIST */
               (inventory["Water"] || 0) <= 0 && (inventory["Bread"] || 0) <= 0 ? (
                 <div className="inventory-empty">Yiyecek veya suyunuz yok.</div>
@@ -1971,7 +2020,48 @@ const App: React.FC = () => {
                   )}
                 </div>
               )
-            )}
+            ) : (
+              /* TOOLS TAB ITEMS LIST */
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", width: "100%" }}>
+                <div
+                  className={`inventory-item ${selectedInventoryTool === "hoe" ? "inventory-item--selected" : ""}`}
+                  style={{ cursor: "pointer", flex: "1 1 calc(50% - 4px)", minWidth: "80px" }}
+                  onClick={() => {
+                    const next = selectedInventoryTool === "hoe" ? null : "hoe";
+                    setSelectedInventoryTool(next);
+                    if (game) {
+                      game.events.emit("play-tool-selected", { tool: next });
+                    }
+                  }}
+                  title="Çapa: Boş tarlayı sürer"
+                >
+                  <span style={{ fontSize: "24px" }}>⛏️</span>
+                  <div className="inventory-details">
+                    <span className="inventory-name" style={{ fontSize: "10px" }}>Çapa</span>
+                    <span className="inventory-qty" style={{ color: "#4ade80" }}>Hazır</span>
+                  </div>
+                </div>
+
+                <div
+                  className={`inventory-item ${selectedInventoryTool === "watering_can" ? "inventory-item--selected" : ""}`}
+                  style={{ cursor: "pointer", flex: "1 1 calc(50% - 4px)", minWidth: "80px" }}
+                  onClick={() => {
+                    const next = selectedInventoryTool === "watering_can" ? null : "watering_can";
+                    setSelectedInventoryTool(next);
+                    if (game) {
+                      game.events.emit("play-tool-selected", { tool: next });
+                    }
+                  }}
+                  title="Sulama Kabı: Ekili tarlayı sular"
+                >
+                  <span style={{ fontSize: "24px" }}>💧</span>
+                  <div className="inventory-details">
+                    <span className="inventory-name" style={{ fontSize: "10px" }}>Sulama Kabı</span>
+                    <span className="inventory-qty" style={{ color: "#4ade80" }}>Hazır</span>
+                  </div>
+                </div>
+              </div>
+            )}}
           </div>
         </div>
       )}

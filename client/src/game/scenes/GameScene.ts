@@ -66,6 +66,7 @@ export class GameScene extends Phaser.Scene {
   private placedObjects: PlacedObject[] = [];
   private selectedObjectId: string | null = null;
   private selectionGraphics!: Phaser.GameObjects.Graphics;
+  private activePlayTool: string | null = null;
 
   // Drag Panning & Dragging Objects
   private isDraggingCamera = false;
@@ -221,7 +222,7 @@ export class GameScene extends Phaser.Scene {
       this.load.image(fileObj.key, `assets/ahir/${fileObj.file}`);
     }
 
-    this.load.image("farm_tile", "assets/farm_tile.jpg");
+    this.load.spritesheet("farm_tile_sheet", "assets/tarla_cropped.png", { frameWidth: 418, frameHeight: 418 });
 
     // Load material gift items as spritesheets
     this.load.spritesheet("mg_stable_gate", "assets/material_gift/Stable_Gate_16x16.png", { frameWidth: 32, frameHeight: 32 });
@@ -248,8 +249,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   private getDefaultScaleForType(type: string): number {
-    if (type === "farm_tile") {
-      return 0.03125;
+    if (type === "farm_tile" || type === "farm_tile_hoed" || type === "farm_tile_watered") {
+      return 0.07655;
     }
     if (type === "nft_house") {
       return 0.12;
@@ -323,6 +324,7 @@ export class GameScene extends Phaser.Scene {
       this.activeBrushRotationStep = 0;
       this.activeBrushFlipX = false;
       this.activeBrushFlipY = false;
+      this.activePlayTool = null; // Clear active play tool when editor brush is chosen
       if (brush.type === "tile" && brush.index !== undefined) {
         this.currentTileIndex = brush.index;
         this.currentTileStamp = null;
@@ -332,6 +334,13 @@ export class GameScene extends Phaser.Scene {
         this.selectedSeed = "";
       } else if (brush.type === "seed") {
         this.selectedSeed = brush.cropType || "";
+      }
+    });
+
+    this.game.events.on("play-tool-selected", (data: { tool: string | null }) => {
+      this.activePlayTool = data.tool;
+      if (data.tool) {
+        this.selectedSeed = "";
       }
     });
 
@@ -720,10 +729,10 @@ export class GameScene extends Phaser.Scene {
             const terrainGid = terrainTile ? terrainTile.index : -1;
             const decorGid = decorTile ? decorTile.index : -1;
             
-            // Check if there is a farm_tile object at this grid position
+            // Check if there is a farm_tile_hoed object at this grid position
             let hasFarmObject = false;
             this.placedObjects.forEach(obj => {
-              if (obj.type === "farm_tile") {
+              if (obj.type === "farm_tile_hoed") {
                 const ox = Math.floor(obj.x / 16);
                 const oy = Math.floor(obj.y / 16);
                 if (ox === tileX && oy === tileY) {
@@ -754,7 +763,7 @@ export class GameScene extends Phaser.Scene {
             const defaultScale = this.getDefaultScaleForType(this.currentObjectName);
             let posX = pointer.worldX;
             let posY = pointer.worldY;
-            if (this.currentObjectName === "farm_tile") {
+            if (this.currentObjectName === "farm_tile" || this.currentObjectName === "farm_tile_hoed" || this.currentObjectName === "farm_tile_watered") {
               posX = Math.floor(pointer.worldX / 16) * 16 + 8;
               posY = Math.floor(pointer.worldY / 16) * 16 + 8;
             }
@@ -774,10 +783,10 @@ export class GameScene extends Phaser.Scene {
               const terrainGid = terrainTile ? terrainTile.index : -1;
               const decorGid = decorTile ? decorTile.index : -1;
               
-              // Check if there is a farm_tile object at this grid position
+              // Check if there is a farm_tile object at this grid position (allow all stages in editor)
               let hasFarmObject = false;
               this.placedObjects.forEach(obj => {
-                if (obj.type === "farm_tile") {
+                if (obj.type === "farm_tile" || obj.type === "farm_tile_hoed" || obj.type === "farm_tile_watered") {
                   const ox = Math.floor(obj.x / 16);
                   const oy = Math.floor(obj.y / 16);
                   if (ox === tileX && oy === tileY) {
@@ -867,6 +876,62 @@ export class GameScene extends Phaser.Scene {
           const sid = gameObject.getData("sessionId");
           this.game.events.emit("open-player-profile", { sessionId: sid });
         }
+
+        // Farm Tile Interactions in Play Mode
+        if (pointer.button === 0 && (type === "farm_tile" || type === "farm_tile_hoed" || type === "farm_tile_watered")) {
+          const imgObj = gameObject as Phaser.GameObjects.Image;
+          const tileX = Math.floor(imgObj.x / 16);
+          const tileY = Math.floor(imgObj.y / 16);
+          const tileKey = `${this.currentMapId}:${tileX},${tileY}`;
+          const crop = this.room?.state.crops.get(tileKey);
+
+          // 1. Tool usage
+          if (this.activePlayTool === "hoe") {
+            if (type === "farm_tile") {
+              this.room?.send("use-tool-on-object", { id, tool: "hoe" });
+            } else {
+              alert("⚠️ Bu tarla zaten kazılmış!");
+            }
+            return;
+          }
+          if (this.activePlayTool === "watering_can") {
+            if (type === "farm_tile_hoed") {
+              if (crop) {
+                this.room?.send("use-tool-on-object", { id, tool: "watering_can" });
+              } else {
+                alert("⚠️ Önce tohum ekmelisiniz!");
+              }
+            } else if (type === "farm_tile_watered") {
+              alert("⚠️ Bu tarla zaten sulanmış!");
+            } else {
+              alert("⚠️ Önce tarlayı çapa ile kazıp tohum ekmelisiniz!");
+            }
+            return;
+          }
+
+          // 2. Planting seed
+          if (this.selectedSeed) {
+            if (type === "farm_tile") {
+              alert("⚠️ Önce tarlayı çapa ile kazmanız gerekiyor!");
+              return;
+            }
+            if (type === "farm_tile_watered") {
+              alert("⚠️ Bu tarlaya zaten ekin ekilmiş!");
+              return;
+            }
+            if (!crop) {
+              this.room?.send("crop-plant", { x: tileX, y: tileY, cropType: this.selectedSeed, free: false });
+              this.game.events.emit("crop-planted", { cropType: this.selectedSeed });
+            }
+            return;
+          }
+
+          // 3. Harvesting crop
+          if (crop && crop.stage >= 6) {
+            this.room?.send("crop-harvest", { x: tileX, y: tileY });
+            return;
+          }
+        }
         return;
       }
       this.clickedGameObject = true;
@@ -888,14 +953,21 @@ export class GameScene extends Phaser.Scene {
 
     this.input.on("drag", (_pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.Image, dragX: number, dragY: number) => {
       if (!this.editorMode) return;
-      gameObject.x = dragX;
-      gameObject.y = dragY;
+      let posX = dragX;
+      let posY = dragY;
+      const type = gameObject.getData("type");
+      if (type === "farm_tile" || type === "farm_tile_hoed" || type === "farm_tile_watered") {
+        posX = Math.floor(dragX / 16) * 16 + 8;
+        posY = Math.floor(dragY / 16) * 16 + 8;
+      }
+      gameObject.x = posX;
+      gameObject.y = posY;
       
       const id = gameObject.getData("id");
       const obj = this.placedObjects.find(o => o.id === id);
       if (obj) {
-        obj.x = dragX;
-        obj.y = dragY;
+        obj.x = posX;
+        obj.y = posY;
       }
       this.drawSelectionOutline();
     });
@@ -1030,12 +1102,18 @@ export class GameScene extends Phaser.Scene {
       const frameStr = type.substring("decor_gorsel_".length);
       const frameIdx = parseInt(frameStr, 10) || 0;
       img = this.add.image(x, y, "decor_sheet_gorsel", frameIdx);
+    } else if (type === "farm_tile") {
+      img = this.add.image(x, y, "farm_tile_sheet", 0);
+    } else if (type === "farm_tile_hoed") {
+      img = this.add.image(x, y, "farm_tile_sheet", 1);
+    } else if (type === "farm_tile_watered") {
+      img = this.add.image(x, y, "farm_tile_sheet", 2);
     } else {
       img = isAnimated ? this.add.sprite(x, y, type) : this.add.image(x, y, type);
     }
     
     img.setScale(scale);
-    if (type === "farm_tile") {
+    if (type === "farm_tile" || type === "farm_tile_hoed" || type === "farm_tile_watered") {
       img.setOrigin(0.5, 0.5);
       img.setDepth(1.5);
     } else {

@@ -390,12 +390,45 @@ export class GameRoom extends Room<GameState> {
        console.log(`[Server GameRoom] Received object-delete for ID: ${msg.id}`);
        const exists = this.state.placedObjects.has(msg.id);
        console.log(`[Server GameRoom] Object exists in placedObjects? ${exists}`);
-       if (exists) {
-         this.state.placedObjects.delete(msg.id);
-         console.log(`[Server GameRoom] Object ${msg.id} deleted successfully.`);
-       }
-       this.triggerDebouncedSave();
-     });
+        if (exists) {
+          this.state.placedObjects.delete(msg.id);
+          console.log(`[Server GameRoom] Object ${msg.id} deleted successfully.`);
+        }
+        this.triggerDebouncedSave();
+      });
+
+    /**
+     * "use-tool-on-object" handler - player uses a tool (hoe, watering_can) on a farm tile object
+     */
+    this.onMessage("use-tool-on-object", (client: Client, msg: { id: string; tool: string }) => {
+      const player = this.state.players.get(client.sessionId);
+      if (!player) return;
+
+      const obj = this.state.placedObjects.get(msg.id);
+      if (!obj) return;
+
+      // Distance check
+      const dist = Math.hypot(player.x - obj.x, player.y - obj.y);
+      if (dist > 100) {
+        console.log(`[Tool] Player is too far to use tool: ${dist}px`);
+        return;
+      }
+
+      if (msg.tool === "hoe" && obj.type === "farm_tile") {
+        obj.type = "farm_tile_hoed";
+        console.log(`[Tool] Object ${msg.id} hoed successfully.`);
+      } else if (msg.tool === "watering_can" && obj.type === "farm_tile_hoed") {
+        const mapId = player.currentMap || "main";
+        const tx = Math.floor(obj.x / 16);
+        const ty = Math.floor(obj.y / 16);
+        const key = `${mapId}:${tx},${ty}`;
+        if (this.state.crops.has(key)) {
+          obj.type = "farm_tile_watered";
+          console.log(`[Tool] Object ${msg.id} watered successfully.`);
+        }
+      }
+      this.triggerDebouncedSave();
+    });
 
     /**
      * "player-teleport" handler - teleport to another map/island
@@ -528,6 +561,19 @@ export class GameRoom extends Room<GameState> {
         this.addSkillXP(player, "farming", 25);
         this.addActionCount(player, "harvestCount", client.sessionId);
         console.log(`[Inventory] Player ${client.sessionId.slice(0, 8)} harvested 1 ${cropType}. Total: ${currentCount + 1}`);
+        
+        // Reset farm_tile_watered or farm_tile_hoed back to farm_tile on harvest!
+        this.state.placedObjects.forEach((obj) => {
+          if (obj.type === "farm_tile_watered" || obj.type === "farm_tile_hoed") {
+            const ox = Math.floor(obj.x / 16);
+            const oy = Math.floor(obj.y / 16);
+            if (ox === msg.x && oy === msg.y) {
+              obj.type = "farm_tile";
+              console.log(`[Crop] Reset farm tile ${obj.id} back to farm_tile after harvest.`);
+            }
+          }
+        });
+
         this.state.crops.delete(key);
         this.triggerDebouncedSave();
         console.log(`[Crop] Harvested ${crop.cropType} at ${key}`);
