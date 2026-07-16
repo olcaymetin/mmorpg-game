@@ -1279,7 +1279,7 @@ export class GameScene extends Phaser.Scene {
 
       for (const obj of this.placedObjects) {
         const dist = Phaser.Math.Distance.Between(px, py, obj.x, obj.y);
-        if (dist < 30) {
+        if (dist < 45) {
           if (obj.type === "yon_up" && this.currentMapId === "main") {
             this.lastTeleportTime = time;
             this.room.send("player-teleport", { mapId: "sub_island", x: 400, y: 580 });
