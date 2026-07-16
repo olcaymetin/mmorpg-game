@@ -264,6 +264,11 @@ export class GameScene extends Phaser.Scene {
       const obj = this.placedObjects.find(o => o.id === payload.id);
       if (obj) {
         obj.scale = payload.scale;
+        if (obj.imageObj) {
+          obj.imageObj.setScale(payload.scale);
+        }
+        this.drawSelectionOutline();
+
         const stateObj = this.room.state.placedObjects.get(obj.id);
         const animSpeed = stateObj ? stateObj.animSpeed : 1.0;
         this.room.send("object-place", {
@@ -280,6 +285,9 @@ export class GameScene extends Phaser.Scene {
     this.game.events.on("editor-object-speed-changed", (payload: { id: string; speed: number }) => {
       const obj = this.placedObjects.find(o => o.id === payload.id);
       if (obj) {
+        if (obj.imageObj && (obj.type.startsWith("vfx_") || obj.type.startsWith("mg_"))) {
+          (obj.imageObj as Phaser.GameObjects.Sprite).anims.timeScale = payload.speed;
+        }
         this.room.send("object-place", {
           id: obj.id,
           type: obj.type,
