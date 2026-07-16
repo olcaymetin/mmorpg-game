@@ -315,6 +315,12 @@ export class GameScene extends Phaser.Scene {
       this.paintOnTop = enabled;
     });
 
+    this.game.events.on("clear-island", () => {
+      if (this.room) {
+        this.room.send("clear-map-island");
+      }
+    });
+
     this.game.events.on("editor-tile-stamp-selected", (stamp: { width: number; height: number; tiles: number[][] }) => {
       this.currentBrushType = "tile";
       this.currentTileStamp = stamp;

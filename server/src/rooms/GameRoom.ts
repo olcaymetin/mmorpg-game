@@ -317,6 +317,39 @@ export class GameRoom extends Room<GameState> {
     });
 
     /**
+     * "clear-map-island" handler - clears ALL tiles and objects for the current map/island
+     */
+    this.onMessage("clear-map-island", (client: Client) => {
+      const player = this.state.players.get(client.sessionId);
+      const mapId = player?.currentMap || "main";
+      const prefix = `${mapId}:`;
+
+      // Delete all mapData keys for this island
+      const mapKeysToDelete: string[] = [];
+      this.state.mapData.forEach((_val: number, key: string) => {
+        if (key.startsWith(prefix)) mapKeysToDelete.push(key);
+      });
+      mapKeysToDelete.forEach(key => this.state.mapData.delete(key));
+
+      // Delete all decorData keys for this island
+      const decorKeysToDelete: string[] = [];
+      (this.state as any).decorData.forEach((_val: number, key: string) => {
+        if (key.startsWith(prefix)) decorKeysToDelete.push(key);
+      });
+      decorKeysToDelete.forEach(key => (this.state as any).decorData.delete(key));
+
+      // Delete all placed objects for this island
+      const objKeysToDelete: string[] = [];
+      this.state.placedObjects.forEach((obj: any, id: string) => {
+        if ((obj.mapId || "main") === mapId) objKeysToDelete.push(id);
+      });
+      objKeysToDelete.forEach(id => this.state.placedObjects.delete(id));
+
+      this.triggerDebouncedSave();
+      console.log(`[Editor] Cleared island "${mapId}" — removed ${mapKeysToDelete.length} terrain, ${decorKeysToDelete.length} decor, ${objKeysToDelete.length} objects`);
+    });
+
+    /**
      * "object-place" handler - for placing a new object/building
      */
     this.onMessage("object-place", (client: Client, msg: ObjectPlaceMessage) => {

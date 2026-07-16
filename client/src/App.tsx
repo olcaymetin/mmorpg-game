@@ -814,6 +814,24 @@ const App: React.FC = () => {
                 </button>
               </div>
 
+              {/* ── Danger Zone: Clear Island ── */}
+              <div className="brush-row" style={{ marginTop: "6px" }}>
+                <button
+                  className="btn btn--danger"
+                  style={{ width: "100%", fontSize: "10px", opacity: 0.8 }}
+                  title="Bu adanın tüm zemin, dekor ve objelerini siler. GERİ ALINAMAZ!"
+                  onClick={() => {
+                    if (window.confirm("⚠️ Bu ada (harita bölgesi) üzerindeki TÜM zemin, çit ve objeleri silmek istediğinizden emin misiniz? Bu işlem GERİ ALINAMAZ!")) {
+                      if (game) {
+                        game.events.emit("clear-island");
+                      }
+                    }
+                  }}
+                >
+                  🗑️ Bu Adayı Tamamen Temizle
+                </button>
+              </div>
+
               {/* ── Import / Export Harita Dosyası ── */}
               <div className="section-title">Harita Kaydet / Yükle</div>
               <div className="brush-row" style={{ display: "flex", gap: "8px" }}>
