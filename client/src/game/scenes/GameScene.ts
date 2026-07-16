@@ -26,7 +26,7 @@ interface PlacedObject {
   x: number;
   y: number;
   scale: number;
-  imageObj?: Phaser.GameObjects.Image;
+  imageObj?: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
 }
 
 // ─── Scene ───────────────────────────────────────────────────────────────────
