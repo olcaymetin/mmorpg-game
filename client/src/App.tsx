@@ -948,6 +948,21 @@ const App: React.FC = () => {
                       selectedObject.type.startsWith("vfx_") ? `Yaprak Efekti (${selectedObject.type.replace("vfx_leaves_", "").replace("_", " ")})` :
                       selectedObject.type.startsWith("decor_grass_") ? `Dekor (Çiçek/Çimen #${selectedObject.type.replace("decor_grass_", "")})` :
                       selectedObject.type.startsWith("decor_gorsel_") ? `Görsel Dekor #${selectedObject.type.replace("decor_gorsel_", "")}` :
+                      selectedObject.type.startsWith("ahir_") ? `Ahır Parçası (${
+                        selectedObject.type === "ahir_front_green" ? "Ön Yeşil" :
+                        selectedObject.type === "ahir_front_grey" ? "Ön Gri" :
+                        selectedObject.type === "ahir_front_red" ? "Ön Kızıl" :
+                        selectedObject.type === "ahir_front_yellow" ? "Ön Sarı" :
+                        selectedObject.type === "ahir_green_bottom_inside" ? "Alt Yeşil (İç)" :
+                        selectedObject.type === "ahir_grey_bottom_inside" ? "Alt Gri (İç)" :
+                        selectedObject.type === "ahir_red_bottom_inside" ? "Alt Kızıl (İç)" :
+                        selectedObject.type === "ahir_yellow_bottom_inside" ? "Alt Sarı (İç)" :
+                        selectedObject.type === "ahir_middle_modular_inside" ? "Orta (İç)" :
+                        selectedObject.type === "ahir_upper_inside" ? "Üst (İç)" :
+                        selectedObject.type === "ahir_roof_middle_modular" ? "Çatı Orta (Mod)" :
+                        selectedObject.type === "ahir_roof_top" ? "Çatı Üst" :
+                        "Bilinmeyen"
+                      })` :
                       "Market"
                     }</b>
                   </div>
@@ -960,6 +975,7 @@ const App: React.FC = () => {
                       id="scale-slider"
                       type="range"
                       min={
+                        selectedObject.type.startsWith("ahir_") ||
                         selectedObject.type.startsWith("decor_grass_") ||
                         selectedObject.type.startsWith("decor_gorsel_") ||
                         selectedObject.type.startsWith("vfx_") ||
@@ -972,6 +988,7 @@ const App: React.FC = () => {
                           : "0.05"
                       }
                       max={
+                        selectedObject.type.startsWith("ahir_") ||
                         selectedObject.type.startsWith("decor_grass_") ||
                         selectedObject.type.startsWith("decor_gorsel_") ||
                         selectedObject.type.startsWith("vfx_") ||
@@ -984,6 +1001,7 @@ const App: React.FC = () => {
                           : "0.50"
                       }
                       step={
+                        selectedObject.type.startsWith("ahir_") ||
                         selectedObject.type.startsWith("decor_grass_") ||
                         selectedObject.type.startsWith("decor_gorsel_") ||
                         selectedObject.type.startsWith("vfx_") ||
@@ -1075,6 +1093,17 @@ const App: React.FC = () => {
                   style={{ fontSize: "9px" }}
                 >
                   🌾 Tohum Ek
+                </button>
+                <button
+                  className={`tab-btn ${activeTab === "ahir" ? "tab-btn--active" : ""}`}
+                  onClick={() => {
+                    setActiveTab("ahir");
+                    // Select the first ahır piece by default when switching to ahır tab
+                    handleSelectObjectBrush("ahir_front_green");
+                  }}
+                  style={{ fontSize: "9px" }}
+                >
+                  🐴 Ahır
                 </button>
               </div>
 
@@ -1429,6 +1458,35 @@ const App: React.FC = () => {
                         margin: "0 auto",
                       }} />
                       <span style={{ fontSize: "6px" }}>{crop.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Tab 5b: Ahır (Modular Barn Components) */}
+              {activeTab === "ahir" && (
+                <div className="object-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
+                  {[
+                    { key: "ahir_front_green", name: "Ahır Önü (Yeşil)", file: "Front_Hayloft_Green_16x16.png" },
+                    { key: "ahir_front_grey", name: "Ahır Önü (Gri)", file: "Front_Hayloft_Grey_16x16.png" },
+                    { key: "ahir_front_red", name: "Ahır Önü (Kızıl)", file: "Front_Hayloft_Red_16x16.png" },
+                    { key: "ahir_front_yellow", name: "Ahır Önü (Sarı)", file: "Front_Hayloft_Yellow_16x16.png" },
+                    { key: "ahir_green_bottom_inside", name: "Ahır Altı Y. (İç)", file: "Hayloft_Green_Bottom_Inside_16x16.png" },
+                    { key: "ahir_grey_bottom_inside", name: "Ahır Altı G. (İç)", file: "Hayloft_Grey_Bottom_Inside_16x16.png" },
+                    { key: "ahir_red_bottom_inside", name: "Ahır Altı K. (İç)", file: "Hayloft_Red_Bottom_Inside_16x16.png" },
+                    { key: "ahir_yellow_bottom_inside", name: "Ahır Altı S. (İç)", file: "Hayloft_Yellow_Bottom_Inside_16x16.png" },
+                    { key: "ahir_middle_modular_inside", name: "Ahır Orta (İç)", file: "Hayloft_Middle_Modular_Inside_16x16.png" },
+                    { key: "ahir_upper_inside", name: "Ahır Üstü (İç)", file: "Hayloft_Upper_Inside_16x16.png" },
+                    { key: "ahir_roof_middle_modular", name: "Çatı Orta (Mod)", file: "Roof_Hayloft_Middle_Modular_16x16.png" },
+                    { key: "ahir_roof_top", name: "Çatı Üst", file: "Roof_Hayloft_Top_16x16.png" }
+                  ].map(obj => (
+                    <button
+                      key={obj.key}
+                      className={`obj-btn obj-btn--small ${selectedTile === -2 && selectedObjectName === obj.key ? "obj-btn--active" : ""}`}
+                      onClick={() => handleSelectObjectBrush(obj.key)}
+                    >
+                      <img src={`/assets/ahir/${obj.file}`} alt={obj.name} className="obj-thumb obj-thumb--small" style={{ height: "24px", objectFit: "contain" }} />
+                      <span style={{ fontSize: "6px" }}>{obj.name}</span>
                     </button>
                   ))}
                 </div>

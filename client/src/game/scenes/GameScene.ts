@@ -202,6 +202,25 @@ export class GameScene extends Phaser.Scene {
     }
     this.load.spritesheet("decor_sheet_gorsel", "assets/customization/gorsel.png", { frameWidth: 16, frameHeight: 16 });
 
+    // Load ahir assets
+    const ahirFiles = [
+      { key: "ahir_front_green", file: "Front_Hayloft_Green_16x16.png" },
+      { key: "ahir_front_grey", file: "Front_Hayloft_Grey_16x16.png" },
+      { key: "ahir_front_red", file: "Front_Hayloft_Red_16x16.png" },
+      { key: "ahir_front_yellow", file: "Front_Hayloft_Yellow_16x16.png" },
+      { key: "ahir_green_bottom_inside", file: "Hayloft_Green_Bottom_Inside_16x16.png" },
+      { key: "ahir_grey_bottom_inside", file: "Hayloft_Grey_Bottom_Inside_16x16.png" },
+      { key: "ahir_middle_modular_inside", file: "Hayloft_Middle_Modular_Inside_16x16.png" },
+      { key: "ahir_red_bottom_inside", file: "Hayloft_Red_Bottom_Inside_16x16.png" },
+      { key: "ahir_upper_inside", file: "Hayloft_Upper_Inside_16x16.png" },
+      { key: "ahir_yellow_bottom_inside", file: "Hayloft_Yellow_Bottom_Inside_16x16.png" },
+      { key: "ahir_roof_middle_modular", file: "Roof_Hayloft_Middle_Modular_16x16.png" },
+      { key: "ahir_roof_top", file: "Roof_Hayloft_Top_16x16.png" }
+    ];
+    for (const fileObj of ahirFiles) {
+      this.load.image(fileObj.key, `assets/ahir/${fileObj.file}`);
+    }
+
     // Load material gift items as spritesheets
     this.load.spritesheet("mg_stable_gate", "assets/material_gift/Stable_Gate_16x16.png", { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet("mg_stable_gate_lb", "assets/material_gift/Stable_Gate_Light_Brown_16x16.png", { frameWidth: 32, frameHeight: 25 });
@@ -236,7 +255,7 @@ export class GameScene extends Phaser.Scene {
     if (type.startsWith("silo")) {
       return 1.0;
     }
-    if (type.startsWith("decor_grass_") || type.startsWith("decor_gorsel_") || type.startsWith("vfx_") || type.startsWith("mg_") || type.startsWith("rock_") || type.startsWith("house_") || type.startsWith("table_")) {
+    if (type.startsWith("ahir_") || type.startsWith("decor_grass_") || type.startsWith("decor_gorsel_") || type.startsWith("vfx_") || type.startsWith("mg_") || type.startsWith("rock_") || type.startsWith("house_") || type.startsWith("table_")) {
       return 2.0;
     }
     return 0.15;
