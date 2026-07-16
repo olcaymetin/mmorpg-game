@@ -256,6 +256,23 @@ const App: React.FC = () => {
     };
   }, [game]);
 
+  // Auto-backup to localStorage every 20 seconds
+  useEffect(() => {
+    if (!game) return;
+    const interval = setInterval(() => {
+      try {
+        const scene = game.scene.keys.GameScene as any;
+        if (scene) {
+          const json = scene.getExportJSON();
+          localStorage.setItem("mmorpg_map_backup_auto", json);
+        }
+      } catch (e) {
+        console.error("Auto-backup failed", e);
+      }
+    }, 20000);
+    return () => clearInterval(interval);
+  }, [game]);
+
   // Colyseus message listeners
   useEffect(() => {
     if (!room) return;
@@ -850,13 +867,12 @@ const App: React.FC = () => {
                 </button>
               </div>
 
-              {/* ── Import / Export Harita Dosyası ── */}
               <div className="section-title">Harita Kaydet / Yükle</div>
               <div className="brush-row" style={{ display: "flex", gap: "8px" }}>
-                <button className="btn btn--secondary" onClick={handleExportMap} style={{ flex: 1 }}>
+                <button className="btn btn--secondary" onClick={handleExportMap} style={{ flex: 1, fontSize: "10px" }}>
                   💾 Dışa Aktar (JSON)
                 </button>
-                <button className="btn btn--secondary" onClick={handleImportMapClick} style={{ flex: 1 }}>
+                <button className="btn btn--secondary" onClick={handleImportMapClick} style={{ flex: 1, fontSize: "10px" }}>
                   📂 İçe Aktar (JSON)
                 </button>
                 <input
@@ -866,6 +882,28 @@ const App: React.FC = () => {
                   accept=".json"
                   style={{ display: "none" }}
                 />
+              </div>
+              <div className="brush-row" style={{ marginTop: "6px" }}>
+                <button
+                  className="btn btn--secondary"
+                  onClick={() => {
+                    const backup = localStorage.getItem("mmorpg_map_backup_auto");
+                    if (backup) {
+                      if (window.confirm("⚠️ Son 20 saniye içinde tarayıcınıza kaydedilmiş otomatik yedeği haritaya yüklemek istediğinizden emin misiniz?")) {
+                        const scene = game?.scene.keys.GameScene as any;
+                        if (scene && scene.importJSON(backup)) {
+                          alert("Yerel yedek başarıyla haritaya yüklendi!");
+                        }
+                      }
+                    } else {
+                      alert("Henüz oluşturulmuş otomatik bir yedek bulunamadı. Lütfen bir süre düzenleme yapın.");
+                    }
+                  }}
+                  style={{ width: "100%", fontSize: "10px", backgroundColor: "#3b82f6", color: "#fff" }}
+                  title="Son yaptığınız değişikliklerin tarayıcıdaki otomatik yedeğini geri yükler."
+                >
+                  🔄 Yerel Yedekten Yükle
+                </button>
               </div>
 
 
