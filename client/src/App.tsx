@@ -141,7 +141,7 @@ const App: React.FC = () => {
   const [afkKickReason, setAfkKickReason] = useState("");
 
   // Active tab inside spawning objects selector
-  const [activeTab, setActiveTab] = useState<"structures" | "decorations" | "effects" | "materials" | "seeds" | "mining">("structures");
+  const [activeTab, setActiveTab] = useState<"structures" | "decorations" | "effects" | "materials" | "seeds" | "mining" | "ahir">("structures");
 
   // Selection box start/end for multi-tile selection
   const [selectionStart, setSelectionStart] = useState<{ col: number; row: number } | null>(null);
