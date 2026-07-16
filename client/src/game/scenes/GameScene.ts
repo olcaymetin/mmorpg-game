@@ -1424,8 +1424,11 @@ export class GameScene extends Phaser.Scene {
     this.decorLayer.setDepth(1); // Fences/decors on top of ground, under players
     
     // Sort players depth
-    this.entities.forEach(entity => {
+    this.entities.forEach((entity, sessionId) => {
       entity.container.setDepth(entity.container.y);
+      if (sessionId === this.localId && Math.floor(time) % 60 === 0) {
+        console.log(`[Depth Debug] decorLayer:${this.decorLayer.depth}, playerY:${entity.container.y}, playerDepth:${entity.container.depth}`);
+      }
     });
 
     // Sort placed building objects depth
