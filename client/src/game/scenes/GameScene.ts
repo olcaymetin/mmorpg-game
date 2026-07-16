@@ -137,6 +137,10 @@ export class GameScene extends Phaser.Scene {
       frameWidth: 16,
       frameHeight: 16,
     });
+    this.load.spritesheet("zemin2", "assets/zemin2.png", {
+      frameWidth: 16,
+      frameHeight: 16,
+    });
 
     // Load building images
     this.load.image("marketplace", "assets/marketplace.png");
@@ -205,6 +209,14 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  private getLayerForTileIndex(tileIndex: number): "terrain" | "decor" {
+    const cleanIndex = tileIndex & 0xFFFF;
+    if (cleanIndex >= 2000 && cleanIndex < 3000) {
+      return "decor";
+    }
+    return "terrain";
+  }
+
   private getDefaultScaleForType(type: string): number {
     if (type === "nft_house") {
       return 0.12;
@@ -240,7 +252,8 @@ export class GameScene extends Phaser.Scene {
     });
     const tileset = this.map.addTilesetImage("terrains", "terrains", 16, 16)!;
     const fencesTileset = this.map.addTilesetImage("fences", "fences", 16, 16, 0, 0, 2000)!;
-    this.layer = this.map.createBlankLayer("terrain_layer", tileset)!;
+    const zemin2Tileset = this.map.addTilesetImage("zemin2", "zemin2", 16, 16, 0, 0, 3000)!;
+    this.layer = this.map.createBlankLayer("terrain_layer", [tileset, zemin2Tileset])!;
     this.layer.setScale(2); // Scale 16x16 tiles to 32x32
 
     this.decorLayer = this.map.createBlankLayer("decor_layer", fencesTileset)!;
@@ -590,7 +603,7 @@ export class GameScene extends Phaser.Scene {
                 const ty = tileY + r;
                 if (tx >= 0 && tx < maxCols && ty >= 0 && ty < maxRows) {
                   const tileIndex = this.currentTileStamp.tiles[r][c];
-                  const layer = tileIndex >= 2000 ? "decor" : "terrain";
+                  const layer = this.getLayerForTileIndex(tileIndex);
                   updates.push({
                     x: tx,
                     y: ty,
@@ -604,7 +617,7 @@ export class GameScene extends Phaser.Scene {
               this.room.send("tile-update-multi", { updates });
             }
           } else {
-            const layer = this.currentTileIndex >= 2000 ? "decor" : "terrain";
+            const layer = this.getLayerForTileIndex(this.currentTileIndex);
             const encodedIndex = this.currentTileIndex + (this.activeBrushRotationStep << 16) + (this.activeBrushFlipX ? 1 << 18 : 0) + (this.activeBrushFlipY ? 1 << 19 : 0);
             this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: encodedIndex, layer });
           }
