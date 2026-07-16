@@ -221,6 +221,8 @@ export class GameScene extends Phaser.Scene {
       this.load.image(fileObj.key, `assets/ahir/${fileObj.file}`);
     }
 
+    this.load.image("farm_tile", "assets/farm_tile.jpg");
+
     // Load material gift items as spritesheets
     this.load.spritesheet("mg_stable_gate", "assets/material_gift/Stable_Gate_16x16.png", { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet("mg_stable_gate_lb", "assets/material_gift/Stable_Gate_Light_Brown_16x16.png", { frameWidth: 32, frameHeight: 25 });
@@ -246,6 +248,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   private getDefaultScaleForType(type: string): number {
+    if (type === "farm_tile") {
+      return 0.03125;
+    }
     if (type === "nft_house") {
       return 0.12;
     }
@@ -715,9 +720,22 @@ export class GameScene extends Phaser.Scene {
             const terrainGid = terrainTile ? terrainTile.index : -1;
             const decorGid = decorTile ? decorTile.index : -1;
             
+            // Check if there is a farm_tile object at this grid position
+            let hasFarmObject = false;
+            this.placedObjects.forEach(obj => {
+              if (obj.type === "farm_tile") {
+                const ox = Math.floor(obj.x / 16);
+                const oy = Math.floor(obj.y / 16);
+                if (ox === tileX && oy === tileY) {
+                  hasFarmObject = true;
+                }
+              }
+            });
+
             const isFarmland = (
               terrainGid === 227 || terrainGid === 228 || terrainGid === 451 || terrainGid === 452 ||
-              decorGid === 227 || decorGid === 228 || decorGid === 451 || decorGid === 452
+              decorGid === 227 || decorGid === 228 || decorGid === 451 || decorGid === 452 ||
+              hasFarmObject
             );
             if (!isFarmland) {
               alert("⚠️ Sadece hazırlanmış tarla toprağı üzerine ekim yapabilirsiniz!");
@@ -734,11 +752,17 @@ export class GameScene extends Phaser.Scene {
             // Place building object on server
             const uniqueId = `obj_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             const defaultScale = this.getDefaultScaleForType(this.currentObjectName);
+            let posX = pointer.worldX;
+            let posY = pointer.worldY;
+            if (this.currentObjectName === "farm_tile") {
+              posX = Math.floor(pointer.worldX / 16) * 16 + 8;
+              posY = Math.floor(pointer.worldY / 16) * 16 + 8;
+            }
             this.room.send("object-place", {
               id: uniqueId,
               type: this.currentObjectName,
-              x: pointer.worldX,
-              y: pointer.worldY,
+              x: posX,
+              y: posY,
               scale: defaultScale
             });
           } else if (this.currentBrushType === "seed" && this.selectedSeed) {
@@ -750,9 +774,22 @@ export class GameScene extends Phaser.Scene {
               const terrainGid = terrainTile ? terrainTile.index : -1;
               const decorGid = decorTile ? decorTile.index : -1;
               
+              // Check if there is a farm_tile object at this grid position
+              let hasFarmObject = false;
+              this.placedObjects.forEach(obj => {
+                if (obj.type === "farm_tile") {
+                  const ox = Math.floor(obj.x / 16);
+                  const oy = Math.floor(obj.y / 16);
+                  if (ox === tileX && oy === tileY) {
+                    hasFarmObject = true;
+                  }
+                }
+              });
+
               const isFarmland = (
                 terrainGid === 227 || terrainGid === 228 || terrainGid === 451 || terrainGid === 452 ||
-                decorGid === 227 || decorGid === 228 || decorGid === 451 || decorGid === 452
+                decorGid === 227 || decorGid === 228 || decorGid === 451 || decorGid === 452 ||
+                hasFarmObject
               );
               if (!isFarmland) {
                 alert("⚠️ Sadece hazırlanmış tarla toprağı üzerine ekim yapabilirsiniz!");
@@ -998,7 +1035,12 @@ export class GameScene extends Phaser.Scene {
     }
     
     img.setScale(scale);
-    img.setOrigin(0.5, 0.8);
+    if (type === "farm_tile") {
+      img.setOrigin(0.5, 0.5);
+      img.setDepth(1.5);
+    } else {
+      img.setOrigin(0.5, 0.8);
+    }
     // Precise hit area for structures to prevent click-stealing through transparent space
     const isStructure = type === "bank" || type === "games" || type === "blacksmith" || type === "shop" || type === "gem_trader" || type === "farmer_npc" || type === "marketplace" || type === "nft_house";
     if (isStructure) {
@@ -1485,7 +1527,11 @@ export class GameScene extends Phaser.Scene {
     // Sort placed building objects depth
     this.placedObjects.forEach(obj => {
       if (obj.imageObj) {
-        obj.imageObj.setDepth(obj.y);
+        if (obj.type === "farm_tile") {
+          obj.imageObj.setDepth(1.5);
+        } else {
+          obj.imageObj.setDepth(obj.y);
+        }
       }
     });
 

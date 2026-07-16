@@ -429,12 +429,25 @@ export class GameRoom extends Room<GameState> {
       const decorTile = (this.state as any).decorData.get(key);
       const decorGid = decorTile !== undefined ? (decorTile & 0xFFFF) : -1;
 
+      // Check if there is a farm_tile object at this grid position
+      let hasFarmObject = false;
+      this.state.placedObjects.forEach((obj) => {
+        if (obj.type === "farm_tile") {
+          const ox = Math.floor(obj.x / 16);
+          const oy = Math.floor(obj.y / 16);
+          if (ox === msg.x && oy === msg.y) {
+            hasFarmObject = true;
+          }
+        }
+      });
+
       const isFarmland = (
         groundGid === 227 || groundGid === 228 || groundGid === 451 || groundGid === 452 ||
-        decorGid === 227 || decorGid === 228 || decorGid === 451 || decorGid === 452
+        decorGid === 227 || decorGid === 228 || decorGid === 451 || decorGid === 452 ||
+        hasFarmObject
       );
       if (!isFarmland) {
-        console.log(`[Crop] Rejecting plant at ${key}: ground is GID ${groundGid}, decor is GID ${decorGid} (must be 227, 228, 451, or 452)`);
+        console.log(`[Crop] Rejecting plant at ${key}: ground is GID ${groundGid}, decor is GID ${decorGid}, hasFarmObject=${hasFarmObject}`);
         return;
       }
 

@@ -963,6 +963,7 @@ const App: React.FC = () => {
                         selectedObject.type === "ahir_roof_top" ? "Çatı Üst" :
                         "Bilinmeyen"
                       })` :
+                      selectedObject.type === "farm_tile" ? "Boş Tarla Toprağı (Obje)" :
                       "Market"
                     }</b>
                   </div>
@@ -975,6 +976,7 @@ const App: React.FC = () => {
                       id="scale-slider"
                       type="range"
                       min={
+                        selectedObject.type === "farm_tile" ||
                         selectedObject.type.startsWith("ahir_") ||
                         selectedObject.type.startsWith("decor_grass_") ||
                         selectedObject.type.startsWith("decor_gorsel_") ||
@@ -984,10 +986,11 @@ const App: React.FC = () => {
                         selectedObject.type.startsWith("rock_") ||
                         selectedObject.type.startsWith("house_") ||
                         selectedObject.type.startsWith("table_")
-                          ? "0.5"
+                          ? "0.01" // allow fine tuning for farm_tile scale snaps (like 0.03125)
                           : "0.05"
                       }
                       max={
+                        selectedObject.type === "farm_tile" ||
                         selectedObject.type.startsWith("ahir_") ||
                         selectedObject.type.startsWith("decor_grass_") ||
                         selectedObject.type.startsWith("decor_gorsel_") ||
@@ -1001,6 +1004,7 @@ const App: React.FC = () => {
                           : "0.50"
                       }
                       step={
+                        selectedObject.type === "farm_tile" ||
                         selectedObject.type.startsWith("ahir_") ||
                         selectedObject.type.startsWith("decor_grass_") ||
                         selectedObject.type.startsWith("decor_gorsel_") ||
@@ -1010,7 +1014,7 @@ const App: React.FC = () => {
                         selectedObject.type.startsWith("rock_") ||
                         selectedObject.type.startsWith("house_") ||
                         selectedObject.type.startsWith("table_")
-                          ? "0.1"
+                          ? "0.005" // allow very precise steps for scale snaps
                           : "0.01"
                       }
                       value={selectedObject.scale}
@@ -1164,6 +1168,14 @@ const App: React.FC = () => {
                   >
                     <img src="/assets/farmer_npc.png" alt="farmer npc" className="obj-thumb" />
                     <span>Çiftçi NPC</span>
+                  </button>
+
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "farm_tile" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("farm_tile")}
+                  >
+                    <img src="/assets/farm_tile.jpg" alt="farm_tile" className="obj-thumb" style={{ width: "32px", height: "32px", objectFit: "contain" }} />
+                    <span>Boş Tarla (Obje)</span>
                   </button>
 
                   <button
