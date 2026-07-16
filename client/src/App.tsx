@@ -1667,17 +1667,18 @@ const App: React.FC = () => {
       ) : null}
 
       {/* ── Chat Panel ──────────────────────────────────────────────────── */}
-      {room && (
+      {/* ── Chat Panel ──────────────────────────────────────────────────── */}
+      {room && !editMode && (
         <ChatPanel room={room} myName={myUsername || `Player_${sessionId?.slice(0,6) || "?"}`} />
       )}
 
       {/* ── Friends List Panel ──────────────────────────────────────────── */}
-      {room && sessionId && (
+      {room && sessionId && !editMode && (
         <FriendsPanel room={room} players={allPlayers} mySessionId={sessionId} />
       )}
 
       {/* ── Character HUD Stats ─────────────────────────────────────────── */}
-      {isLoggedIn && (
+      {isLoggedIn && !editMode && (
         <CharacterStats
           hp={hp}
           maxHp={maxHp}
@@ -1693,7 +1694,7 @@ const App: React.FC = () => {
       )}
 
       {/* ── Guild System Panel ──────────────────────────────────────────── */}
-      {room && sessionId && (
+      {room && sessionId && !editMode && (
         <GuildPanel room={room} coin={coin} mySessionId={sessionId} />
       )}
 
