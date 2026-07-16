@@ -1299,6 +1299,25 @@ export class GameScene extends Phaser.Scene {
 
             this.room.send("player-teleport", { mapId: "main", x: targetX, y: targetY });
             break;
+          } else if (obj.type === "yon_left" && this.currentMapId === "main") {
+            this.lastTeleportTime = time;
+            this.room.send("player-teleport", { mapId: "left_island", x: 1500, y: obj.y });
+            break;
+          } else if (obj.type === "yon_right" && this.currentMapId === "left_island") {
+            this.lastTeleportTime = time;
+            
+            // Find target position on main map (near first yon_left)
+            let targetX = 100;
+            let targetY = 600;
+            this.room.state.placedObjects.forEach((val: any) => {
+              if (val.type === "yon_left" && (val.mapId || "main") === "main") {
+                targetX = val.x + 48; // Offset to the right so we don't immediately re-teleport
+                targetY = val.y;
+              }
+            });
+
+            this.room.send("player-teleport", { mapId: "main", x: targetX, y: targetY });
+            break;
           }
         }
       }
