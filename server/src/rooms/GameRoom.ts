@@ -1113,14 +1113,14 @@ export class GameRoom extends Room<GameState> {
       const decorData: { [key: string]: number } = {};
       this.state.decorData.forEach((val, key) => { decorData[key] = val; });
 
-      const placedObjects: Array<{ id: string; type: string; x: number; y: number; scale: number; animSpeed: number }> = [];
+      const placedObjects: Array<{ id: string; type: string; x: number; y: number; scale: number; animSpeed: number; mapId: string }> = [];
       this.state.placedObjects.forEach((val) => {
-        placedObjects.push({ id: val.id, type: val.type, x: val.x, y: val.y, scale: val.scale, animSpeed: val.animSpeed });
+        placedObjects.push({ id: val.id, type: val.type, x: val.x, y: val.y, scale: val.scale, animSpeed: val.animSpeed, mapId: val.mapId || "main" });
       });
 
-      const crops: Array<{ key: string; cropType: string; stage: number; plantedAt: number }> = [];
+      const crops: Array<{ key: string; cropType: string; stage: number; plantedAt: number; mapId: string }> = [];
       this.state.crops.forEach((val) => {
-        crops.push({ key: val.key, cropType: val.cropType, stage: val.stage, plantedAt: val.plantedAt });
+        crops.push({ key: val.key, cropType: val.cropType, stage: val.stage, plantedAt: val.plantedAt, mapId: val.mapId || "main" });
       });
 
       const payload = { mapData, decorData, placedObjects, crops };
