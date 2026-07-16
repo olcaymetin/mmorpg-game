@@ -1065,6 +1065,7 @@ export class GameScene extends Phaser.Scene {
         if (parsed && parsed.mapId === this.currentMapId) {
           // Determine tileIndex (the one that isn't the string key)
           const tileIndex = typeof arg1 === "number" ? arg1 : (typeof arg2 === "number" ? arg2 : 0);
+          console.log(`[Sync Map] onAdd tile:${tileIndex} at x:${parsed.tx}, y:${parsed.ty}`);
           this.putTileWithEncoding(tileIndex, parsed.tx, parsed.ty, this.layer);
         }
       } catch (e) {
@@ -1077,6 +1078,7 @@ export class GameScene extends Phaser.Scene {
         const parsed = this.parseTileSchemaKey(arg1, arg2);
         if (parsed && parsed.mapId === this.currentMapId) {
           const tileIndex = typeof arg1 === "number" ? arg1 : (typeof arg2 === "number" ? arg2 : 0);
+          console.log(`[Sync Map] onChange tile:${tileIndex} at x:${parsed.tx}, y:${parsed.ty}`);
           this.putTileWithEncoding(tileIndex, parsed.tx, parsed.ty, this.layer);
         }
       } catch (e) {
@@ -1088,6 +1090,7 @@ export class GameScene extends Phaser.Scene {
       try {
         const parsed = this.parseTileSchemaKey(arg1, arg2);
         if (parsed && parsed.mapId === this.currentMapId) {
+          console.log(`[Sync Map] onRemove at x:${parsed.tx}, y:${parsed.ty}`);
           this.map.removeTileAt(parsed.tx, parsed.ty, false, true, this.layer);
         }
       } catch (e) {
@@ -1103,6 +1106,7 @@ export class GameScene extends Phaser.Scene {
           const parsed = this.parseTileSchemaKey(arg1, arg2);
           if (parsed && parsed.mapId === this.currentMapId) {
             const tileIndex = typeof arg1 === "number" ? arg1 : (typeof arg2 === "number" ? arg2 : 0);
+            console.log(`[Sync Decor] onAdd tile:${tileIndex} at x:${parsed.tx}, y:${parsed.ty}`);
             this.putTileWithEncoding(tileIndex, parsed.tx, parsed.ty, this.decorLayer);
           }
         } catch (e) {
@@ -1115,6 +1119,7 @@ export class GameScene extends Phaser.Scene {
           const parsed = this.parseTileSchemaKey(arg1, arg2);
           if (parsed && parsed.mapId === this.currentMapId) {
             const tileIndex = typeof arg1 === "number" ? arg1 : (typeof arg2 === "number" ? arg2 : 0);
+            console.log(`[Sync Decor] onChange tile:${tileIndex} at x:${parsed.tx}, y:${parsed.ty}`);
             this.putTileWithEncoding(tileIndex, parsed.tx, parsed.ty, this.decorLayer);
           }
         } catch (e) {
@@ -1126,6 +1131,7 @@ export class GameScene extends Phaser.Scene {
         try {
           const parsed = this.parseTileSchemaKey(arg1, arg2);
           if (parsed && parsed.mapId === this.currentMapId) {
+            console.log(`[Sync Decor] onRemove at x:${parsed.tx}, y:${parsed.ty}`);
             this.map.removeTileAt(parsed.tx, parsed.ty, false, true, this.decorLayer);
           }
         } catch (e) {
