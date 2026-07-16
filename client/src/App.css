@@ -617,6 +617,8 @@ kbd {
 /* ── Editor Tabs Navigation ───────────────────────────────────────────────── */
 .editor-tabs {
   display: flex;
+  overflow-x: auto;
+  white-space: nowrap;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 6px;
@@ -625,15 +627,26 @@ kbd {
   gap: 4px;
 }
 
+.editor-tabs::-webkit-scrollbar {
+  height: 4px;
+}
+.editor-tabs::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+.editor-tabs::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 2px;
+}
+
 .tab-btn {
-  flex: 1;
+  flex: 0 0 auto;
   background: none;
   border: none;
   color: rgba(255, 255, 255, 0.5);
   font-family: "Courier New", monospace;
   font-weight: bold;
   font-size: 10px;
-  padding: 6px 2px;
+  padding: 6px 10px;
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.15s ease;
