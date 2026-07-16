@@ -837,6 +837,12 @@ const App: React.FC = () => {
                       selectedObject.type === "rock_small" ? "Küçük Kaya" :
                       selectedObject.type === "rock_small_bronze" ? "Bronz Kaya (Küçük)" :
                       selectedObject.type === "rock_small_silver" ? "Gümüş Kaya (Küçük)" :
+                      selectedObject.type === "house_barn_small" ? "Küçük Ahır (Görsel)" :
+                      selectedObject.type === "house_farmer_2" ? "Çiftçi Evi 2 (Görsel)" :
+                      selectedObject.type === "house_stable" ? "Harici Ahır (Görsel)" :
+                      selectedObject.type === "house_oven" ? "Taş Fırın 1 (Görsel)" :
+                      selectedObject.type === "table_tailor" ? "Terzi Masası (Görsel)" :
+                      selectedObject.type === "table_woodwork" ? "Marangoz Masası (Görsel)" :
                       selectedObject.type.startsWith("vfx_") ? `Yaprak Efekti (${selectedObject.type.replace("vfx_leaves_", "").replace("_", " ")})` :
                       selectedObject.type.startsWith("decor_grass_") ? `Dekor (Çiçek/Çimen #${selectedObject.type.replace("decor_grass_", "")})` :
                       selectedObject.type.startsWith("decor_gorsel_") ? `Görsel Dekor #${selectedObject.type.replace("decor_gorsel_", "")}` :
@@ -857,7 +863,9 @@ const App: React.FC = () => {
                         selectedObject.type.startsWith("vfx_") ||
                         selectedObject.type.startsWith("mg_") ||
                         selectedObject.type.startsWith("silo") ||
-                        selectedObject.type.startsWith("rock_")
+                        selectedObject.type.startsWith("rock_") ||
+                        selectedObject.type.startsWith("house_") ||
+                        selectedObject.type.startsWith("table_")
                           ? "0.5"
                           : "0.05"
                       }
@@ -867,7 +875,9 @@ const App: React.FC = () => {
                         selectedObject.type.startsWith("vfx_") ||
                         selectedObject.type.startsWith("mg_") ||
                         selectedObject.type.startsWith("silo") ||
-                        selectedObject.type.startsWith("rock_")
+                        selectedObject.type.startsWith("rock_") ||
+                        selectedObject.type.startsWith("house_") ||
+                        selectedObject.type.startsWith("table_")
                           ? "5.0"
                           : "0.50"
                       }
@@ -877,7 +887,9 @@ const App: React.FC = () => {
                         selectedObject.type.startsWith("vfx_") ||
                         selectedObject.type.startsWith("mg_") ||
                         selectedObject.type.startsWith("silo") ||
-                        selectedObject.type.startsWith("rock_")
+                        selectedObject.type.startsWith("rock_") ||
+                        selectedObject.type.startsWith("house_") ||
+                        selectedObject.type.startsWith("table_")
                           ? "0.1"
                           : "0.01"
                       }
@@ -1073,6 +1085,54 @@ const App: React.FC = () => {
                   >
                     <img src="/assets/yon_right.png" alt="yon right" className="obj-thumb" style={{ height: "48px", objectFit: "contain" }} />
                     <span>Yön: Sağ</span>
+                  </button>
+
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "house_barn_small" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("house_barn_small")}
+                  >
+                    <img src="/assets/house_barn_small.png" alt="barn_small" className="obj-thumb" style={{ height: "48px", objectFit: "contain" }} />
+                    <span>Küçük Ahır (Görsel)</span>
+                  </button>
+
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "house_farmer_2" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("house_farmer_2")}
+                  >
+                    <img src="/assets/house_farmer_2.png" alt="farmer_house_2" className="obj-thumb" style={{ height: "48px", objectFit: "contain" }} />
+                    <span>Çiftçi Evi 2 (Görsel)</span>
+                  </button>
+
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "house_stable" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("house_stable")}
+                  >
+                    <img src="/assets/house_stable.png" alt="stable" className="obj-thumb" style={{ height: "48px", objectFit: "contain" }} />
+                    <span>Harici Ahır (Görsel)</span>
+                  </button>
+
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "house_oven" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("house_oven")}
+                  >
+                    <img src="/assets/house_oven.png" alt="oven" className="obj-thumb" style={{ height: "48px", objectFit: "contain" }} />
+                    <span>Taş Fırın (Görsel)</span>
+                  </button>
+
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "table_tailor" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("table_tailor")}
+                  >
+                    <img src="/assets/table_tailor.png" alt="tailor" className="obj-thumb" style={{ height: "48px", objectFit: "contain" }} />
+                    <span>Terzi Masası (Görsel)</span>
+                  </button>
+
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "table_woodwork" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("table_woodwork")}
+                  >
+                    <img src="/assets/table_woodwork.png" alt="woodwork" className="obj-thumb" style={{ height: "48px", objectFit: "contain" }} />
+                    <span>Marangoz Masası (Görsel)</span>
                   </button>
                 </div>
               )}

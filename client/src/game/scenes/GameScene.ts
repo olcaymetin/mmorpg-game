@@ -163,6 +163,14 @@ export class GameScene extends Phaser.Scene {
     this.load.image("rock_small_bronze", "assets/rock_small_bronze.png");
     this.load.image("rock_small_silver", "assets/rock_small_silver.png");
 
+    // Preload new house / crafting table assets
+    this.load.image("house_barn_small", "assets/house_barn_small.png");
+    this.load.image("house_farmer_2", "assets/house_farmer_2.png");
+    this.load.image("house_stable", "assets/house_stable.png");
+    this.load.image("house_oven", "assets/house_oven.png");
+    this.load.image("table_tailor", "assets/table_tailor.png");
+    this.load.image("table_woodwork", "assets/table_woodwork.png");
+
     // Load gift effects as spritesheets
     this.load.spritesheet("vfx_leaf_single", "assets/gift/Modern_Farm_vfx_Falling_Leaf_16x16.png", { frameWidth: 16, frameHeight: 16 });
     this.load.spritesheet("vfx_leaves_1", "assets/gift/Modern_Farm_vfx_Falling_Leaves_16x16.png", { frameWidth: 48, frameHeight: 48 });
@@ -204,7 +212,7 @@ export class GameScene extends Phaser.Scene {
     if (type.startsWith("silo")) {
       return 1.0;
     }
-    if (type.startsWith("decor_grass_") || type.startsWith("decor_gorsel_") || type.startsWith("vfx_") || type.startsWith("mg_") || type.startsWith("rock_")) {
+    if (type.startsWith("decor_grass_") || type.startsWith("decor_gorsel_") || type.startsWith("vfx_") || type.startsWith("mg_") || type.startsWith("rock_") || type.startsWith("house_") || type.startsWith("table_")) {
       return 2.0;
     }
     return 0.15;
