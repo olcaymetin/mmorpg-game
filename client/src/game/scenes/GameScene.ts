@@ -709,10 +709,14 @@ export class GameScene extends Phaser.Scene {
         // Play mode seed planting! (Requires and consumes purchased seeds)
         if (!this.editorMode && this.selectedSeed) {
           if (!crop) {
-            // Check if ground tile is farmland (GID 227)
-            const tile = this.map.getTileAt(tileX, tileY, true, this.layer);
-            const tileGid = tile ? tile.index : -1;
-            if (tileGid !== 227 && tileGid !== 451) {
+            // Check if ground tile is farmland (GID 227 or 451) on either terrain or decor layer
+            const terrainTile = this.map.getTileAt(tileX, tileY, true, this.layer);
+            const decorTile = this.map.getTileAt(tileX, tileY, true, this.decorLayer);
+            const terrainGid = terrainTile ? terrainTile.index : -1;
+            const decorGid = decorTile ? decorTile.index : -1;
+            
+            const isFarmland = (terrainGid === 227 || terrainGid === 451 || decorGid === 227 || decorGid === 451);
+            if (!isFarmland) {
               alert("⚠️ Sadece hazırlanmış tarla toprağı üzerine ekim yapabilirsiniz!");
               return;
             }
@@ -737,10 +741,14 @@ export class GameScene extends Phaser.Scene {
           } else if (this.currentBrushType === "seed" && this.selectedSeed) {
             // Plant a crop on the clicked tile
             if (!crop) {
-              // Check if ground tile is farmland (GID 227)
-              const tile = this.map.getTileAt(tileX, tileY, true, this.layer);
-              const tileGid = tile ? tile.index : -1;
-              if (tileGid !== 227 && tileGid !== 451) {
+              // Check if ground tile is farmland (GID 227 or 451) on either terrain or decor layer
+              const terrainTile = this.map.getTileAt(tileX, tileY, true, this.layer);
+              const decorTile = this.map.getTileAt(tileX, tileY, true, this.decorLayer);
+              const terrainGid = terrainTile ? terrainTile.index : -1;
+              const decorGid = decorTile ? decorTile.index : -1;
+              
+              const isFarmland = (terrainGid === 227 || terrainGid === 451 || decorGid === 227 || decorGid === 451);
+              if (!isFarmland) {
                 alert("⚠️ Sadece hazırlanmış tarla toprağı üzerine ekim yapabilirsiniz!");
                 return;
               }

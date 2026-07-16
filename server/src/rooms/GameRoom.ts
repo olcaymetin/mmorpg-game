@@ -422,11 +422,16 @@ export class GameRoom extends Room<GameState> {
       // Don't overwrite an existing crop
       if (this.state.crops.has(key)) return;
 
-      // Farmland check: GID 227 (plowed soil) or 451 (circular wooden stable/farm tile)
+      // Farmland check: GID 227 (plowed soil) or 451 (circular wooden stable/farm tile) on terrain or decor layer
       const groundTile = this.state.mapData.get(key);
       const groundGid = groundTile !== undefined ? (groundTile & 0xFFFF) : -1;
-      if (groundGid !== 227 && groundGid !== 451) {
-        console.log(`[Crop] Rejecting plant at ${key}: ground is GID ${groundGid} (must be 227 or 451)`);
+      
+      const decorTile = (this.state as any).decorData.get(key);
+      const decorGid = decorTile !== undefined ? (decorTile & 0xFFFF) : -1;
+
+      const isFarmland = (groundGid === 227 || groundGid === 451 || decorGid === 227 || decorGid === 451);
+      if (!isFarmland) {
+        console.log(`[Crop] Rejecting plant at ${key}: ground is GID ${groundGid}, decor is GID ${decorGid} (must be 227 or 451)`);
         return;
       }
 
