@@ -864,7 +864,7 @@ export class GameScene extends Phaser.Scene {
           if (serverMap !== this.currentMapId) {
             this.currentMapId = serverMap;
             // Update boundaries
-            if (this.currentMapId === "sub_island") {
+            if (this.currentMapId === "sub_island" || this.currentMapId === "boss_island") {
               this.mapWidth = 25 * TILE_SIZE;
               this.mapHeight = 20 * TILE_SIZE;
             } else if (this.currentMapId === "bottom_island") {
@@ -1350,6 +1350,27 @@ export class GameScene extends Phaser.Scene {
               });
 
               this.room.send("player-teleport", { mapId: "main", x: targetX, y: targetY });
+              break;
+            } else if (obj.type === "yon_down" && this.currentMapId === "bottom_island") {
+              console.log(`[Teleport] Down arrow triggered on bottom_island. Teleporting to boss_island...`);
+              this.lastTeleportTime = time;
+              this.room.send("player-teleport", { mapId: "boss_island", x: 400, y: 100 }); // spawn near the top of boss_island
+              break;
+            } else if (obj.type === "yon_up" && this.currentMapId === "boss_island") {
+              console.log(`[Teleport] Up arrow triggered on boss_island. Teleporting to bottom_island...`);
+              this.lastTeleportTime = time;
+              
+              // Find target position on bottom_island map (near first yon_down on bottom_island)
+              let targetX = 600;
+              let targetY = 900;
+              this.room.state.placedObjects.forEach((val: any) => {
+                if (val.type === "yon_down" && val.mapId === "bottom_island") {
+                  targetX = val.x;
+                  targetY = val.y - 48; // Offset up so we don't immediately re-teleport
+                }
+              });
+
+              this.room.send("player-teleport", { mapId: "bottom_island", x: targetX, y: targetY });
               break;
             }
           }
