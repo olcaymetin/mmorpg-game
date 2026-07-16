@@ -834,7 +834,6 @@ const App: React.FC = () => {
                     { id: "Grape",        label: "Üzüm",           frameH: 96 },
                     { id: "Onion",        label: "Soğan",          frameH: 64 },
                     { id: "Pepper",       label: "Biber",          frameH: 32 },
-                    { id: "Pineapple",    label: "Ananas",         frameH: 64 },
                     { id: "Prickly_Pear", label: "Kaktüs",         frameH: 96 },
                     { id: "Pumpkin",      label: "Kabak",          frameH: 64 },
                     { id: "Radish",       label: "Turp",           frameH: 32 },
