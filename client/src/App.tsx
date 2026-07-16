@@ -473,6 +473,15 @@ const App: React.FC = () => {
       setSelectionEnd({ col, row });
       setIsSelectingTileset(true);
       setSelectedObject(null);
+      // Immediately switch brush to tile mode on tile panel click
+      // (this sets the brush type even if eraser was selected before)
+      const startGid = activeTileset === "fences" ? 2000 : (activeTileset === "zemin2" ? 3000 : (activeTileset === "iskele" ? 4000 : (activeTileset === "dekor2" ? 5000 : 0)));
+      const colsCount = activeTileset === "zemin2" ? 5 : (activeTileset === "iskele" ? 9 : (activeTileset === "dekor2" ? 7 : 32));
+      const index = startGid + (row * colsCount + col);
+      setSelectedTile(index);
+      if (game) {
+        game.events.emit("editor-brush-selected", { type: "tile", index });
+      }
     }
   };
 
@@ -1378,51 +1387,31 @@ const App: React.FC = () => {
               <div className="editor-tabs" style={{ marginTop: "6px", marginBottom: "8px" }}>
                 <button
                   className={`tab-btn ${activeTileset === "terrains" ? "tab-btn--active" : ""}`}
-                  onClick={() => {
-                    setActiveTileset("terrains");
-                    setSelectedTile(0);
-                    if (game) game.events.emit("editor-brush-selected", { type: "tile", index: 0 });
-                  }}
+                  onClick={() => setActiveTileset("terrains")}
                 >
                   🏞️ Zeminler
                 </button>
                 <button
                   className={`tab-btn ${activeTileset === "fences" ? "tab-btn--active" : ""}`}
-                  onClick={() => {
-                    setActiveTileset("fences");
-                    setSelectedTile(2000);
-                    if (game) game.events.emit("editor-brush-selected", { type: "tile", index: 2000 });
-                  }}
+                  onClick={() => setActiveTileset("fences")}
                 >
                   🚧 Çitler (Şeffaf)
                 </button>
                 <button
                   className={`tab-btn ${activeTileset === "zemin2" ? "tab-btn--active" : ""}`}
-                  onClick={() => {
-                    setActiveTileset("zemin2");
-                    setSelectedTile(3000);
-                    if (game) game.events.emit("editor-brush-selected", { type: "tile", index: 3000 });
-                  }}
+                  onClick={() => setActiveTileset("zemin2")}
                 >
                   🧱 Zemin 2
                 </button>
                 <button
                   className={`tab-btn ${activeTileset === "iskele" ? "tab-btn--active" : ""}`}
-                  onClick={() => {
-                    setActiveTileset("iskele");
-                    setSelectedTile(4000);
-                    if (game) game.events.emit("editor-brush-selected", { type: "tile", index: 4000 });
-                  }}
+                  onClick={() => setActiveTileset("iskele")}
                 >
                   🪵 İskele
                 </button>
                 <button
                   className={`tab-btn ${activeTileset === "dekor2" ? "tab-btn--active" : ""}`}
-                  onClick={() => {
-                    setActiveTileset("dekor2");
-                    setSelectedTile(5000);
-                    if (game) game.events.emit("editor-brush-selected", { type: "tile", index: 5000 });
-                  }}
+                  onClick={() => setActiveTileset("dekor2")}
                 >
                   🏡 Dekor 2
                 </button>
