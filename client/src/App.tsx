@@ -1160,6 +1160,14 @@ const App: React.FC = () => {
               {activeTab === "structures" && (
                 <div className="object-grid" style={{ gridTemplateColumns: "repeat(2, 1fr)" }}>
                   <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "farm_tile" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("farm_tile")}
+                  >
+                    <img src="/assets/farm_tile.jpg" alt="farm_tile" className="obj-thumb" style={{ width: "32px", height: "32px", objectFit: "contain" }} />
+                    <span>Boş Tarla (Obje)</span>
+                  </button>
+
+                  <button
                     className={`obj-btn ${selectedTile === -2 && selectedObjectName === "marketplace" ? "obj-btn--active" : ""}`}
                     onClick={() => handleSelectObjectBrush("marketplace")}
                   >
@@ -1215,13 +1223,7 @@ const App: React.FC = () => {
                     <span>Çiftçi NPC</span>
                   </button>
 
-                  <button
-                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "farm_tile" ? "obj-btn--active" : ""}`}
-                    onClick={() => handleSelectObjectBrush("farm_tile")}
-                  >
-                    <img src="/assets/farm_tile.jpg" alt="farm_tile" className="obj-thumb" style={{ width: "32px", height: "32px", objectFit: "contain" }} />
-                    <span>Boş Tarla (Obje)</span>
-                  </button>
+
 
                   <button
                     className={`obj-btn ${selectedTile === -2 && selectedObjectName === "silo" ? "obj-btn--active" : ""}`}
