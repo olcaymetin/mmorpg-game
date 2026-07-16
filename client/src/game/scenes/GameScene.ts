@@ -1103,7 +1103,7 @@ export class GameScene extends Phaser.Scene {
         const [xStr, yStr] = coords.split(",");
         const tx = parseInt(xStr, 10);
         const ty = parseInt(yStr, 10);
-        this.map.removeTileAt(tx, ty, true, true, this.layer);
+        this.map.putTileAt(-1, tx, ty, false, this.layer);
       }
     });
 
@@ -1154,7 +1154,7 @@ export class GameScene extends Phaser.Scene {
           const [xStr, yStr] = coords.split(",");
           const tx = parseInt(xStr, 10);
           const ty = parseInt(yStr, 10);
-          this.map.removeTileAt(tx, ty, true, true, this.decorLayer);
+          this.map.putTileAt(-1, tx, ty, false, this.decorLayer);
         }
       });
     }
@@ -1310,7 +1310,7 @@ export class GameScene extends Phaser.Scene {
 
   private putTileWithEncoding(tileIndex: number, tx: number, ty: number, layer: Phaser.Tilemaps.TilemapLayer): void {
     if (tileIndex === -1) {
-      this.map.removeTileAt(tx, ty, true, true, layer);
+      this.map.putTileAt(-1, tx, ty, false, layer);
       return;
     }
     const cleanIndex = tileIndex & 0xFFFF;
