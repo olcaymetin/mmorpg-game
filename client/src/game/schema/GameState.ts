@@ -33,6 +33,7 @@ export class PlacedObjectState extends Schema {
   x!: number;
   y!: number;
   scale!: number;
+  animSpeed!: number;
 }
 
 defineTypes(PlacedObjectState, {
@@ -41,6 +42,7 @@ defineTypes(PlacedObjectState, {
   x: "float32",
   y: "float32",
   scale: "float32",
+  animSpeed: "float32",
 });
 
 // ─── Player ──────────────────────────────────────────────────────────────────

@@ -20,6 +20,7 @@ export class PlacedObjectState extends Schema {
   @type("float32") x: number = 0;
   @type("float32") y: number = 0;
   @type("float32") scale: number = 0.15;
+  @type("float32") animSpeed: number = 1.0;
 }
 
 /**

@@ -260,7 +260,30 @@ export class GameScene extends Phaser.Scene {
       const obj = this.placedObjects.find(o => o.id === payload.id);
       if (obj) {
         obj.scale = payload.scale;
-        this.room.send("object-place", { id: obj.id, type: obj.type, x: obj.x, y: obj.y, scale: obj.scale });
+        const stateObj = this.room.state.placedObjects.get(obj.id);
+        const animSpeed = stateObj ? stateObj.animSpeed : 1.0;
+        this.room.send("object-place", {
+          id: obj.id,
+          type: obj.type,
+          x: obj.x,
+          y: obj.y,
+          scale: obj.scale,
+          animSpeed: animSpeed
+        });
+      }
+    });
+
+    this.game.events.on("editor-object-speed-changed", (payload: { id: string; speed: number }) => {
+      const obj = this.placedObjects.find(o => o.id === payload.id);
+      if (obj) {
+        this.room.send("object-place", {
+          id: obj.id,
+          type: obj.type,
+          x: obj.x,
+          y: obj.y,
+          scale: obj.scale,
+          animSpeed: payload.speed
+        });
       }
     });
 
@@ -644,10 +667,13 @@ export class GameScene extends Phaser.Scene {
     this.selectedObjectId = id;
     const obj = this.placedObjects.find(o => o.id === id);
     if (obj) {
+      const stateObj = this.room.state.placedObjects.get(id);
+      const animSpeed = stateObj ? stateObj.animSpeed : 1.0;
       this.game.events.emit("editor-object-selected", {
         id: obj.id,
         type: obj.type,
         scale: obj.scale,
+        animSpeed: animSpeed,
       });
       this.drawSelectionOutline();
     }
@@ -682,7 +708,7 @@ export class GameScene extends Phaser.Scene {
 
   // ─── Local Objects Spawning ───────────────────────────────────────────────
 
-  private spawnLocalObject(type: string, x: number, y: number, scale = 0.15, id: string): PlacedObject {
+  private spawnLocalObject(type: string, x: number, y: number, scale = 0.15, id: string, animSpeed = 1.0): PlacedObject {
     // Destroy previous representation if it exists
     this.destroyLocalObject(id);
 
@@ -695,7 +721,9 @@ export class GameScene extends Phaser.Scene {
     img.setData("id", id);
 
     if (isAnimated) {
-      (img as Phaser.GameObjects.Sprite).play(`${type}_anim`);
+      const sprite = img as Phaser.GameObjects.Sprite;
+      sprite.play(`${type}_anim`);
+      sprite.anims.timeScale = animSpeed;
     }
 
     this.input.setDraggable(img);
@@ -806,7 +834,7 @@ export class GameScene extends Phaser.Scene {
 
     // 3. Placed Buildings Sync
     placedObjects.onAdd((objState: PlacedObjectState, id: string) => {
-      this.spawnLocalObject(objState.type, objState.x, objState.y, objState.scale, id);
+      this.spawnLocalObject(objState.type, objState.x, objState.y, objState.scale, id, objState.animSpeed);
     });
 
     placedObjects.onChange((objState: PlacedObjectState, id: string) => {
@@ -819,6 +847,9 @@ export class GameScene extends Phaser.Scene {
           obj.imageObj.x = objState.x;
           obj.imageObj.y = objState.y;
           obj.imageObj.setScale(objState.scale);
+          if (objState.type.startsWith("vfx_") || objState.type.startsWith("mg_")) {
+            (obj.imageObj as Phaser.GameObjects.Sprite).anims.timeScale = objState.animSpeed !== undefined ? objState.animSpeed : 1.0;
+          }
         }
       }
       this.drawSelectionOutline();
@@ -846,13 +877,17 @@ export class GameScene extends Phaser.Scene {
         }
       }
     }
-    const placedObjectsPayload = this.placedObjects.map(o => ({
-      id: o.id,
-      type: o.type,
-      x: o.x,
-      y: o.y,
-      scale: o.scale,
-    }));
+    const placedObjectsPayload = this.placedObjects.map(o => {
+      const stateObj = this.room.state.placedObjects.get(o.id);
+      return {
+        id: o.id,
+        type: o.type,
+        x: o.x,
+        y: o.y,
+        scale: o.scale,
+        animSpeed: stateObj ? stateObj.animSpeed : 1.0,
+      };
+    });
     return JSON.stringify({ mapData: mapDataPayload, decorData: decorDataPayload, placedObjects: placedObjectsPayload }, null, 2);
   }
 

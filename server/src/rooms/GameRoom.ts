@@ -62,6 +62,7 @@ interface TileUpdateBulkMessage {
     x: number;
     y: number;
     scale: number;
+    animSpeed?: number;
   }>;
 }
 
@@ -71,6 +72,7 @@ interface ObjectPlaceMessage {
   x: number;
   y: number;
   scale: number;
+  animSpeed?: number;
 }
 
 interface ObjectMoveMessage {
@@ -235,6 +237,7 @@ export class GameRoom extends Room<GameState> {
           obj.x = o.x;
           obj.y = o.y;
           obj.scale = o.scale;
+          obj.animSpeed = o.animSpeed !== undefined ? o.animSpeed : 1.0;
           this.state.placedObjects.set(o.id, obj);
         });
       }
@@ -247,12 +250,18 @@ export class GameRoom extends Room<GameState> {
      * "object-place" handler - for placing a new object/building
      */
     this.onMessage("object-place", (client: Client, msg: ObjectPlaceMessage) => {
-      const obj = new PlacedObjectState();
-      obj.id = msg.id;
-      obj.type = msg.type;
+      let obj = this.state.placedObjects.get(msg.id);
+      if (!obj) {
+        obj = new PlacedObjectState();
+        obj.id = msg.id;
+        obj.type = msg.type;
+      }
       obj.x = msg.x;
       obj.y = msg.y;
       obj.scale = msg.scale;
+      if (msg.animSpeed !== undefined) {
+        obj.animSpeed = msg.animSpeed;
+      }
       this.state.placedObjects.set(msg.id, obj);
       this.triggerDebouncedSave();
     });
@@ -409,9 +418,9 @@ export class GameRoom extends Room<GameState> {
       const decorData: { [key: string]: number } = {};
       this.state.decorData.forEach((val, key) => { decorData[key] = val; });
 
-      const placedObjects: Array<{ id: string; type: string; x: number; y: number; scale: number }> = [];
+      const placedObjects: Array<{ id: string; type: string; x: number; y: number; scale: number; animSpeed: number }> = [];
       this.state.placedObjects.forEach((val) => {
-        placedObjects.push({ id: val.id, type: val.type, x: val.x, y: val.y, scale: val.scale });
+        placedObjects.push({ id: val.id, type: val.type, x: val.x, y: val.y, scale: val.scale, animSpeed: val.animSpeed });
       });
 
       const crops: Array<{ key: string; cropType: string; stage: number; plantedAt: number }> = [];
@@ -454,6 +463,7 @@ export class GameRoom extends Room<GameState> {
           const obj = new PlacedObjectState();
           obj.id = o.id; obj.type = o.type;
           obj.x = o.x; obj.y = o.y; obj.scale = o.scale;
+          obj.animSpeed = o.animSpeed !== undefined ? o.animSpeed : 1.0;
           this.state.placedObjects.set(o.id, obj);
         });
       }

@@ -65,7 +65,7 @@ const App: React.FC = () => {
   const [selectedObjectName, setSelectedObjectName] = useState("marketplace");
 
   // Selected object properties (for scaling/deletion)
-  const [selectedObject, setSelectedObject] = useState<{ id: string; type: string; scale: number } | null>(null);
+  const [selectedObject, setSelectedObject] = useState<{ id: string; type: string; scale: number; animSpeed?: number } | null>(null);
 
   // Local player's inventory
   const [inventory, setInventory] = useState<Record<string, number>>({});
@@ -91,7 +91,7 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!game) return;
 
-    const handleObjectSelected = (data: { id: string; type: string; scale: number }) => {
+    const handleObjectSelected = (data: { id: string; type: string; scale: number; animSpeed?: number }) => {
       setSelectedObject(data);
     };
 
@@ -183,6 +183,14 @@ const App: React.FC = () => {
     if (selectedObject && game) {
       setSelectedObject({ ...selectedObject, scale: newScale });
       game.events.emit("editor-object-scale-changed", { id: selectedObject.id, scale: newScale });
+    }
+  };
+
+  const handleObjectSpeedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newSpeed = parseFloat(e.target.value);
+    if (selectedObject && game) {
+      setSelectedObject({ ...selectedObject, animSpeed: newSpeed });
+      game.events.emit("editor-object-speed-changed", { id: selectedObject.id, speed: newSpeed });
     }
   };
 
@@ -524,6 +532,24 @@ const App: React.FC = () => {
                       onChange={handleObjectScaleChange}
                     />
                   </div>
+
+                  {/* Animation Speed Slider (Visible only for animated objects like VFX/gifts) */}
+                  {(selectedObject.type.startsWith("vfx_") || selectedObject.type.startsWith("mg_")) && (
+                    <div className="slider-group" style={{ marginTop: "10px" }}>
+                      <label htmlFor="speed-slider">
+                        Animasyon Hızı: <b>{Math.round((selectedObject.animSpeed !== undefined ? selectedObject.animSpeed : 1.0) * 100)}%</b>
+                      </label>
+                      <input
+                        id="speed-slider"
+                        type="range"
+                        min="0.1"
+                        max="5.0"
+                        step="0.1"
+                        value={selectedObject.animSpeed !== undefined ? selectedObject.animSpeed : 1.0}
+                        onChange={handleObjectSpeedChange}
+                      />
+                    </div>
+                  )}
 
                   <button className="btn btn--danger" onClick={handleObjectDelete}>
                     🗑️ Objeyi Haritadan Sil
