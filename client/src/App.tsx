@@ -1519,7 +1519,7 @@ const App: React.FC = () => {
               )}
 
                {/* ── Terrains Tileset Selector ── */}
-              <div className="section-title">Zemin & Çit Fayansları (16x16)</div>
+              <div className="section-title">Zemin & Çit Fayansları (16x16) {selectedTile >= 0 ? `[Seçilen ID: ${selectedTile}]` : ""}</div>
 
               {/* Sub-Tabs to switch between Terrains and Fences */}
               <div className="editor-tabs" style={{ marginTop: "6px", marginBottom: "8px" }}>

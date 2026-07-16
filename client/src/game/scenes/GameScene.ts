@@ -712,8 +712,8 @@ export class GameScene extends Phaser.Scene {
             // Check if ground tile is farmland (GID 227)
             const tile = this.map.getTileAt(tileX, tileY, true, this.layer);
             const tileGid = tile ? tile.index : -1;
-            if (tileGid !== 227) {
-              alert("⚠️ Sadece sürülmüş tarla toprağı üzerine ekim yapabilirsiniz!");
+            if (tileGid !== 227 && tileGid !== 451) {
+              alert("⚠️ Sadece hazırlanmış tarla toprağı üzerine ekim yapabilirsiniz!");
               return;
             }
             this.room?.send("crop-plant", { x: tileX, y: tileY, cropType: this.selectedSeed, free: false });
@@ -740,8 +740,8 @@ export class GameScene extends Phaser.Scene {
               // Check if ground tile is farmland (GID 227)
               const tile = this.map.getTileAt(tileX, tileY, true, this.layer);
               const tileGid = tile ? tile.index : -1;
-              if (tileGid !== 227) {
-                alert("⚠️ Sadece sürülmüş tarla toprağı üzerine ekim yapabilirsiniz!");
+              if (tileGid !== 227 && tileGid !== 451) {
+                alert("⚠️ Sadece hazırlanmış tarla toprağı üzerine ekim yapabilirsiniz!");
                 return;
               }
               this.room?.send("crop-plant", { x: tileX, y: tileY, cropType: this.selectedSeed, free: true });
