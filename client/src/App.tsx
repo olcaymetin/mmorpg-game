@@ -422,6 +422,25 @@ const App: React.FC = () => {
     }
   };
 
+  const getTabBtnStyle = (tabName: string) => {
+    const isActive = activeTab === tabName;
+    return {
+      flex: "1 1 auto",
+      textAlign: "center" as const,
+      background: isActive ? "rgba(74, 222, 128, 0.15)" : "rgba(255, 255, 255, 0.03)",
+      border: isActive ? "1px solid rgba(74, 222, 128, 0.35)" : "1px solid rgba(255, 255, 255, 0.05)",
+      color: isActive ? "#4ade80" : "rgba(255, 255, 255, 0.6)",
+      fontFamily: '"Courier New", monospace',
+      fontWeight: "bold" as const,
+      fontSize: tabName === "structures" || tabName === "decorations" || tabName === "effects" ? "10px" : "9px",
+      padding: "6px 8px",
+      cursor: "pointer",
+      borderRadius: "4px",
+      transition: "all 0.15s ease",
+      textShadow: isActive ? "0 0 5px rgba(74, 222, 128, 0.4)" : "none",
+    };
+  };
+
   const handleObjectScaleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newScale = parseFloat(e.target.value);
     if (selectedObject && game) {
@@ -1067,36 +1086,51 @@ const App: React.FC = () => {
               <div className="section-title">Büyük Objeler & Efektler</div>
               
               {/* Tab Navigation Buttons */}
-              <div className="editor-tabs">
+              <div 
+                className="editor-tabs"
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "6px",
+                  marginBottom: "12px",
+                  background: "rgba(0, 0, 0, 0.4)",
+                  padding: "6px",
+                  borderRadius: "6px",
+                  border: "1px solid rgba(255, 255, 255, 0.08)"
+                }}
+              >
                 <button
                   className={`tab-btn ${activeTab === "structures" ? "tab-btn--active" : ""}`}
                   onClick={() => setActiveTab("structures")}
+                  style={getTabBtnStyle("structures")}
                 >
                   🏰 Yapı & NPC
                 </button>
                 <button
                   className={`tab-btn ${activeTab === "decorations" ? "tab-btn--active" : ""}`}
                   onClick={() => setActiveTab("decorations")}
+                  style={getTabBtnStyle("decorations")}
                 >
                   🌿 Dekor (Foto)
                 </button>
                 <button
                   className={`tab-btn ${activeTab === "effects" ? "tab-btn--active" : ""}`}
                   onClick={() => setActiveTab("effects")}
+                  style={getTabBtnStyle("effects")}
                 >
                   ✨ Efekt (GIF)
                 </button>
                 <button
                   className={`tab-btn ${activeTab === "mining" ? "tab-btn--active" : ""}`}
                   onClick={() => setActiveTab("mining")}
-                  style={{ fontSize: "9px" }}
+                  style={getTabBtnStyle("mining")}
                 >
                   ⛏️ Maden
                 </button>
                 <button
                   className={`tab-btn ${activeTab === "materials" ? "tab-btn--active" : ""}`}
                   onClick={() => setActiveTab("materials")}
-                  style={{ fontSize: "9px" }}
+                  style={getTabBtnStyle("materials")}
                 >
                   📦 Malzeme Gift
                 </button>
@@ -1104,10 +1138,9 @@ const App: React.FC = () => {
                   className={`tab-btn ${activeTab === "seeds" ? "tab-btn--active" : ""}`}
                   onClick={() => {
                     setActiveTab("seeds");
-                    // Clear any object brush when switching to seeds
                     if (game) game.events.emit("editor-brush-selected", { type: "seed", cropType: "" });
                   }}
-                  style={{ fontSize: "9px" }}
+                  style={getTabBtnStyle("seeds")}
                 >
                   🌾 Tohum Ek
                 </button>
@@ -1115,10 +1148,9 @@ const App: React.FC = () => {
                   className={`tab-btn ${activeTab === "ahir" ? "tab-btn--active" : ""}`}
                   onClick={() => {
                     setActiveTab("ahir");
-                    // Select the first ahır piece by default when switching to ahır tab
                     handleSelectObjectBrush("ahir_front_green");
                   }}
-                  style={{ fontSize: "9px" }}
+                  style={getTabBtnStyle("ahir")}
                 >
                   🐴 Ahır
                 </button>
