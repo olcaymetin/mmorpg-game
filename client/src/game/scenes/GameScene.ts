@@ -141,7 +141,10 @@ export class GameScene extends Phaser.Scene {
     this.load.image("silo", "assets/silo.png");
     this.load.image("silo2", "assets/silo2.png");
     this.load.image("nft_house", "assets/nft_house.png");
-    this.load.image("yon", "assets/yon.png");
+    this.load.image("yon_up", "assets/yon_up.png");
+    this.load.image("yon_down", "assets/yon_down.png");
+    this.load.image("yon_left", "assets/yon_left.png");
+    this.load.image("yon_right", "assets/yon_right.png");
 
     // Load gift effects as spritesheets
     this.load.spritesheet("vfx_leaf_single", "assets/gift/Modern_Farm_vfx_Falling_Leaf_16x16.png", { frameWidth: 16, frameHeight: 16 });
@@ -178,8 +181,8 @@ export class GameScene extends Phaser.Scene {
     if (type === "nft_house") {
       return 0.12;
     }
-    if (type === "yon") {
-      return 0.05; // 1024x1024 scaled down to ~51px
+    if (type === "yon_up" || type === "yon_down" || type === "yon_left" || type === "yon_right") {
+      return 0.1; // 512x512 scaled down to ~51px
     }
     if (type.startsWith("silo")) {
       return 1.0;

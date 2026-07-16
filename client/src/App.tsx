@@ -1025,11 +1025,35 @@ const App: React.FC = () => {
                   </button>
 
                   <button
-                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "yon" ? "obj-btn--active" : ""}`}
-                    onClick={() => handleSelectObjectBrush("yon")}
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "yon_up" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("yon_up")}
                   >
-                    <img src="/assets/yon.png" alt="yon" className="obj-thumb" style={{ height: "48px", objectFit: "contain" }} />
-                    <span>Yön İşareti</span>
+                    <img src="/assets/yon_up.png" alt="yon up" className="obj-thumb" style={{ height: "48px", objectFit: "contain" }} />
+                    <span>Yön: Yukarı</span>
+                  </button>
+
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "yon_down" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("yon_down")}
+                  >
+                    <img src="/assets/yon_down.png" alt="yon down" className="obj-thumb" style={{ height: "48px", objectFit: "contain" }} />
+                    <span>Yön: Aşağı</span>
+                  </button>
+
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "yon_left" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("yon_left")}
+                  >
+                    <img src="/assets/yon_left.png" alt="yon left" className="obj-thumb" style={{ height: "48px", objectFit: "contain" }} />
+                    <span>Yön: Sol</span>
+                  </button>
+
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "yon_right" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("yon_right")}
+                  >
+                    <img src="/assets/yon_right.png" alt="yon right" className="obj-thumb" style={{ height: "48px", objectFit: "contain" }} />
+                    <span>Yön: Sağ</span>
                   </button>
                 </div>
               )}
