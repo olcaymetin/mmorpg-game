@@ -72,6 +72,12 @@ export class GameScene extends Phaser.Scene {
   private cameraStartX = 0;
   private cameraStartY = 0;
 
+  public currentMapId = "main";
+  public mapWidth = 1600;
+  public mapHeight = 1280;
+  private lastTeleportTime = 0;
+  private gridOverlayGraphics!: Phaser.GameObjects.Graphics;
+
   // ── State variables ────────────────────────────────────────────────────────
   public virtualLeft = false;
   public virtualRight = false;
@@ -223,7 +229,7 @@ export class GameScene extends Phaser.Scene {
     this.selectionGraphics.setDepth(99999);
 
     // 5. Clamp camera to world bounds
-    this.cameras.main.setBounds(0, 0, WORLD_W, WORLD_H);
+    this.cameras.main.setBounds(0, 0, this.mapWidth, this.mapHeight);
 
     // 6. Register keys
     const kb = this.input.keyboard!;
@@ -347,7 +353,7 @@ export class GameScene extends Phaser.Scene {
 
     // 11. Mouse wheel zoom (middle mouse wheel) and responsive scale resize
     const getMinZoom = () => {
-      return Math.max(this.scale.width / WORLD_W, this.scale.height / WORLD_H);
+      return Math.max(this.scale.width / this.mapWidth, this.scale.height / this.mapHeight);
     };
 
     const initialMinZoom = getMinZoom();
@@ -369,7 +375,7 @@ export class GameScene extends Phaser.Scene {
     });
 
     this.scale.on("resize", (gameSize: Phaser.Structs.Size) => {
-      const minZoom = Math.max(gameSize.width / WORLD_W, gameSize.height / WORLD_H);
+      const minZoom = Math.max(gameSize.width / this.mapWidth, gameSize.height / this.mapHeight);
       if (this.cameras.main.zoom < minZoom) {
         this.cameras.main.setZoom(minZoom);
       }
@@ -433,7 +439,25 @@ export class GameScene extends Phaser.Scene {
 
   /** Render or update a crop sprite at tile position encoded as "x,y" */
   private renderCropSprite(key: string, cropType: string, stage: number): void {
-    const [tx, ty] = key.split(",").map(Number);
+    let mapId = "main";
+    let coords = key;
+    if (key.includes(":")) {
+      const parts = key.split(":");
+      mapId = parts[0];
+      coords = parts[1];
+    }
+
+    // If this crop belongs to a different map, make sure it is destroyed locally
+    if (mapId !== this.currentMapId) {
+      const sprite = this.cropSprites.get(key);
+      if (sprite) {
+        sprite.destroy();
+        this.cropSprites.delete(key);
+      }
+      return;
+    }
+
+    const [tx, ty] = coords.split(",").map(Number);
     const meta = GameScene.CROP_META[cropType];
     if (!meta) return;
 
@@ -491,25 +515,28 @@ export class GameScene extends Phaser.Scene {
   // ─── Grid Overlay Drawing ──────────────────────────────────────────────────
 
   private drawGridOverlay(): void {
-    const g = this.add.graphics();
-    g.fillStyle(0x0f2405, 1); // Dark background
-    g.fillRect(0, 0, WORLD_W, WORLD_H);
+    if (!this.gridOverlayGraphics) {
+      this.gridOverlayGraphics = this.add.graphics();
+    }
+    this.gridOverlayGraphics.clear();
+    this.gridOverlayGraphics.fillStyle(0x0f2405, 1); // Dark background
+    this.gridOverlayGraphics.fillRect(0, 0, this.mapWidth, this.mapHeight);
 
     // Grid lines
-    g.lineStyle(1, 0x1d470d, 0.45);
-    for (let x = 0; x <= WORLD_W; x += TILE_SIZE) {
-      g.moveTo(x, 0);
-      g.lineTo(x, WORLD_H);
+    this.gridOverlayGraphics.lineStyle(1, 0x1d470d, 0.45);
+    for (let x = 0; x <= this.mapWidth; x += TILE_SIZE) {
+      this.gridOverlayGraphics.moveTo(x, 0);
+      this.gridOverlayGraphics.lineTo(x, this.mapHeight);
     }
-    for (let y = 0; y <= WORLD_H; y += TILE_SIZE) {
-      g.moveTo(0, y);
-      g.lineTo(WORLD_W, y);
+    for (let y = 0; y <= this.mapHeight; y += TILE_SIZE) {
+      this.gridOverlayGraphics.moveTo(0, y);
+      this.gridOverlayGraphics.lineTo(this.mapWidth, y);
     }
-    g.strokePath();
+    this.gridOverlayGraphics.strokePath();
 
     // Map boundary border
-    g.lineStyle(2, 0x55ff22, 0.7);
-    g.strokeRect(1, 1, WORLD_W - 2, WORLD_H - 2);
+    this.gridOverlayGraphics.lineStyle(2, 0x55ff22, 0.7);
+    this.gridOverlayGraphics.strokeRect(1, 1, this.mapWidth - 2, this.mapHeight - 2);
   }
 
   // ─── Editor Painter / Eraser / Panning / Dragging Inputs ────────────────────
@@ -525,8 +552,10 @@ export class GameScene extends Phaser.Scene {
 
       const tileX = Math.floor(pointer.worldX / TILE_SIZE);
       const tileY = Math.floor(pointer.worldY / TILE_SIZE);
+      const maxCols = this.mapWidth / TILE_SIZE;
+      const maxRows = this.mapHeight / TILE_SIZE;
 
-      if (tileX >= 0 && tileX < 50 && tileY >= 0 && tileY < 40) {
+      if (tileX >= 0 && tileX < maxCols && tileY >= 0 && tileY < maxRows) {
         if (this.currentBrushType === "tile") {
           if (this.currentTileStamp) {
             const updates: Array<{ x: number; y: number; tileIndex: number; layer: "terrain" | "decor" }> = [];
@@ -534,7 +563,7 @@ export class GameScene extends Phaser.Scene {
               for (let c = 0; c < this.currentTileStamp.width; c++) {
                 const tx = tileX + c;
                 const ty = tileY + r;
-                if (tx >= 0 && tx < 50 && ty >= 0 && ty < 40) {
+                if (tx >= 0 && tx < maxCols && ty >= 0 && ty < maxRows) {
                   const tileIndex = this.currentTileStamp.tiles[r][c];
                   const layer = tileIndex >= 2000 ? "decor" : "terrain";
                   updates.push({
@@ -566,7 +595,7 @@ export class GameScene extends Phaser.Scene {
       if (pointer.button === 0) { // Left Click
         const tileX = Math.floor(pointer.worldX / 16);
         const tileY = Math.floor(pointer.worldY / 16);
-        const tileKey = `${tileX},${tileY}`;
+        const tileKey = `${this.currentMapId}:${tileX},${tileY}`;
         const crop = this.room?.state.crops.get(tileKey);
 
         if (crop && crop.stage >= 6) {
@@ -620,7 +649,7 @@ export class GameScene extends Phaser.Scene {
         if (this.currentBrushType === "seed") {
           const tileX = Math.floor(pointer.worldX / 16);
           const tileY = Math.floor(pointer.worldY / 16);
-          const tileKey = `${tileX},${tileY}`;
+          const tileKey = `${this.currentMapId}:${tileX},${tileY}`;
           const crop = this.room?.state.crops.get(tileKey);
           if (crop && crop.stage >= 6) {
             this.room?.send("crop-harvest", { x: tileX, y: tileY });
@@ -639,8 +668,8 @@ export class GameScene extends Phaser.Scene {
       else if (this.isDraggingCamera && pointer.button === 2) {
         const dx = pointer.x - this.dragStartX;
         const dy = pointer.y - this.dragStartY;
-        const newScrollX = Phaser.Math.Clamp(this.cameraStartX - dx, 0, WORLD_W - this.cameras.main.width);
-        const newScrollY = Phaser.Math.Clamp(this.cameraStartY - dy, 0, WORLD_H - this.cameras.main.height);
+         const newScrollX = Phaser.Math.Clamp(this.cameraStartX - dx, 0, this.mapWidth - this.cameras.main.width);
+         const newScrollY = Phaser.Math.Clamp(this.cameraStartY - dy, 0, this.mapHeight - this.cameras.main.height);
         this.cameras.main.setScroll(newScrollX, newScrollY);
       }
     });
@@ -825,6 +854,27 @@ export class GameScene extends Phaser.Scene {
             entity.sprite.play(animKey, true);
           }
         }
+
+        // Update player visibility
+        this.updatePlayerVisibilities();
+
+        // If local player changed map, reload map
+        if (sessionId === this.localId) {
+          const serverMap = player.currentMap || "main";
+          if (serverMap !== this.currentMapId) {
+            this.currentMapId = serverMap;
+            // Update boundaries
+            if (this.currentMapId === "sub_island") {
+              this.mapWidth = 25 * TILE_SIZE;
+              this.mapHeight = 20 * TILE_SIZE;
+            } else {
+              this.mapWidth = 50 * TILE_SIZE;
+              this.mapHeight = 40 * TILE_SIZE;
+            }
+            this.cameras.main.setBounds(0, 0, this.mapWidth, this.mapHeight);
+            this.redrawMap();
+          }
+        }
       });
     });
 
@@ -838,70 +888,134 @@ export class GameScene extends Phaser.Scene {
 
     // 2. Map Tiles Sync
     mapData.onAdd((tileIndex: number, key: string) => {
-      const [xStr, yStr] = key.split(",");
-      const tx = parseInt(xStr, 10);
-      const ty = parseInt(yStr, 10);
-      this.map.putTileAt(tileIndex, tx, ty, true, this.layer);
+      let mapId = "main";
+      let coords = key;
+      if (key.includes(":")) {
+        const parts = key.split(":");
+        mapId = parts[0];
+        coords = parts[1];
+      }
+      if (mapId === this.currentMapId) {
+        const [xStr, yStr] = coords.split(",");
+        const tx = parseInt(xStr, 10);
+        const ty = parseInt(yStr, 10);
+        this.map.putTileAt(tileIndex, tx, ty, true, this.layer);
+      }
     });
 
     mapData.onChange((tileIndex: number, key: string) => {
-      const [xStr, yStr] = key.split(",");
-      const tx = parseInt(xStr, 10);
-      const ty = parseInt(yStr, 10);
-      this.map.putTileAt(tileIndex, tx, ty, true, this.layer);
+      let mapId = "main";
+      let coords = key;
+      if (key.includes(":")) {
+        const parts = key.split(":");
+        mapId = parts[0];
+        coords = parts[1];
+      }
+      if (mapId === this.currentMapId) {
+        const [xStr, yStr] = coords.split(",");
+        const tx = parseInt(xStr, 10);
+        const ty = parseInt(yStr, 10);
+        this.map.putTileAt(tileIndex, tx, ty, true, this.layer);
+      }
     });
 
     mapData.onRemove((_tileIndex: number, key: string) => {
-      const [xStr, yStr] = key.split(",");
-      const tx = parseInt(xStr, 10);
-      const ty = parseInt(yStr, 10);
-      this.map.removeTileAt(tx, ty, true, true, this.layer);
+      let mapId = "main";
+      let coords = key;
+      if (key.includes(":")) {
+        const parts = key.split(":");
+        mapId = parts[0];
+        coords = parts[1];
+      }
+      if (mapId === this.currentMapId) {
+        const [xStr, yStr] = coords.split(",");
+        const tx = parseInt(xStr, 10);
+        const ty = parseInt(yStr, 10);
+        this.map.removeTileAt(tx, ty, true, true, this.layer);
+      }
     });
 
     // 2b. Decor/Fence Tiles Sync
     const decorData = (this.room.state as any).decorData;
     if (decorData) {
       decorData.onAdd((tileIndex: number, key: string) => {
-        const [xStr, yStr] = key.split(",");
-        const tx = parseInt(xStr, 10);
-        const ty = parseInt(yStr, 10);
-        this.map.putTileAt(tileIndex, tx, ty, true, this.decorLayer);
+        let mapId = "main";
+        let coords = key;
+        if (key.includes(":")) {
+          const parts = key.split(":");
+          mapId = parts[0];
+          coords = parts[1];
+        }
+        if (mapId === this.currentMapId) {
+          const [xStr, yStr] = coords.split(",");
+          const tx = parseInt(xStr, 10);
+          const ty = parseInt(yStr, 10);
+          this.map.putTileAt(tileIndex, tx, ty, true, this.decorLayer);
+        }
       });
 
       decorData.onChange((tileIndex: number, key: string) => {
-        const [xStr, yStr] = key.split(",");
-        const tx = parseInt(xStr, 10);
-        const ty = parseInt(yStr, 10);
-        this.map.putTileAt(tileIndex, tx, ty, true, this.decorLayer);
+        let mapId = "main";
+        let coords = key;
+        if (key.includes(":")) {
+          const parts = key.split(":");
+          mapId = parts[0];
+          coords = parts[1];
+        }
+        if (mapId === this.currentMapId) {
+          const [xStr, yStr] = coords.split(",");
+          const tx = parseInt(xStr, 10);
+          const ty = parseInt(yStr, 10);
+          this.map.putTileAt(tileIndex, tx, ty, true, this.decorLayer);
+        }
       });
 
       decorData.onRemove((_tileIndex: number, key: string) => {
-        const [xStr, yStr] = key.split(",");
-        const tx = parseInt(xStr, 10);
-        const ty = parseInt(yStr, 10);
-        this.map.removeTileAt(tx, ty, true, true, this.decorLayer);
+        let mapId = "main";
+        let coords = key;
+        if (key.includes(":")) {
+          const parts = key.split(":");
+          mapId = parts[0];
+          coords = parts[1];
+        }
+        if (mapId === this.currentMapId) {
+          const [xStr, yStr] = coords.split(",");
+          const tx = parseInt(xStr, 10);
+          const ty = parseInt(yStr, 10);
+          this.map.removeTileAt(tx, ty, true, true, this.decorLayer);
+        }
       });
     }
 
     // 3. Placed Buildings Sync
     placedObjects.onAdd((objState: PlacedObjectState, id: string) => {
-      this.spawnLocalObject(objState.type, objState.x, objState.y, objState.scale, id, objState.animSpeed);
+      const objMapId = objState.mapId || "main";
+      if (objMapId === this.currentMapId) {
+        this.spawnLocalObject(objState.type, objState.x, objState.y, objState.scale, id, objState.animSpeed);
+      }
     });
 
     placedObjects.onChange((objState: PlacedObjectState, id: string) => {
-      const obj = this.placedObjects.find(o => o.id === id);
-      if (obj) {
-        obj.x = objState.x;
-        obj.y = objState.y;
-        obj.scale = objState.scale;
-        if (obj.imageObj) {
-          obj.imageObj.x = objState.x;
-          obj.imageObj.y = objState.y;
-          obj.imageObj.setScale(objState.scale);
-          if (objState.type.startsWith("vfx_") || objState.type.startsWith("mg_")) {
-            (obj.imageObj as Phaser.GameObjects.Sprite).anims.timeScale = objState.animSpeed !== undefined ? objState.animSpeed : 1.0;
+      const objMapId = objState.mapId || "main";
+      if (objMapId === this.currentMapId) {
+        const obj = this.placedObjects.find(o => o.id === id);
+        if (obj) {
+          obj.x = objState.x;
+          obj.y = objState.y;
+          obj.scale = objState.scale;
+          if (obj.imageObj) {
+            obj.imageObj.x = objState.x;
+            obj.imageObj.y = objState.y;
+            obj.imageObj.setScale(objState.scale);
+            if (objState.type.startsWith("vfx_") || objState.type.startsWith("mg_")) {
+              (obj.imageObj as Phaser.GameObjects.Sprite).anims.timeScale = objState.animSpeed !== undefined ? objState.animSpeed : 1.0;
+            }
           }
+        } else {
+          this.spawnLocalObject(objState.type, objState.x, objState.y, objState.scale, id, objState.animSpeed);
         }
+      } else {
+        this.destroyLocalObject(id);
       }
       this.drawSelectionOutline();
     });
@@ -916,8 +1030,10 @@ export class GameScene extends Phaser.Scene {
   public getExportJSON(): string {
     const mapDataPayload: { [key: string]: number } = {};
     const decorDataPayload: { [key: string]: number } = {};
-    for (let x = 0; x < 50; x++) {
-      for (let y = 0; y < 40; y++) {
+    const maxCols = this.mapWidth / TILE_SIZE;
+    const maxRows = this.mapHeight / TILE_SIZE;
+    for (let x = 0; x < maxCols; x++) {
+      for (let y = 0; y < maxRows; y++) {
         const t = this.map.getTileAt(x, y, true, this.layer);
         if (t && t.index !== -1) {
           mapDataPayload[`${x},${y}`] = t.index;
@@ -1003,6 +1119,101 @@ export class GameScene extends Phaser.Scene {
     if (isLocal) {
       this.cameras.main.startFollow(container, true, 0.08, 0.08);
     }
+    this.updatePlayerVisibilities();
+  }
+
+  private updatePlayerVisibilities(): void {
+    this.entities.forEach((entity, sessionId) => {
+      const statePlayer = this.room.state.players.get(sessionId);
+      if (statePlayer) {
+        const playerMap = statePlayer.currentMap || "main";
+        if (playerMap === this.currentMapId) {
+          entity.container.setVisible(true);
+        } else {
+          entity.container.setVisible(false);
+        }
+      }
+    });
+  }
+
+  private redrawMap(): void {
+    // Clear tilemap (terrain & decor)
+    for (let x = 0; x < 100; x++) {
+      for (let y = 0; y < 100; y++) {
+        this.map.removeTileAt(x, y, true, true, this.layer);
+        this.map.removeTileAt(x, y, true, true, this.decorLayer);
+      }
+    }
+
+    // Destroy local object representation
+    this.placedObjects.forEach(obj => {
+      if (obj.imageObj) obj.imageObj.destroy();
+    });
+    this.placedObjects = [];
+
+    // Destroy crop sprites
+    this.cropSprites.forEach(sprite => {
+      sprite.destroy();
+    });
+    this.cropSprites.clear();
+
+    // Redraw grid
+    this.drawGridOverlay();
+
+    // Re-fill tiles from schema mapData
+    this.room.state.mapData.forEach((tileIndex: number, key: string) => {
+      let mapId = "main";
+      let coords = key;
+      if (key.includes(":")) {
+        const parts = key.split(":");
+        mapId = parts[0];
+        coords = parts[1];
+      }
+      if (mapId === this.currentMapId) {
+        const [xStr, yStr] = coords.split(",");
+        const tx = parseInt(xStr, 10);
+        const ty = parseInt(yStr, 10);
+        this.map.putTileAt(tileIndex, tx, ty, true, this.layer);
+      }
+    });
+
+    // Re-fill decor tiles from schema decorData
+    const decorData = (this.room.state as any).decorData;
+    if (decorData) {
+      decorData.forEach((tileIndex: number, key: string) => {
+        let mapId = "main";
+        let coords = key;
+        if (key.includes(":")) {
+          const parts = key.split(":");
+          mapId = parts[0];
+          coords = parts[1];
+        }
+        if (mapId === this.currentMapId) {
+          const [xStr, yStr] = coords.split(",");
+          const tx = parseInt(xStr, 10);
+          const ty = parseInt(yStr, 10);
+          this.map.putTileAt(tileIndex, tx, ty, true, this.decorLayer);
+        }
+      });
+    }
+
+    // Re-spawn placed objects
+    this.room.state.placedObjects.forEach((val: any, id: string) => {
+      const objMapId = val.mapId || "main";
+      if (objMapId === this.currentMapId) {
+        this.spawnLocalObject(val.type, val.x, val.y, val.scale, id, val.animSpeed);
+      }
+    });
+
+    // Re-spawn crops
+    this.room.state.crops.forEach((val: any, key: string) => {
+      const cropMapId = val.mapId || "main";
+      if (cropMapId === this.currentMapId) {
+        this.renderCropSprite(key, val.cropType, val.stage);
+      }
+    });
+
+    this.updatePlayerVisibilities();
   }
 
   // ─── Game loop ────────────────────────────────────────────────────────────
@@ -1050,6 +1261,39 @@ export class GameScene extends Phaser.Scene {
       if (this.isMoving) {
         this.room.send("move", { dx: 0, dy: 0 });
         this.isMoving = false;
+      }
+    }
+
+    // Teleport Check
+    const localPlayer = this.entities.get(this.localId);
+    if (localPlayer && time - this.lastTeleportTime > 2000) {
+      const px = localPlayer.container.x;
+      const py = localPlayer.container.y;
+
+      for (const obj of this.placedObjects) {
+        const dist = Phaser.Math.Distance.Between(px, py, obj.x, obj.y);
+        if (dist < 30) {
+          if (obj.type === "yon_up" && this.currentMapId === "main") {
+            this.lastTeleportTime = time;
+            this.room.send("player-teleport", { mapId: "sub_island", x: 400, y: 580 });
+            break;
+          } else if (obj.type === "yon_down" && this.currentMapId === "sub_island") {
+            this.lastTeleportTime = time;
+            
+            // Find target position on main map (near first yon_up)
+            let targetX = 800;
+            let targetY = 1200;
+            this.room.state.placedObjects.forEach((val: any) => {
+              if (val.type === "yon_up" && (val.mapId || "main") === "main") {
+                targetX = val.x;
+                targetY = val.y + 48; // Offset down so we don't immediately re-teleport
+              }
+            });
+
+            this.room.send("player-teleport", { mapId: "main", x: targetX, y: targetY });
+            break;
+          }
+        }
       }
     }
   }

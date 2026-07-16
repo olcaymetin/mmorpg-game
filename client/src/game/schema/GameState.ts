@@ -1,10 +1,10 @@
-﻿import { Schema, MapSchema, ArraySchema, defineTypes } from "@colyseus/schema";
+import { Schema, MapSchema, ArraySchema, defineTypes } from "@colyseus/schema";
 
-export class CropState extends Schema { key!: string; cropType!: string; stage!: number; plantedAt!: number; }
-defineTypes(CropState, { key: "string", cropType: "string", stage: "int32", plantedAt: "float64" });
+export class CropState extends Schema { key!: string; cropType!: string; stage!: number; plantedAt!: number; mapId!: string; }
+defineTypes(CropState, { key: "string", cropType: "string", stage: "int32", plantedAt: "float64", mapId: "string" });
 
-export class PlacedObjectState extends Schema { id!: string; type!: string; x!: number; y!: number; scale!: number; animSpeed!: number; }
-defineTypes(PlacedObjectState, { id: "string", type: "string", x: "float32", y: "float32", scale: "float32", animSpeed: "float32" });
+export class PlacedObjectState extends Schema { id!: string; type!: string; x!: number; y!: number; scale!: number; animSpeed!: number; mapId!: string; }
+defineTypes(PlacedObjectState, { id: "string", type: "string", x: "float32", y: "float32", scale: "float32", animSpeed: "float32", mapId: "string" });
 
 export class SkillState extends Schema { name!: string; xp!: number; level!: number; }
 defineTypes(SkillState, { name: "string", xp: "int32", level: "int32" });
@@ -47,6 +47,7 @@ export class Player extends Schema {
   friends!: MapSchema<string>;
   friendRequests!: MapSchema<string>;
   rodTier!: number;
+  currentMap!: string;
 }
 defineTypes(Player, {
   x: "float32", y: "float32", color: "string", sessionId: "string",
@@ -64,6 +65,7 @@ defineTypes(Player, {
   achievements: { map: AchievementState },
   friends: { map: "string" }, friendRequests: { map: "string" },
   rodTier: "int32",
+  currentMap: "string",
 });
 
 export class GameState extends Schema {

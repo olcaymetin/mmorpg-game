@@ -235,7 +235,9 @@ export class GameRoom extends Room<GameState> {
      * "tile-update" handler - for painting/erasing single tiles
      */
     this.onMessage("tile-update", (client: Client, msg: TileUpdateMessage) => {
-       const key = `${msg.x},${msg.y}`;
+       const player = this.state.players.get(client.sessionId);
+       const mapId = player?.currentMap || "main";
+       const key = `${mapId}:${msg.x},${msg.y}`;
        const targetMap = msg.layer === "decor" ? this.state.decorData : this.state.mapData;
        if (msg.tileIndex === -1) {
          targetMap.delete(key);
@@ -243,17 +245,12 @@ export class GameRoom extends Room<GameState> {
          targetMap.set(key, msg.tileIndex);
        }
        this.triggerDebouncedSave();
-    });
+     });
 
     /**
      * "tile-update-multi" handler - for painting multiple tiles (stamp/brush)
      */
     this.onMessage("tile-update-multi", (client: Client, msg: TileUpdateMultiMessage) => {
-      if (msg.updates) {
-        msg.updates.forEach(u => {
-          const key = `${u.x},${u.y}`;
-          const targetMap = u.layer === "decor" ? this.state.decorData : this.state.mapData;
-          if (u.tileIndex === -1) {
             targetMap.delete(key);
           } else {
             targetMap.set(key, u.tileIndex);
@@ -306,11 +303,13 @@ export class GameRoom extends Room<GameState> {
      * "object-place" handler - for placing a new object/building
      */
     this.onMessage("object-place", (client: Client, msg: ObjectPlaceMessage) => {
+      const player = this.state.players.get(client.sessionId);
       let obj = this.state.placedObjects.get(msg.id);
       if (!obj) {
         obj = new PlacedObjectState();
         obj.id = msg.id;
         obj.type = msg.type;
+        obj.mapId = player?.currentMap || "main";
       }
       obj.x = msg.x;
       obj.y = msg.y;
@@ -343,15 +342,29 @@ export class GameRoom extends Room<GameState> {
     });
 
     /**
+     * "player-teleport" handler - teleport to another map/island
+     */
+    this.onMessage("player-teleport", (client: Client, msg: { mapId: string; x: number; y: number }) => {
+      const player = this.state.players.get(client.sessionId);
+      if (player) {
+        player.currentMap = msg.mapId;
+        player.x = msg.x;
+        player.y = msg.y;
+        console.log(`[Teleport] Player ${player.username || client.sessionId.slice(0, 8)} teleported to ${msg.mapId} (${msg.x}, ${msg.y})`);
+      }
+    });
+
+    /**
      * "crop-plant" handler - plant a crop on a farm tile
      */
     this.onMessage("crop-plant", (client: Client, msg: CropPlantMessage) => {
-      const key = `${msg.x},${msg.y}`;
-      // Don't overwrite an existing crop
-      if (this.state.crops.has(key)) return;
-
       const player = this.state.players.get(client.sessionId);
       if (!player) return;
+
+      const mapId = player.currentMap || "main";
+      const key = `${mapId}:${msg.x},${msg.y}`;
+      // Don't overwrite an existing crop
+      if (this.state.crops.has(key)) return;
 
       // Seed consumption check (skipped if msg.free is true, e.g. in editor mode)
       if (!msg.free) {
@@ -368,6 +381,7 @@ export class GameRoom extends Room<GameState> {
       crop.cropType = msg.cropType;
       crop.stage = 0;
       crop.plantedAt = Date.now();
+      crop.mapId = mapId;
       this.state.crops.set(key, crop);
       this.triggerDebouncedSave();
       console.log(`[Crop] ${msg.cropType} planted at ${key} (free=${!!msg.free})`);
@@ -413,21 +427,22 @@ export class GameRoom extends Room<GameState> {
      * "crop-harvest" handler - harvest a fully grown crop
      */
     this.onMessage("crop-harvest", (client: Client, msg: CropHarvestMessage) => {
-      const key = `${msg.x},${msg.y}`;
+      const player = this.state.players.get(client.sessionId);
+      if (!player) return;
+
+      const mapId = player.currentMap || "main";
+      const key = `${mapId}:${msg.x},${msg.y}`;
       const crop = this.state.crops.get(key);
       if (!crop) return;
 
       if (crop.stage >= MAX_CROP_STAGE) {
-        const player = this.state.players.get(client.sessionId);
-        if (player) {
-          const cropType = crop.cropType;
-          const currentCount = player.inventory.get(cropType) || 0;
-          player.inventory.set(cropType, currentCount + 1);
-          // Grant farming XP (with boost)
-          this.addSkillXP(player, "farming", 25);
-          this.addActionCount(player, "harvestCount", client.sessionId);
-          console.log(`[Inventory] Player ${client.sessionId.slice(0, 8)} harvested 1 ${cropType}. Total: ${currentCount + 1}`);
-        }
+        const cropType = crop.cropType;
+        const currentCount = player.inventory.get(cropType) || 0;
+        player.inventory.set(cropType, currentCount + 1);
+        // Grant farming XP (with boost)
+        this.addSkillXP(player, "farming", 25);
+        this.addActionCount(player, "harvestCount", client.sessionId);
+        console.log(`[Inventory] Player ${client.sessionId.slice(0, 8)} harvested 1 ${cropType}. Total: ${currentCount + 1}`);
         this.state.crops.delete(key);
         this.triggerDebouncedSave();
         console.log(`[Crop] Harvested ${crop.cropType} at ${key}`);
@@ -438,7 +453,9 @@ export class GameRoom extends Room<GameState> {
      * "crop-remove" handler - erase a crop at specific tile (used by Eraser tool)
      */
     this.onMessage("crop-remove", (client: Client, msg: { x: number; y: number }) => {
-      const key = `${msg.x},${msg.y}`;
+      const player = this.state.players.get(client.sessionId);
+      const mapId = player?.currentMap || "main";
+      const key = `${mapId}:${msg.x},${msg.y}`;
       if (this.state.crops.has(key)) {
         this.state.crops.delete(key);
         this.triggerDebouncedSave();
@@ -1116,22 +1133,28 @@ export class GameRoom extends Room<GameState> {
 
       if (parsed.mapData) {
         for (const key in parsed.mapData) {
-          this.state.mapData.set(key, parsed.mapData[key]);
+          const newKey = key.includes(":") ? key : `main:${key}`;
+          this.state.mapData.set(newKey, parsed.mapData[key]);
         }
       }
 
       if (parsed.decorData) {
         for (const key in parsed.decorData) {
-          this.state.decorData.set(key, parsed.decorData[key]);
+          const newKey = key.includes(":") ? key : `main:${key}`;
+          this.state.decorData.set(newKey, parsed.decorData[key]);
         }
       }
 
       if (parsed.placedObjects) {
         parsed.placedObjects.forEach((o: any) => {
           const obj = new PlacedObjectState();
-          obj.id = o.id; obj.type = o.type;
-          obj.x = o.x; obj.y = o.y; obj.scale = o.scale;
+          obj.id = o.id;
+          obj.type = o.type;
+          obj.x = o.x;
+          obj.y = o.y;
+          obj.scale = o.scale;
           obj.animSpeed = o.animSpeed !== undefined ? o.animSpeed : 1.0;
+          obj.mapId = o.mapId || "main";
           this.state.placedObjects.set(o.id, obj);
         });
       }
@@ -1139,9 +1162,12 @@ export class GameRoom extends Room<GameState> {
       if (parsed.crops) {
         parsed.crops.forEach((c: any) => {
           const crop = new CropState();
-          crop.key = c.key; crop.cropType = c.cropType;
-          crop.stage = c.stage; crop.plantedAt = c.plantedAt;
-          this.state.crops.set(c.key, crop);
+          crop.key = c.key.includes(":") ? c.key : `main:${c.key}`;
+          crop.cropType = c.cropType;
+          crop.stage = c.stage;
+          crop.plantedAt = c.plantedAt;
+          crop.mapId = c.mapId || "main";
+          this.state.crops.set(crop.key, crop);
         });
       }
 

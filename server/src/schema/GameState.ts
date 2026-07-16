@@ -5,6 +5,7 @@ export class CropState extends Schema {
   @type("string")  cropType: string = "";
   @type("int32")   stage: number = 0;
   @type("float64") plantedAt: number = 0;
+  @type("string")  mapId: string = "main";
 }
 
 export class PlacedObjectState extends Schema {
@@ -14,6 +15,7 @@ export class PlacedObjectState extends Schema {
   @type("float32") y: number = 0;
   @type("float32") scale: number = 0.15;
   @type("float32") animSpeed: number = 1.0;
+  @type("string")  mapId: string = "main";
 }
 
 export class SkillState extends Schema {
@@ -75,6 +77,7 @@ export class Player extends Schema {
   @type("string")  state: string = "idle";
   @type("string")  direction: string = "down";
   @type("string")  skin: string = "farmer_1";
+  @type("string")  currentMap: string = "main";
 
   @type("string")  username: string = "";
   @type("boolean") usernameSet: boolean = false;
