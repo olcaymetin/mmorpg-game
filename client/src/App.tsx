@@ -149,6 +149,7 @@ const App: React.FC = () => {
 
   // Active tileset tab (terrains or fences)
   const [activeTileset, setActiveTileset] = useState<"terrains" | "fences" | "zemin2" | "iskele" | "dekor2">("terrains");
+  const [paintOnTop, setPaintOnTop] = useState(false);
 
   // Legacy map migration state
   const [hasLegacyMap, setHasLegacyMap] = useState(false);
@@ -782,12 +783,25 @@ const App: React.FC = () => {
               )}
 
               {/* ── Action Brushes ── */}
-              <div className="brush-row">
+              <div className="brush-row" style={{ display: "flex", gap: "8px" }}>
                 <button
                   className={`btn btn--eraser ${selectedTile === -1 ? "btn--active" : ""}`}
                   onClick={handleSelectEraser}
+                  style={{ flex: 1 }}
                 >
                   🧹 Silgi (Eraser)
+                </button>
+                <button
+                  className={`btn ${paintOnTop ? "btn--active" : ""}`}
+                  onClick={() => {
+                    const nextVal = !paintOnTop;
+                    setPaintOnTop(nextVal);
+                    if (game) game.events.emit("editor-paint-on-top-changed", nextVal);
+                  }}
+                  style={{ flex: 1, fontSize: "10px", backgroundColor: paintOnTop ? "#55ff22" : "", color: paintOnTop ? "#000" : "" }}
+                  title="Açık olduğunda, çizdiğiniz zeminler altındaki zeminleri silmeden üst üste biner."
+                >
+                  Layering: {paintOnTop ? "Açık 🟢" : "Kapalı 🔴"}
                 </button>
               </div>
 

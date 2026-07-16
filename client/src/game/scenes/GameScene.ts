@@ -60,6 +60,7 @@ export class GameScene extends Phaser.Scene {
   private activeBrushRotationStep = 0;
   private activeBrushFlipX = false;
   private activeBrushFlipY = false;
+  private paintOnTop = false;
 
   // Placed Objects list
   private placedObjects: PlacedObject[] = [];
@@ -264,10 +265,11 @@ export class GameScene extends Phaser.Scene {
     const iskeleTileset = this.map.addTilesetImage("iskele", "iskele", 16, 16, 0, 0, 4000)!;
     const dekor2Tileset = this.map.addTilesetImage("dekor2", "dekor2", 16, 16, 0, 0, 5000)!;
 
-    this.layer = this.map.createBlankLayer("terrain_layer", [tileset, zemin2Tileset])!;
+    const allTilesets = [tileset, fencesTileset, zemin2Tileset, iskeleTileset, dekor2Tileset];
+    this.layer = this.map.createBlankLayer("terrain_layer", allTilesets)!;
     this.layer.setScale(2); // Scale 16x16 tiles to 32x32
 
-    this.decorLayer = this.map.createBlankLayer("decor_layer", [fencesTileset, iskeleTileset, dekor2Tileset])!;
+    this.decorLayer = this.map.createBlankLayer("decor_layer", allTilesets)!;
     this.decorLayer.setScale(2);
 
     // 4. Initialize Selection Graphics Overlay
@@ -307,6 +309,10 @@ export class GameScene extends Phaser.Scene {
       } else if (brush.type === "seed") {
         this.selectedSeed = brush.cropType || "";
       }
+    });
+
+    this.game.events.on("editor-paint-on-top-changed", (enabled: boolean) => {
+      this.paintOnTop = enabled;
     });
 
     this.game.events.on("editor-tile-stamp-selected", (stamp: { width: number; height: number; tiles: number[][] }) => {
@@ -614,7 +620,7 @@ export class GameScene extends Phaser.Scene {
                 const ty = tileY + r;
                 if (tx >= 0 && tx < maxCols && ty >= 0 && ty < maxRows) {
                   const tileIndex = this.currentTileStamp.tiles[r][c];
-                  const layer = this.getLayerForTileIndex(tileIndex);
+                  const layer = this.paintOnTop ? "decor" : this.getLayerForTileIndex(tileIndex);
                   updates.push({
                     x: tx,
                     y: ty,
@@ -628,7 +634,7 @@ export class GameScene extends Phaser.Scene {
               this.room.send("tile-update-multi", { updates });
             }
           } else {
-            const layer = this.getLayerForTileIndex(this.currentTileIndex);
+            const layer = this.paintOnTop ? "decor" : this.getLayerForTileIndex(this.currentTileIndex);
             const encodedIndex = this.currentTileIndex + (this.activeBrushRotationStep << 16) + (this.activeBrushFlipX ? 1 << 18 : 0) + (this.activeBrushFlipY ? 1 << 19 : 0);
             this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: encodedIndex, layer });
           }
