@@ -29,7 +29,7 @@ const VirtualDPad: React.FC<VirtualDPadProps> = ({ game }) => {
   return (
     <div className="dpad-container" aria-label="Virtual Controls">
       <div className="dpad-cross">
-        {/* Up Button */}
+        {/* Up Area Button */}
         <button
           className="dpad-btn dpad-up"
           onMouseDown={(e) => handleStart("up", e)}
@@ -39,13 +39,9 @@ const VirtualDPad: React.FC<VirtualDPadProps> = ({ game }) => {
           onTouchEnd={() => handleEnd("up")}
           onTouchCancel={() => handleEnd("up")}
           aria-label="Move Up"
-        >
-          <svg viewBox="0 0 24 24" className="arrow-svg">
-            <path d="M12 4l-8 8h6v8h4v-8h6z" />
-          </svg>
-        </button>
+        />
 
-        {/* Left Button */}
+        {/* Left Area Button */}
         <button
           className="dpad-btn dpad-left"
           onMouseDown={(e) => handleStart("left", e)}
@@ -55,16 +51,9 @@ const VirtualDPad: React.FC<VirtualDPadProps> = ({ game }) => {
           onTouchEnd={() => handleEnd("left")}
           onTouchCancel={() => handleEnd("left")}
           aria-label="Move Left"
-        >
-          <svg viewBox="0 0 24 24" className="arrow-svg">
-            <path d="M4 12l8-8v6h8v4h-8v6z" />
-          </svg>
-        </button>
+        />
 
-        {/* Center Core Decorator */}
-        <div className="dpad-center" />
-
-        {/* Right Button */}
+        {/* Right Area Button */}
         <button
           className="dpad-btn dpad-right"
           onMouseDown={(e) => handleStart("right", e)}
@@ -74,13 +63,9 @@ const VirtualDPad: React.FC<VirtualDPadProps> = ({ game }) => {
           onTouchEnd={() => handleEnd("right")}
           onTouchCancel={() => handleEnd("right")}
           aria-label="Move Right"
-        >
-          <svg viewBox="0 0 24 24" className="arrow-svg">
-            <path d="M20 12l-8 8v-6h-8v-4h8v-6z" />
-          </svg>
-        </button>
+        />
 
-        {/* Down Button */}
+        {/* Down Area Button */}
         <button
           className="dpad-btn dpad-down"
           onMouseDown={(e) => handleStart("down", e)}
@@ -90,11 +75,7 @@ const VirtualDPad: React.FC<VirtualDPadProps> = ({ game }) => {
           onTouchEnd={() => handleEnd("down")}
           onTouchCancel={() => handleEnd("down")}
           aria-label="Move Down"
-        >
-          <svg viewBox="0 0 24 24" className="arrow-svg">
-            <path d="M12 20l8-8h-6v-8h-4v8h-6z" />
-          </svg>
-        </button>
+        />
       </div>
     </div>
   );
