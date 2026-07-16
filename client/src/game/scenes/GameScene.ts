@@ -141,6 +141,7 @@ export class GameScene extends Phaser.Scene {
     this.load.image("silo", "assets/silo.png");
     this.load.image("silo2", "assets/silo2.png");
     this.load.image("nft_house", "assets/nft_house.png");
+    this.load.image("yon", "assets/yon.png");
 
     // Load gift effects as spritesheets
     this.load.spritesheet("vfx_leaf_single", "assets/gift/Modern_Farm_vfx_Falling_Leaf_16x16.png", { frameWidth: 16, frameHeight: 16 });
@@ -176,6 +177,9 @@ export class GameScene extends Phaser.Scene {
   private getDefaultScaleForType(type: string): number {
     if (type === "nft_house") {
       return 0.12;
+    }
+    if (type === "yon") {
+      return 0.05; // 1024x1024 scaled down to ~51px
     }
     if (type.startsWith("silo")) {
       return 1.0;
@@ -1020,10 +1024,10 @@ export class GameScene extends Phaser.Scene {
     }
 
     // 2. Read movement inputs
-    const left  = this.cursors.left.isDown  || this.keyA.isDown || this.virtualLeft;
-    const right = this.cursors.right.isDown || this.keyD.isDown || this.virtualRight;
-    const up    = this.cursors.up.isDown    || this.keyW.isDown || this.virtualUp;
-    const down  = this.cursors.down.isDown  || this.keyS.isDown || this.virtualDown;
+    const left  = this.cursors.left.isDown  || this.keyA.isDown;
+    const right = this.cursors.right.isDown || this.keyD.isDown;
+    const up    = this.cursors.up.isDown    || this.keyW.isDown;
+    const down  = this.cursors.down.isDown  || this.keyS.isDown;
 
     const dx = right ? 1 : left ? -1 : 0;
     const dy = down  ? 1 : up   ? -1 : 0;

@@ -12,7 +12,6 @@ import CharacterStats from "./components/CharacterStats";
 import FriendsPanel from "./components/FriendsPanel";
 import PlayerProfileModal from "./components/PlayerProfileModal";
 import GuildPanel from "./components/GuildPanel";
-import VirtualDPad from "./components/VirtualDPad";
 
 
 
@@ -1021,6 +1020,14 @@ const App: React.FC = () => {
                     <img src="/assets/nft_house.png" alt="nft house" className="obj-thumb" style={{ height: "48px", objectFit: "contain" }} />
                     <span>NFT Evi</span>
                   </button>
+
+                  <button
+                    className={`obj-btn ${selectedTile === -2 && selectedObjectName === "yon" ? "obj-btn--active" : ""}`}
+                    onClick={() => handleSelectObjectBrush("yon")}
+                  >
+                    <img src="/assets/yon.png" alt="yon" className="obj-thumb" style={{ height: "48px", objectFit: "contain" }} />
+                    <span>Yön İşareti</span>
+                  </button>
                 </div>
               )}
 
@@ -1697,11 +1704,6 @@ const App: React.FC = () => {
       {/* ── Guild System Panel ──────────────────────────────────────────── */}
       {room && sessionId && !editMode && (
         <GuildPanel room={room} coin={coin} mySessionId={sessionId} />
-      )}
-
-      {/* ── Virtual D-Pad Overlay ───────────────────────────────────────── */}
-      {room && sessionId && !editMode && (
-        <VirtualDPad game={game} />
       )}
 
       {/* ── Craft Timer HUD ─────────────────────────────────────────────── */}
