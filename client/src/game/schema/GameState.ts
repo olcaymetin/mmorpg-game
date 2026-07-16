@@ -24,6 +24,9 @@ defineTypes(ChatMessage, { id: "string", senderId: "string", senderName: "string
 export class AchievementState extends Schema { id!: string; name!: string; description!: string; emoji!: string; unlocked!: boolean; unlockedAt!: number; }
 defineTypes(AchievementState, { id: "string", name: "string", description: "string", emoji: "string", unlocked: "boolean", unlockedAt: "float64" });
 
+export class GuildState extends Schema { id!: string; name!: string; level!: number; xp!: number; ownerId!: string; members!: MapSchema<string>; }
+defineTypes(GuildState, { id: "string", name: "string", level: "int32", xp: "int32", ownerId: "string", members: { map: "string" } });
+
 export class Player extends Schema {
   x!: number; y!: number; color!: string; sessionId!: string;
   state!: string; direction!: string; skin!: string;
@@ -32,6 +35,8 @@ export class Player extends Schema {
   gold!: number; gem!: number; coin!: number;
   seeds!: MapSchema<number>;
   hp!: number; maxHp!: number; shield!: number; maxShield!: number;
+  hunger!: number; thirst!: number;
+  guildId!: string;
   skills!: MapSchema<SkillState>;
   totalLevel!: number;
   skillBoosts!: MapSchema<number>;
@@ -50,6 +55,8 @@ defineTypes(Player, {
   inventory: { map: "int32" }, gold: "int32", gem: "int32", coin: "int32",
   seeds: { map: "int32" },
   hp: "int32", maxHp: "int32", shield: "int32", maxShield: "int32",
+  hunger: "int32", thirst: "int32",
+  guildId: "string",
   skills: { map: SkillState }, totalLevel: "int32",
   skillBoosts: { map: "int32" },
   actionCounts: { map: "int32" },
@@ -68,6 +75,7 @@ export class GameState extends Schema {
   marketListings!: MapSchema<MarketListing>;
   chatMessages!: ArraySchema<ChatMessage>;
   marketHistory!: ArraySchema<MarketHistory>;
+  guilds!: MapSchema<GuildState>;
 }
 defineTypes(GameState, {
   players: { map: Player },
@@ -77,4 +85,5 @@ defineTypes(GameState, {
   marketListings: { map: MarketListing },
   chatMessages: [ ChatMessage ],
   marketHistory: [ MarketHistory ],
+  guilds: { map: GuildState }
 });

@@ -6,6 +6,10 @@ interface CharacterStatsProps {
   maxHp: number;
   shield: number;
   maxShield: number;
+  hunger: number;
+  maxHunger: number;
+  thirst: number;
+  maxThirst: number;
   username: string;
   totalLevel: number;
 }
@@ -15,11 +19,17 @@ const CharacterStats: React.FC<CharacterStatsProps> = ({
   maxHp,
   shield,
   maxShield,
+  hunger,
+  maxHunger,
+  thirst,
+  maxThirst,
   username,
   totalLevel
 }) => {
   const hpPct = Math.max(0, Math.min(100, (hp / maxHp) * 100));
   const shieldPct = Math.max(0, Math.min(100, (shield / maxShield) * 100));
+  const hungerPct = Math.max(0, Math.min(100, (hunger / maxHunger) * 100));
+  const thirstPct = Math.max(0, Math.min(100, (thirst / maxThirst) * 100));
 
   return (
     <div className="char-stats-container">
@@ -40,6 +50,18 @@ const CharacterStats: React.FC<CharacterStatsProps> = ({
         <div className="stat-bar-wrapper">
           <div className="stat-bar shield-bar" style={{ width: `${shieldPct}%` }} />
           <span className="stat-text">🛡️ {shield}/{maxShield}</span>
+        </div>
+
+        {/* Hunger Bar */}
+        <div className="stat-bar-wrapper">
+          <div className="stat-bar hunger-bar" style={{ width: `${hungerPct}%` }} />
+          <span className="stat-text">🍗 Açlık: {hunger}/{maxHunger}</span>
+        </div>
+
+        {/* Thirst Bar */}
+        <div className="stat-bar-wrapper">
+          <div className="stat-bar thirst-bar" style={{ width: `${thirstPct}%` }} />
+          <span className="stat-text">💧 Susuzluk: {thirst}/{maxThirst}</span>
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-﻿import { Schema, MapSchema, ArraySchema, type } from "@colyseus/schema";
+import { Schema, MapSchema, ArraySchema, type } from "@colyseus/schema";
 
 export class CropState extends Schema {
   @type("string")  key: string = "";
@@ -33,7 +33,6 @@ export class MarketListing extends Schema {
   @type("float64") listedAt: number = 0;
 }
 
-/** MarketHistory — one completed trade record for charting */
 export class MarketHistory extends Schema {
   @type("string")  itemType: string = "";
   @type("int32")   quantity: number = 1;
@@ -50,14 +49,22 @@ export class ChatMessage extends Schema {
   @type("float64") timestamp: number = 0;
 }
 
-/** AchievementState — one achievement entry for a player */
 export class AchievementState extends Schema {
   @type("string")  id: string = "";
   @type("string")  name: string = "";
-  @type("string")  description: string = "";
+  @type("string") description: string = "";
   @type("string")  emoji: string = "";
   @type("boolean") unlocked: boolean = false;
   @type("float64") unlockedAt: number = 0;
+}
+
+export class GuildState extends Schema {
+  @type("string")  id: string = "";
+  @type("string")  name: string = "";
+  @type("int32")   level: number = 1;
+  @type("int32")   xp: number = 0;
+  @type("string")  ownerId: string = "";
+  @type({ map: "string" }) members = new MapSchema<string>(); // sessionId -> username
 }
 
 export class Player extends Schema {
@@ -86,17 +93,24 @@ export class Player extends Schema {
   @type("int32") shield: number = 100;
   @type("int32") maxShield: number = 100;
 
+  // Survival
+  @type("int32") hunger: number = 100;
+  @type("int32") thirst: number = 100;
+
+  // Guild
+  @type("string") guildId: string = "";
+
   // Skills
   @type({ map: SkillState }) skills = new MapSchema<SkillState>();
   @type("int32") totalLevel: number = 1;
   @type({ map: "int32" }) skillBoosts = new MapSchema<number>();
 
-  // Action counters (harvestCount, woodcutCount, mineCount, fishCount, craftCount, pvpWins, marketSales)
+  // Action counters
   @type({ map: "int32" }) actionCounts = new MapSchema<number>();
 
   // Marketplace stats
   @type("int32") marketSaleCount: number = 0;
-  @type("int32") marketSaleVolume: number = 0; // total FARM earned from sales
+  @type("int32") marketSaleVolume: number = 0;
 
   // Achievements
   @type({ map: AchievementState }) achievements = new MapSchema<AchievementState>();
@@ -106,7 +120,7 @@ export class Player extends Schema {
   @type({ map: "string" }) friendRequests = new MapSchema<string>();
 
   // Fishing
-  @type("int32") rodTier: number = 1; // 1=T1(5kg), 2=T2(15kg), 3=T3(40kg), 4=T4(100kg)
+  @type("int32") rodTier: number = 1;
 }
 
 export class GameState extends Schema {
@@ -118,4 +132,5 @@ export class GameState extends Schema {
   @type({ map: MarketListing }) marketListings = new MapSchema<MarketListing>();
   @type([ChatMessage]) chatMessages = new ArraySchema<ChatMessage>();
   @type([MarketHistory]) marketHistory = new ArraySchema<MarketHistory>();
+  @type({ map: GuildState }) guilds = new MapSchema<GuildState>();
 }

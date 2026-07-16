@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import "./PlayerProfileModal.css";
 
 interface Achievement {
@@ -32,6 +32,7 @@ interface PlayerProfileModalProps {
   isFriend: boolean;
   hasSentRequest: boolean;
   onAddFriend: (sessionId: string) => void;
+  onReportPlayer?: (targetSessionId: string, category: string) => void;
   onClose: () => void;
 }
 
@@ -44,14 +45,36 @@ const SKILL_EMOJIS: Record<string, string> = {
   crafting: "⚙️ Crafting"
 };
 
+const REPORT_CATEGORIES = [
+  { id: "spam", label: "🚫 Spam" },
+  { id: "insult", label: "🤬 Hakaret" },
+  { id: "cheat", label: "⚡ Hile" },
+  { id: "ad", label: "📢 Reklam" }
+];
+
 const PlayerProfileModal: React.FC<PlayerProfileModalProps> = ({
   player,
   isMe,
   isFriend,
   hasSentRequest,
   onAddFriend,
+  onReportPlayer,
   onClose
 }) => {
+  const [showReport, setShowReport] = useState(false);
+  const [reportSuccess, setReportSuccess] = useState("");
+
+  const handleReport = (category: string) => {
+    if (onReportPlayer) {
+      onReportPlayer(player.sessionId, category);
+      setReportSuccess("Oyuncu başarıyla bildirildi!");
+      setTimeout(() => {
+        setReportSuccess("");
+        setShowReport(false);
+      }, 2500);
+    }
+  };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="profile-modal" onClick={e => e.stopPropagation()}>
@@ -63,21 +86,50 @@ const PlayerProfileModal: React.FC<PlayerProfileModalProps> = ({
             <h2>{player.username || `Player_${player.sessionId.slice(0, 6)}`}</h2>
             <span className="profile-title">Seviye {player.totalLevel} Oyuncu</span>
           </div>
-          {!isMe && (
-            <div className="profile-action-btns">
-              {isFriend ? (
-                <span className="relationship-badge friend">🤝 Arkadaş</span>
-              ) : hasSentRequest ? (
-                <span className="relationship-badge requested">📨 İstek Gönderildi</span>
-              ) : (
-                <button className="add-friend-action" onClick={() => onAddFriend(player.sessionId)}>
-                  ➕ Arkadaş Ekle
+          
+          <div className="profile-action-btns">
+            {!isMe && (
+              <>
+                {isFriend ? (
+                  <span className="relationship-badge friend">🤝 Arkadaş</span>
+                ) : hasSentRequest ? (
+                  <span className="relationship-badge requested">📨 İstek Gönderildi</span>
+                ) : (
+                  <button className="add-friend-action" onClick={() => onAddFriend(player.sessionId)}>
+                    ➕ Arkadaş Ekle
+                  </button>
+                )}
+                
+                <button className="report-player-btn" onClick={() => setShowReport(!showReport)}>
+                  🚨 Rapor Et
                 </button>
-              )}
-            </div>
-          )}
+              </>
+            )}
+          </div>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
+
+        {/* Report dropdown overlay */}
+        {showReport && (
+          <div className="report-overlay-box">
+            <h4>🚨 Oyuncuyu Rapor Et</h4>
+            {reportSuccess ? (
+              <p className="report-success-text">{reportSuccess}</p>
+            ) : (
+              <div className="report-options">
+                <p>Lütfen raporlama nedeninizi seçin:</p>
+                <div className="report-btns-grid">
+                  {REPORT_CATEGORIES.map(cat => (
+                    <button key={cat.id} className="report-cat-btn" onClick={() => handleReport(cat.id)}>
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+                <button className="report-cancel" onClick={() => setShowReport(false)}>Vazgeç</button>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="profile-grid">
           {/* Left Column - Stats & Skills */}

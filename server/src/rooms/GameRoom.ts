@@ -1,5 +1,5 @@
 import { Room, Client } from "colyseus";
-import { GameState, Player, PlacedObjectState, CropState, MarketListing, ChatMessage, SkillState, MarketHistory, AchievementState } from "../schema/GameState";
+import { GameState, Player, PlacedObjectState, CropState, MarketListing, ChatMessage, SkillState, MarketHistory, AchievementState, GuildState } from "../schema/GameState";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -145,12 +145,47 @@ export class GameRoom extends Room<GameState> {
     // Start crop growth timer (checks every 3 seconds for responsive updates)
     this.growthTimer = setInterval(() => this.tickCropGrowth(), 3_000);
 
+    // --- Survival and AFK kicking loops ---
+    // Hunger decreases by -1, thirst by -2 every 20 seconds
+    this.clock.setInterval(() => {
+      this.state.players.forEach((player) => {
+        player.hunger = Math.max(0, player.hunger - 1);
+        player.thirst = Math.max(0, player.thirst - 2);
+      });
+    }, 20000);
+
+    // HP decays if hunger or thirst is 0 (checks every 5 seconds, -5 HP)
+    this.clock.setInterval(() => {
+      this.state.players.forEach((player) => {
+        if (player.hunger === 0 || player.thirst === 0) {
+          player.hp = Math.max(0, player.hp - 5);
+        }
+      });
+    }, 5000);
+
+    // Inactivity (AFK) check: kicked after 15 minutes of zero message activity
+    this.clock.setInterval(() => {
+      const now = Date.now();
+      this.state.players.forEach((player, sessionId) => {
+        const lastAct = (player as any).lastActivityAt || now;
+        if (now - lastAct > 900000) { // 15 mins
+          const client = this.clients.find(c => c.sessionId === sessionId);
+          if (client) {
+            console.log(`[AFK] Kicking ${player.username || sessionId} due to 15m inactivity`);
+            client.send("afk-kick", { reason: "15 dakika boyunca hareket edilmediği için bağlantınız kesildi." });
+            client.leave();
+          }
+        }
+      });
+    }, 10000);
+
     /**
      * "move" message handler (authoritative server movement).
      */
     this.onMessage("move", (client: Client, msg: MoveMessage) => {
       const player = this.state.players.get(client.sessionId);
       if (!player) return;
+      (player as any).lastActivityAt = Date.now();
 
       const dx = Math.max(-1, Math.min(1, msg.dx));
       const dy = Math.max(-1, Math.min(1, msg.dy));
@@ -416,6 +451,17 @@ export class GameRoom extends Room<GameState> {
     this.onMessage("chat-message", (client: Client, msg: { channel: string; text: string }) => {
       const player = this.state.players.get(client.sessionId);
       if (!player) return;
+      (player as any).lastActivityAt = Date.now();
+
+      // Spam Protection: 15s cooldown
+      const now = Date.now();
+      const lastChat = (player as any).lastChatAt || 0;
+      if (now - lastChat < 15000) {
+        client.send("chat-error", { message: "Lütfen mesaj göndermek için 15 saniye bekleyin." });
+        return;
+      }
+      (player as any).lastChatAt = now;
+
       const text = (msg.text || "").trim().slice(0, 200);
       if (!text) return;
 
@@ -423,7 +469,18 @@ export class GameRoom extends Room<GameState> {
       chatMsg.id = `${Date.now()}-${client.sessionId.slice(0, 4)}`;
       chatMsg.senderId = client.sessionId;
       chatMsg.senderName = player.username || `Player_${client.sessionId.slice(0, 6)}`;
-      chatMsg.channel = msg.channel || "global";
+      
+      // Guild channel mapping: prefix with guild- ID
+      if (msg.channel === "guild") {
+        if (!player.guildId) {
+          client.send("chat-error", { message: "Bir klanda değilsiniz." });
+          return;
+        }
+        chatMsg.channel = `guild-${player.guildId}`;
+      } else {
+        chatMsg.channel = msg.channel || "global";
+      }
+      
       chatMsg.text = text;
       chatMsg.timestamp = Date.now();
 
@@ -695,6 +752,141 @@ export class GameRoom extends Room<GameState> {
       player.rodTier += 1;
       client.send("rod-upgraded", { tier: player.rodTier });
     });
+
+    // --- Shop buy item (Water/Bread) for coin ---
+    this.onMessage("shop-buy-item", (client: Client, msg: { itemName: string }) => {
+      const player = this.state.players.get(client.sessionId);
+      if (!player) return;
+      (player as any).lastActivityAt = Date.now();
+
+      if (msg.itemName === "Water") {
+        if (player.coin < 5) { client.send("shop-error", { message: "Gerekli: 5 FARM Coin." }); return; }
+        player.coin -= 5;
+        const qty = player.inventory.get("Water") || 0;
+        player.inventory.set("Water", qty + 1);
+        console.log(`[Shop] Player ${client.sessionId.slice(0, 8)} bought Water for 5 Coin.`);
+      } else if (msg.itemName === "Bread") {
+        if (player.coin < 8) { client.send("shop-error", { message: "Gerekli: 8 FARM Coin." }); return; }
+        player.coin -= 8;
+        const qty = player.inventory.get("Bread") || 0;
+        player.inventory.set("Bread", qty + 1);
+        console.log(`[Shop] Player ${client.sessionId.slice(0, 8)} bought Bread for 8 Coin.`);
+      }
+    });
+
+    // --- Use item (consume food/water) ---
+    this.onMessage("use-item", (client: Client, msg: { itemName: string }) => {
+      const player = this.state.players.get(client.sessionId);
+      if (!player) return;
+      (player as any).lastActivityAt = Date.now();
+
+      const qty = player.inventory.get(msg.itemName) || 0;
+      if (qty <= 0) return;
+
+      if (msg.itemName === "Water") {
+        player.inventory.set("Water", qty - 1);
+        player.thirst = Math.min(100, player.thirst + 40);
+        player.hp = Math.min(player.maxHp, player.hp + 10); // also restores minor HP
+        client.send("item-used", { itemName: "Water", thirst: player.thirst });
+      } else if (msg.itemName === "Bread") {
+        player.inventory.set("Bread", qty - 1);
+        player.hunger = Math.min(100, player.hunger + 50);
+        player.hp = Math.min(player.maxHp, player.hp + 15); // also restores HP
+        client.send("item-used", { itemName: "Bread", hunger: player.hunger });
+      }
+    });
+
+    // --- Guild creation ---
+    this.onMessage("guild-create", (client: Client, msg: { name: string }) => {
+      const player = this.state.players.get(client.sessionId);
+      if (!player || player.guildId) return;
+      (player as any).lastActivityAt = Date.now();
+
+      const name = (msg.name || "").trim().slice(0, 16);
+      if (!name || name.length < 3) { client.send("guild-error", { message: "Klan ismi en az 3 karakter olmalıdır." }); return; }
+      if (player.coin < 100) { client.send("guild-error", { message: "Klan kurmak için 100 FARM coin gerekiyor." }); return; }
+
+      // Check name uniqueness
+      let exists = false;
+      this.state.guilds.forEach(g => {
+        if (g.name.toLowerCase() === name.toLowerCase()) exists = true;
+      });
+      if (exists) { client.send("guild-error", { message: "Bu isimde bir klan zaten var." }); return; }
+
+      player.coin -= 100;
+      const g = new GuildState();
+      g.id = `gld-${Date.now()}`;
+      g.name = name;
+      g.level = 1;
+      g.xp = 0;
+      g.ownerId = client.sessionId;
+      g.members.set(client.sessionId, player.username || `Player_${client.sessionId.slice(0, 6)}`);
+      
+      this.state.guilds.set(g.id, g);
+      player.guildId = g.id;
+      client.send("guild-created", { guildId: g.id });
+      console.log(`[Guild] Created guild: ${name} by ${player.username || client.sessionId}`);
+    });
+
+    // --- Guild Join ---
+    this.onMessage("guild-join", (client: Client, msg: { guildId: string }) => {
+      const player = this.state.players.get(client.sessionId);
+      if (!player || player.guildId) return;
+      (player as any).lastActivityAt = Date.now();
+
+      const g = this.state.guilds.get(msg.guildId);
+      if (!g) { client.send("guild-error", { message: "Klan bulunamadı." }); return; }
+      if (g.members.size >= 20) { client.send("guild-error", { message: "Klan üye sınırı aşıldı (max 20)." }); return; }
+
+      g.members.set(client.sessionId, player.username || `Player_${client.sessionId.slice(0, 6)}`);
+      player.guildId = g.id;
+      console.log(`[Guild] ${player.username || client.sessionId} joined guild ${g.name}`);
+    });
+
+    // --- Guild Leave ---
+    this.onMessage("guild-leave", (client: Client) => {
+      const player = this.state.players.get(client.sessionId);
+      if (!player || !player.guildId) return;
+      (player as any).lastActivityAt = Date.now();
+
+      const g = this.state.guilds.get(player.guildId);
+      if (g) {
+        g.members.delete(client.sessionId);
+        if (g.ownerId === client.sessionId) {
+          if (g.members.size > 0) {
+            // Transfer ownership to first member
+            const nextOwner = g.members.keys().next().value || "";
+            g.ownerId = nextOwner;
+            console.log(`[Guild] Transferred owner of ${g.name} to ${nextOwner}`);
+          } else {
+            // Delete guild if empty
+            this.state.guilds.delete(g.id);
+            console.log(`[Guild] Deleted empty guild ${g.name}`);
+          }
+        }
+      }
+      player.guildId = "";
+    });
+
+    // --- Player Report ---
+    this.onMessage("player-report", (client: Client, msg: { targetSessionId: string; category: string }) => {
+      const player = this.state.players.get(client.sessionId);
+      const target = this.state.players.get(msg.targetSessionId);
+      if (!player || !target) return;
+      (player as any).lastActivityAt = Date.now();
+
+      const reporterName = player.username || client.sessionId.slice(0, 6);
+      const targetName = target.username || msg.targetSessionId.slice(0, 6);
+
+      const logEntry = `[Report] ${new Date().toISOString()} - Reporter: ${reporterName} (ID: ${client.sessionId}) reported Target: ${targetName} (ID: ${msg.targetSessionId}) for Category: ${msg.category}\n`;
+      try {
+        fs.appendFileSync(path.join(__dirname, "../reports.txt"), logEntry, "utf8");
+      } catch (e) {
+        console.error("Failed to write report log", e);
+      }
+
+      client.send("report-success", { message: "Oyuncu başarıyla rapor edildi. Teşekkürler!" });
+    });
   }
 
   /**
@@ -706,6 +898,11 @@ export class GameRoom extends Room<GameState> {
     player.x = WORLD_W / 2 + (Math.random() * 80 - 40);
     player.y = WORLD_H / 2 + (Math.random() * 80 - 40);
     player.color = COLORS[this.colorIndex++ % COLORS.length];
+
+    player.hunger = 100;
+    player.thirst = 100;
+    player.guildId = "";
+    (player as any).lastActivityAt = Date.now();
 
     // Assign a random skin
     const skins = ["farmer_1", "farmer_2", "body_2"];

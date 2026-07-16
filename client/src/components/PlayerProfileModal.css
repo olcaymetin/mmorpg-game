@@ -227,3 +227,79 @@
   border-radius: 6px;
   padding: 2px 6px;
 }
+
+.report-player-btn {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  border-radius: 20px;
+  padding: 6px 16px;
+  color: #fca5a5;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: 6px;
+  transition: all 0.2s;
+}
+.report-player-btn:hover {
+  background: rgba(239, 68, 68, 0.35);
+}
+
+.report-overlay-box {
+  background: rgba(10, 15, 30, 0.98);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 16px;
+  margin: 14px 24px 0;
+  padding: 16px;
+  animation: slideDown 0.2s ease;
+}
+.report-overlay-box h4 {
+  margin: 0 0 10px;
+  color: #ef4444;
+}
+.report-options p {
+  font-size: 13px;
+  margin: 0 0 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+.report-btns-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.report-cat-btn {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.report-cat-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+}
+.report-cancel {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 12.5px;
+  cursor: pointer;
+  display: block;
+  margin: 0 auto;
+}
+.report-cancel:hover {
+  color: #fff;
+}
+.report-success-text {
+  text-align: center;
+  color: #34d399;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 10px 0;
+}
+

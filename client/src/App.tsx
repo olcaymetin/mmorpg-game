@@ -11,6 +11,8 @@ import CraftTimer, { CraftTimerEntry } from "./components/CraftTimer";
 import CharacterStats from "./components/CharacterStats";
 import FriendsPanel from "./components/FriendsPanel";
 import PlayerProfileModal from "./components/PlayerProfileModal";
+import GuildPanel from "./components/GuildPanel";
+
 
 
 const cropLabels: Record<string, string> = {
@@ -125,10 +127,17 @@ const App: React.FC = () => {
 
   // Shop state
   const [isShopOpen, setIsShopOpen] = useState(false);
-  const [shopTab, setShopTab] = useState<"buy" | "sell">("buy");
+  const [shopTab, setShopTab] = useState<"buy" | "sell" | "survival">("buy");
 
-  // Inventory UI tabs: "crops" (mahsuller) or "seeds" (tohumlar)
-  const [inventoryTab, setInventoryTab] = useState<"crops" | "seeds">("crops");
+  // Inventory UI tabs: "crops" (mahsuller), "seeds" (tohumlar), or "survival" (yiyecek/su)
+  const [inventoryTab, setInventoryTab] = useState<"crops" | "seeds" | "survival">("crops");
+
+  // Survival
+  const [hunger, setHunger] = useState(100);
+  const [thirst, setThirst] = useState(100);
+
+  // AFK Kick status
+  const [afkKickReason, setAfkKickReason] = useState("");
 
   // Active tab inside spawning objects selector
   const [activeTab, setActiveTab] = useState<"structures" | "decorations" | "effects" | "materials" | "seeds">("structures");
@@ -256,11 +265,21 @@ const App: React.FC = () => {
       removeCraftTimer(d.craftId);
     };
 
+    const handleAfkKick = (d: { reason: string }) => {
+      setAfkKickReason(d.reason);
+    };
+
+    const handleReportSuccess = (d: { message: string }) => {
+      alert(`🚨 Rapor Gönderildi: ${d.message}`);
+    };
+
     room.onMessage("achievement-unlocked", handleAchievement);
     room.onMessage("craft-instanted", handleCraftInstanted);
+    room.onMessage("afk-kick", handleAfkKick);
+    room.onMessage("report-success", handleReportSuccess);
 
     return () => {
-      // room doesn't require explicit listener off since room object handles it or we'll re-instantiate
+      // no-op
     };
   }, [room, removeCraftTimer]);
 
@@ -283,6 +302,9 @@ const App: React.FC = () => {
         setMaxHp(player.maxHp !== undefined ? player.maxHp : 100);
         setShield(player.shield !== undefined ? player.shield : 100);
         setMaxShield(player.maxShield !== undefined ? player.maxShield : 100);
+
+        setHunger(player.hunger !== undefined ? player.hunger : 100);
+        setThirst(player.thirst !== undefined ? player.thirst : 100);
 
         if (player.inventory) {
           const inv: Record<string, number> = {};
@@ -626,6 +648,11 @@ const App: React.FC = () => {
   const handleInstantCraft = (id: string, remainingSeconds: number) => {
     if (!room) return;
     room.send("instant-craft", { craftId: id, remainingSeconds });
+  };
+
+  const handleReportPlayer = (targetId: string, category: string) => {
+    if (!room) return;
+    room.send("player-report", { targetSessionId: targetId, category });
   };
 
   return (
@@ -1298,7 +1325,11 @@ const App: React.FC = () => {
             </div>
             
             <div className="shop-gold-display">
-              🪙 Kalan Altın: <span className="gold-amount">{gold} Altın</span>
+              {shopTab === "survival" ? (
+                <>🪙 Kalan Coin: <span className="gold-amount">{coin} FARM</span></>
+              ) : (
+                <>💰 Kalan Altın: <span className="gold-amount">{gold} Altın</span></>
+              )}
             </div>
 
             <div className="shop-tabs">
@@ -1313,6 +1344,12 @@ const App: React.FC = () => {
                 onClick={() => setShopTab("sell")}
               >
                 📤 Mahsul Satış
+              </button>
+              <button
+                className={`shop-tab-btn ${shopTab === "survival" ? "shop-tab-btn--active" : ""}`}
+                onClick={() => setShopTab("survival")}
+              >
+                🍗 Yiyecek/Su Al
               </button>
             </div>
 
@@ -1348,7 +1385,7 @@ const App: React.FC = () => {
                     );
                   })}
                 </div>
-              ) : (
+              ) : shopTab === "sell" ? (
                 <div className="shop-list">
                   {Object.entries(CROP_PRICES).map(([cropName, price]) => {
                     const label = cropLabels[cropName] || cropName;
@@ -1381,6 +1418,41 @@ const App: React.FC = () => {
                     );
                   })}
                 </div>
+              ) : (
+                /* SURVIVAL SHOP TAB */
+                <div className="shop-list">
+                  <div className="shop-item">
+                    <span style={{ fontSize: "28px", padding: "6px" }}>💧</span>
+                    <div className="shop-item-info">
+                      <span className="shop-item-name">Temiz Su</span>
+                      <span className="shop-item-price">🪙 5 FARM Coin</span>
+                      <span className="shop-item-stock">Susuzluğu +40 giderir. Can +10.</span>
+                    </div>
+                    <button
+                      className="shop-action-btn shop-action-btn--buy"
+                      disabled={coin < 5}
+                      onClick={() => room?.send("shop-buy-item", { itemName: "Water" })}
+                    >
+                      Satın Al
+                    </button>
+                  </div>
+
+                  <div className="shop-item">
+                    <span style={{ fontSize: "28px", padding: "6px" }}>🍞</span>
+                    <div className="shop-item-info">
+                      <span className="shop-item-name">Taze Ekmek</span>
+                      <span className="shop-item-price">🪙 8 FARM Coin</span>
+                      <span className="shop-item-stock">Açlığı +50 giderir. Can +15.</span>
+                    </div>
+                    <button
+                      className="shop-action-btn shop-action-btn--buy"
+                      disabled={coin < 8}
+                      onClick={() => room?.send("shop-buy-item", { itemName: "Bread" })}
+                    >
+                      Satın Al
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           </div>
@@ -1406,13 +1478,13 @@ const App: React.FC = () => {
                 border: "1px solid " + (inventoryTab === "crops" ? "rgba(74, 222, 128, 0.4)" : "rgba(255,255,255,0.1)"),
                 borderRadius: "6px",
                 color: inventoryTab === "crops" ? "#4ade80" : "rgba(255,255,255,0.7)",
-                fontSize: "10px",
-                padding: "4px",
+                fontSize: "9px",
+                padding: "4px 2px",
                 fontWeight: "bold",
                 cursor: "pointer"
               }}
             >
-              🥦 Mahsuller
+              🥦 Mahsul
             </button>
             <button
               onClick={() => setInventoryTab("seeds")}
@@ -1422,23 +1494,41 @@ const App: React.FC = () => {
                 border: "1px solid " + (inventoryTab === "seeds" ? "rgba(74, 222, 128, 0.4)" : "rgba(255,255,255,0.1)"),
                 borderRadius: "6px",
                 color: inventoryTab === "seeds" ? "#4ade80" : "rgba(255,255,255,0.7)",
-                fontSize: "10px",
-                padding: "4px",
+                fontSize: "9px",
+                padding: "4px 2px",
                 fontWeight: "bold",
                 cursor: "pointer"
               }}
             >
-              🌱 Tohumlar
+              🌱 Tohum
+            </button>
+            <button
+              onClick={() => setInventoryTab("survival")}
+              style={{
+                flex: 1,
+                background: inventoryTab === "survival" ? "rgba(74, 222, 128, 0.2)" : "rgba(255,255,255,0.05)",
+                border: "1px solid " + (inventoryTab === "survival" ? "rgba(74, 222, 128, 0.4)" : "rgba(255,255,255,0.1)"),
+                borderRadius: "6px",
+                color: inventoryTab === "survival" ? "#4ade80" : "rgba(255,255,255,0.7)",
+                fontSize: "9px",
+                padding: "4px 2px",
+                fontWeight: "bold",
+                cursor: "pointer"
+              }}
+            >
+              🍗 Gıda/Su
             </button>
           </div>
 
           <div className="inventory-items">
             {inventoryTab === "crops" ? (
-              Object.keys(inventory).length === 0 || Object.values(inventory).every(qty => qty <= 0) ? (
+              // Filter out Water & Bread from general crops list
+              Object.keys(inventory).filter(k => k !== "Water" && k !== "Bread").length === 0 || 
+              Object.entries(inventory).filter(([k]) => k !== "Water" && k !== "Bread").every(([, qty]) => qty <= 0) ? (
                 <div className="inventory-empty">Çanta boş. Ekin topla!</div>
               ) : (
                 Object.entries(inventory).map(([cropName, qty]) => {
-                  if (qty <= 0) return null;
+                  if (qty <= 0 || cropName === "Water" || cropName === "Bread") return null;
                   const label = cropLabels[cropName] || cropName;
                   return (
                     <div key={cropName} className="inventory-item">
@@ -1459,7 +1549,7 @@ const App: React.FC = () => {
                   );
                 })
               )
-            ) : (
+            ) : inventoryTab === "seeds" ? (
               Object.keys(seeds).length === 0 || Object.values(seeds).every(qty => qty <= 0) ? (
                 <div className="inventory-empty">Tohum yok. NPC'den satın al!</div>
               ) : (
@@ -1492,6 +1582,63 @@ const App: React.FC = () => {
                     </div>
                   );
                 })
+              )
+            ) : (
+              /* SURVIVAL TAB ITEMS LIST */
+              (inventory["Water"] || 0) <= 0 && (inventory["Bread"] || 0) <= 0 ? (
+                <div className="inventory-empty">Yiyecek veya suyunuz yok.</div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px", width: "100%" }}>
+                  {(inventory["Water"] || 0) > 0 && (
+                    <div className="inventory-item" style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+                      <span style={{ fontSize: "20px" }}>💧</span>
+                      <div className="inventory-details" style={{ flex: 1, marginLeft: "10px" }}>
+                        <span className="inventory-name">Temiz Su</span>
+                        <span className="inventory-qty">x{inventory["Water"]}</span>
+                      </div>
+                      <button
+                        onClick={() => room?.send("use-item", { itemName: "Water" })}
+                        style={{
+                          background: "rgba(34, 197, 94, 0.2)",
+                          border: "1px solid rgba(34, 197, 94, 0.4)",
+                          color: "#86efac",
+                          borderRadius: "4px",
+                          fontSize: "11px",
+                          fontWeight: "bold",
+                          padding: "4px 8px",
+                          cursor: "pointer"
+                        }}
+                      >
+                        İç
+                      </button>
+                    </div>
+                  )}
+
+                  {(inventory["Bread"] || 0) > 0 && (
+                    <div className="inventory-item" style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+                      <span style={{ fontSize: "20px" }}>🍞</span>
+                      <div className="inventory-details" style={{ flex: 1, marginLeft: "10px" }}>
+                        <span className="inventory-name">Ekmek</span>
+                        <span className="inventory-qty">x{inventory["Bread"]}</span>
+                      </div>
+                      <button
+                        onClick={() => room?.send("use-item", { itemName: "Bread" })}
+                        style={{
+                          background: "rgba(34, 197, 94, 0.2)",
+                          border: "1px solid rgba(34, 197, 94, 0.4)",
+                          color: "#86efac",
+                          borderRadius: "4px",
+                          fontSize: "11px",
+                          fontWeight: "bold",
+                          padding: "4px 8px",
+                          cursor: "pointer"
+                        }}
+                      >
+                        Ye
+                      </button>
+                    </div>
+                  )}
+                </div>
               )
             )}
           </div>
@@ -1534,9 +1681,18 @@ const App: React.FC = () => {
           maxHp={maxHp}
           shield={shield}
           maxShield={maxShield}
+          hunger={hunger}
+          maxHunger={100}
+          thirst={thirst}
+          maxThirst={100}
           username={myUsername}
           totalLevel={totalLevel}
         />
+      )}
+
+      {/* ── Guild System Panel ──────────────────────────────────────────── */}
+      {room && sessionId && (
+        <GuildPanel room={room} coin={coin} mySessionId={sessionId} />
       )}
 
       {/* ── Craft Timer HUD ─────────────────────────────────────────────── */}
@@ -1590,8 +1746,35 @@ const App: React.FC = () => {
           isFriend={isFriendRelation}
           hasSentRequest={hasSentFriendRequest}
           onAddFriend={handleAddFriend}
+          onReportPlayer={handleReportPlayer}
           onClose={() => setSelectedProfileId(null)}
         />
+      )}
+
+      {/* ── AFK Kick Overlay ────────────────────────────────────────────── */}
+      {afkKickReason && (
+        <div className="error-overlay" style={{ background: "rgba(10, 15, 30, 0.98)" }}>
+          <span className="error-icon" style={{ fontSize: "48px" }}>💤</span>
+          <strong className="error-title" style={{ fontSize: "20px", marginTop: "12px" }}>Bağlantı Kesildi</strong>
+          <p className="error-body" style={{ margin: "8px 0 20px" }}>{afkKickReason}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            style={{
+              padding: "10px 24px",
+              background: "rgba(59, 130, 246, 0.25)",
+              border: "1px solid rgba(59, 130, 246, 0.45)",
+              color: "#93c5fd",
+              borderRadius: "8px",
+              fontWeight: "bold",
+              cursor: "pointer",
+              transition: "background 0.2s"
+            }}
+            onMouseOver={e => e.currentTarget.style.background = "rgba(59, 130, 246, 0.4)"}
+            onMouseOut={e => e.currentTarget.style.background = "rgba(59, 130, 246, 0.25)"}
+          >
+            Yeniden Bağlan
+          </button>
+        </div>
       )}
     </div>
   );
