@@ -200,7 +200,7 @@ export class GameScene extends Phaser.Scene {
     for (let i = 1; i <= 11; i++) {
       this.load.image(`decor_grass_${i}`, `assets/customization/Grass_Tufts_Flowers_${i}.png`);
     }
-    this.load.spritesheet("decor_sheet_gorsel", "assets/customization/görsel.png", { frameWidth: 16, frameHeight: 16 });
+    this.load.spritesheet("decor_sheet_gorsel", "assets/customization/gorsel.png", { frameWidth: 16, frameHeight: 16 });
 
     // Load material gift items as spritesheets
     this.load.spritesheet("mg_stable_gate", "assets/material_gift/Stable_Gate_16x16.png", { frameWidth: 32, frameHeight: 32 });

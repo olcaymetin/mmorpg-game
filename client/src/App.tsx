@@ -1270,7 +1270,7 @@ const App: React.FC = () => {
                           style={{
                             width: "16px",
                             height: "16px",
-                            backgroundImage: "url('/assets/customization/görsel.png')",
+                            backgroundImage: "url('/assets/customization/gorsel.png')",
                             backgroundSize: `${11 * 16}px ${4 * 16}px`,
                             backgroundPosition: `-${col * 16}px -${row * 16}px`,
                             imageRendering: "pixelated",
