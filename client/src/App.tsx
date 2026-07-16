@@ -25,6 +25,28 @@ const cropLabels: Record<string, string> = {
   Zuchini: "Kabak (Z)",
 };
 
+const cropCoordinates: Record<string, { col: number; row: number }> = {
+  Cabbage:      { col: 0,  row: 0 }, // Green leafy head
+  Carrot:       { col: 4,  row: 0 }, // Carrot
+  Cauliflower:  { col: 4,  row: 1 }, // Cauliflower
+  Coffee:       { col: 0,  row: 2 }, // Coffee bean
+  Corn:         { col: 8,  row: 0 }, // Corn cob
+  Cotton:       { col: 0,  row: 1 }, // Cotton (using garlic as white cotton bulb)
+  Grape:        { col: 10, row: 1 }, // Grape (Purple grapes)
+  Onion:        { col: 7,  row: 0 }, // Onion
+  Pepper:       { col: 10, row: 0 }, // Red Pepper
+  Pineapple:    { col: 6,  row: 2 }, // Pineapple
+  Prickly_Pear: { col: 12, row: 0 }, // Cactus Pear (Beetroot-like dark purple/pink fruit)
+  Pumpkin:      { col: 4,  row: 2 }, // Pumpkin
+  Radish:       { col: 2,  row: 0 }, // Radish
+  Strawberry:   { col: 12, row: 1 }, // Strawberry
+  Tomato:       { col: 6,  row: 0 }, // Tomato
+  Turnip:       { col: 3,  row: 0 }, // Yellowish Turnip
+  Watermelon:   { col: 8,  row: 2 }, // Watermelon
+  Wheat:        { col: 5,  row: 0 }, // Wheat (Parsnip/Root shape substitute)
+  Zuchini:      { col: 5,  row: 2 }, // Zucchini / squash
+};
+
 /**
  * App — root React component.
  *
@@ -788,13 +810,12 @@ const App: React.FC = () => {
                     >
                       <div style={{
                         width: "16px",
-                        height: `${Math.min(crop.frameH, 32)}px`,
-                        backgroundImage: `url('/assets/crops/${crop.id}_Growth_Stages_16x16.png')`,
-                        backgroundSize: `${7 * 16}px ${crop.frameH}px`,
-                        backgroundPosition: `-${6 * 16}px 0px`,
+                        height: "16px",
+                        backgroundImage: "url('/assets/pickup_items.png')",
+                        backgroundSize: "224px 160px",
+                        backgroundPosition: `-${(cropCoordinates[crop.id]?.col || 0) * 16}px -${(cropCoordinates[crop.id]?.row || 0) * 16}px`,
                         imageRendering: "pixelated",
                         margin: "0 auto",
-                        overflow: "hidden",
                       }} />
                       <span style={{ fontSize: "6px" }}>{crop.label}</span>
                     </button>
@@ -921,9 +942,9 @@ const App: React.FC = () => {
                     <div
                       className="inventory-thumb"
                       style={{
-                        backgroundImage: `url('/assets/crops/${cropName}_Growth_Stages_16x16.png')`,
-                        backgroundSize: `112px auto`,
-                        backgroundPosition: `-96px bottom`,
+                        backgroundImage: "url('/assets/pickup_items.png')",
+                        backgroundSize: "224px 160px",
+                        backgroundPosition: `-${(cropCoordinates[cropName]?.col || 0) * 16}px -${(cropCoordinates[cropName]?.row || 0) * 16}px`,
                         imageRendering: "pixelated",
                       }}
                     />
