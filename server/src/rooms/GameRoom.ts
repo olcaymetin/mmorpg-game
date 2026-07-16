@@ -209,8 +209,15 @@ export class GameRoom extends Room<GameState> {
         const vx = dx * SPEED;
         const vy = dy * SPEED;
         const mapId = player.currentMap || "main";
-        const mapW = mapId === "sub_island" ? 800 : WORLD_W;
-        const mapH = mapId === "sub_island" ? 640 : WORLD_H;
+        let mapW = WORLD_W;
+        let mapH = WORLD_H;
+        if (mapId === "sub_island") {
+          mapW = 800;
+          mapH = 640;
+        } else if (mapId === "bottom_island") {
+          mapW = 38 * 32; // 1216
+          mapH = 30 * 32; // 960
+        }
         player.x = Math.max(HALF, Math.min(mapW - HALF, player.x + vx));
         player.y = Math.max(HALF, Math.min(mapH - HALF, player.y + vy));
       } else {

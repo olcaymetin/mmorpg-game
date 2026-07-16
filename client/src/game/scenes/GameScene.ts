@@ -867,6 +867,9 @@ export class GameScene extends Phaser.Scene {
             if (this.currentMapId === "sub_island") {
               this.mapWidth = 25 * TILE_SIZE;
               this.mapHeight = 20 * TILE_SIZE;
+            } else if (this.currentMapId === "bottom_island") {
+              this.mapWidth = 38 * TILE_SIZE;
+              this.mapHeight = 30 * TILE_SIZE;
             } else {
               this.mapWidth = 50 * TILE_SIZE;
               this.mapHeight = 40 * TILE_SIZE;
@@ -1322,6 +1325,27 @@ export class GameScene extends Phaser.Scene {
                 if (val.type === "yon_left" && (val.mapId || "main") === "main") {
                   targetX = val.x + 48; // Offset to the right so we don't immediately re-teleport
                   targetY = val.y;
+                }
+              });
+
+              this.room.send("player-teleport", { mapId: "main", x: targetX, y: targetY });
+              break;
+            } else if (obj.type === "yon_down" && this.currentMapId === "main") {
+              console.log(`[Teleport] Down arrow triggered on main. Teleporting to bottom_island...`);
+              this.lastTeleportTime = time;
+              this.room.send("player-teleport", { mapId: "bottom_island", x: obj.x, y: 100 });
+              break;
+            } else if (obj.type === "yon_up" && this.currentMapId === "bottom_island") {
+              console.log(`[Teleport] Up arrow triggered on bottom_island. Teleporting to main...`);
+              this.lastTeleportTime = time;
+              
+              // Find target position on main map (near first yon_down on main)
+              let targetX = 800;
+              let targetY = 1200;
+              this.room.state.placedObjects.forEach((val: any) => {
+                if (val.type === "yon_down" && (val.mapId || "main") === "main") {
+                  targetX = val.x;
+                  targetY = val.y - 48; // Offset up so we don't immediately re-teleport
                 }
               });
 
