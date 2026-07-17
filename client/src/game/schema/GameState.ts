@@ -48,6 +48,16 @@ export class Player extends Schema {
   friendRequests!: MapSchema<string>;
   rodTier!: number;
   currentMap!: string;
+  characterCreated!: boolean;
+  gender!: string;
+  skinTone!: string;
+  hairStyle!: string;
+  hairColor!: string;
+  eyeColor!: string;
+  clothesColor!: string;
+  beardColor!: string;
+  accItem!: string;
+  ownedCosmetics!: MapSchema<boolean>;
 }
 defineTypes(Player, {
   x: "float32", y: "float32", color: "string", sessionId: "string",
@@ -66,6 +76,16 @@ defineTypes(Player, {
   friends: { map: "string" }, friendRequests: { map: "string" },
   rodTier: "int32",
   currentMap: "string",
+  characterCreated: "boolean",
+  gender: "string",
+  skinTone: "string",
+  hairStyle: "string",
+  hairColor: "string",
+  eyeColor: "string",
+  clothesColor: "string",
+  beardColor: "string",
+  accItem: "string",
+  ownedCosmetics: { map: "boolean" }
 });
 
 export class GameState extends Schema {
