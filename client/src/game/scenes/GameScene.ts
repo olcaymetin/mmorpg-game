@@ -2869,6 +2869,12 @@ export class GameScene extends Phaser.Scene {
       { key: "mg_crate_1", end: 19 },
       { key: "mg_crate_2", end: 19 },
       { key: "mg_wooden_gate", end: 20 },
+      { key: "mg_gift_fish_1", end: 3 },
+      { key: "mg_gift_fish_2", end: 3 },
+      { key: "mg_gift_fish_3", end: 3 },
+      { key: "mg_gift_fish_4", end: 3 },
+      { key: "mg_gift_fish_5", end: 3 },
+      { key: "mg_gift_fish_6", end: 3 },
     ];
 
     anims.forEach(a => {

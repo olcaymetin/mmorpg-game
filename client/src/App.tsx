@@ -216,7 +216,15 @@ export const EXTRA_PACK_SPRITESHEETS = [
   { key: "pack_iskele_legacy", path: "/assets/iskele.png", fw: 16, fh: 16, label: "Ahşap İskele", scale: 2.0, category: "dock", sheetW: 144, sheetH: 64 },
 
   // Çitler / Fences
-  { key: "pack_fences_tilemap", path: "/assets/fences.png", fw: 16, fh: 16, label: "Çit", scale: 2.0, category: "fences", sheetW: 512, sheetH: 272 }
+  { key: "pack_fences_tilemap", path: "/assets/fences.png", fw: 16, fh: 16, label: "Çit", scale: 2.0, category: "fences", sheetW: 512, sheetH: 272 },
+
+  // Hediye Balıklar / Gift Fish (Animated)
+  { key: "mg_gift_fish_1", path: "/assets/pack/objects/exterior/gift_balik/best_fish_point_1.png", fw: 16, fh: 16, label: "Hediye Balık 1", scale: 2.0, category: "gift_fish", sheetW: 64, sheetH: 16, isAnimated: true },
+  { key: "mg_gift_fish_2", path: "/assets/pack/objects/exterior/gift_balik/best_fish_point_2.png", fw: 16, fh: 16, label: "Hediye Balık 2", scale: 2.0, category: "gift_fish", sheetW: 64, sheetH: 16, isAnimated: true },
+  { key: "mg_gift_fish_3", path: "/assets/pack/objects/exterior/gift_balik/best_fish_point_3.png", fw: 16, fh: 16, label: "Hediye Balık 3", scale: 2.0, category: "gift_fish", sheetW: 64, sheetH: 16, isAnimated: true },
+  { key: "mg_gift_fish_4", path: "/assets/pack/objects/exterior/gift_balik/best_fish_point_4.png", fw: 16, fh: 16, label: "Hediye Balık 4", scale: 2.0, category: "gift_fish", sheetW: 64, sheetH: 16, isAnimated: true },
+  { key: "mg_gift_fish_5", path: "/assets/pack/objects/exterior/gift_balik/best_fish_point_5.png", fw: 16, fh: 16, label: "Hediye Balık 5", scale: 2.0, category: "gift_fish", sheetW: 64, sheetH: 16, isAnimated: true },
+  { key: "mg_gift_fish_6", path: "/assets/pack/objects/exterior/gift_balik/best_fish_point_6.png", fw: 16, fh: 16, label: "Hediye Balık 6", scale: 2.0, category: "gift_fish", sheetW: 64, sheetH: 16, isAnimated: true }
 ];
 
 const PACK_TREES = [
@@ -921,7 +929,7 @@ const App: React.FC = () => {
   const [afkKickReason, setAfkKickReason] = useState("");
 
   const [activeTab, setActiveTab] = useState<"structures" | "decorations" | "effects" | "materials" | "seeds" | "mining" | "ahir">("structures");
-  const [decorCategory, setDecorCategory] = useState<"trees" | "exterior" | "beds" | "chairs" | "tables" | "closets" | "others" | "playground" | "beach" | "houses" | "workbenches" | "fences" | "animals" | "custom" | "dock">("trees");
+  const [decorCategory, setDecorCategory] = useState<"trees" | "exterior" | "beds" | "chairs" | "tables" | "closets" | "others" | "playground" | "beach" | "houses" | "workbenches" | "fences" | "animals" | "custom" | "dock" | "gift_fish">("trees");
 
   // Equipment states
   const [isEquipmentOpen, setIsEquipmentOpen] = useState(false);
@@ -2447,6 +2455,7 @@ const App: React.FC = () => {
                       { id: "closets", label: "🚪 Dolap" },
                       { id: "others", label: "🧸 Diğer" },
                       { id: "dock", label: "🌉 İskele" },
+                      { id: "gift_fish", label: "🎁 Hediye Balık" },
                       { id: "custom", label: "📤 Özel" }
                     ].map(cat => (
                       <button
@@ -2520,6 +2529,7 @@ const App: React.FC = () => {
                       </>
                     )}
                     {decorCategory === "dock" && renderExtraCategory("dock")}
+                    {decorCategory === "gift_fish" && renderExtraCategory("gift_fish")}
                     {decorCategory === "custom" && (() => {
                         const customList: any[] = [];
                         if (room?.state.customAssets) {
