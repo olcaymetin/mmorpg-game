@@ -68,6 +68,13 @@ export class GameScene extends Phaser.Scene {
   private selectionGraphics!: Phaser.GameObjects.Graphics;
   private activePlayTool: string | null = null;
 
+  // ── Client-side prediction ────────────────────────────────────────────────
+  private localX = 0; // predicted local player X
+  private localY = 0; // predicted local player Y
+  private lastSentMs = 0;
+  private isMoving = false;
+  private static readonly CLIENT_SPEED = 4; // must match server SPEED
+
   // Drag Panning & Dragging Objects
   private isDraggingCamera = false;
   private isDraggingObject = false;
@@ -90,8 +97,6 @@ export class GameScene extends Phaser.Scene {
   public virtualUp = false;
   public virtualDown = false;
 
-  private lastSentMs = 0;
-  private isMoving = false;
 
   // ── Crop Farming ───────────────────────────────────────────────────────────
   // Maps tile key "x,y" -> the sprite shown on that tile
@@ -367,7 +372,7 @@ export class GameScene extends Phaser.Scene {
         this.deselectObject();
         const player = this.entities.get(this.localId);
         if (player && player.container) {
-          this.cameras.main.startFollow(player.container, true, 0.08, 0.08);
+          this.cameras.main.startFollow(player.container, true, 1, 1);
         }
       }
     });
@@ -1182,11 +1187,29 @@ export class GameScene extends Phaser.Scene {
     players.onAdd((player: Player, sessionId: string) => {
       this.spawnPlayer(player, sessionId);
 
+      // Seed local prediction coords when first spawned
+      if (sessionId === this.localId) {
+        this.localX = player.x;
+        this.localY = player.y;
+      }
+
       (player as any).onChange(() => {
         const entity = this.entities.get(sessionId);
+
         if (entity) {
-          entity.container.setPosition(player.x, player.y);
-          
+          if (sessionId === this.localId) {
+            // Client-side prediction: only hard-correct if server drifted > 50px (lag spike / cheat)
+            const drift = Math.hypot(this.localX - player.x, this.localY - player.y);
+            if (drift > 50) {
+              this.localX = player.x;
+              this.localY = player.y;
+              entity.container.setPosition(player.x, player.y);
+            }
+          } else {
+            // For other players, always trust server
+            entity.container.setPosition(player.x, player.y);
+          }
+
           const animKey = `${player.skin}_${player.state}_${player.direction}`;
           if (entity.sprite.anims.currentAnim?.key !== animKey) {
             entity.sprite.play(animKey, true);
@@ -1219,6 +1242,10 @@ export class GameScene extends Phaser.Scene {
             if (this.cameras.main.zoom < minZoom) {
               this.cameras.main.setZoom(minZoom);
             }
+
+            // Sync local prediction coords on map change
+            this.localX = player.x;
+            this.localY = player.y;
 
             this.redrawMap();
           }
@@ -1450,7 +1477,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     if (isLocal) {
-      this.cameras.main.startFollow(container, true, 0.08, 0.08);
+      this.cameras.main.startFollow(container, true, 1, 1);
     }
     this.updatePlayerVisibilities();
   }
@@ -1613,16 +1640,26 @@ export class GameScene extends Phaser.Scene {
     }
 
     // 2. Read movement inputs
-    const left  = this.cursors.left.isDown  || this.keyA.isDown;
-    const right = this.cursors.right.isDown || this.keyD.isDown;
-    const up    = this.cursors.up.isDown    || this.keyW.isDown;
-    const down  = this.cursors.down.isDown  || this.keyS.isDown;
+    const left  = this.cursors.left.isDown  || this.keyA.isDown  || this.virtualLeft;
+    const right = this.cursors.right.isDown || this.keyD.isDown  || this.virtualRight;
+    const up    = this.cursors.up.isDown    || this.keyW.isDown  || this.virtualUp;
+    const down  = this.cursors.down.isDown  || this.keyS.isDown  || this.virtualDown;
 
     const dx = right ? 1 : left ? -1 : 0;
     const dy = down  ? 1 : up   ? -1 : 0;
 
     const isNowMoving = dx !== 0 || dy !== 0;
 
+    // Client-Side Prediction: move local player sprite immediately every frame
+    const localEntity = this.entities.get(this.localId);
+    if (localEntity && isNowMoving) {
+      const spd = GameScene.CLIENT_SPEED;
+      this.localX = Math.max(16, Math.min(this.mapWidth - 16, this.localX + dx * spd));
+      this.localY = Math.max(16, Math.min(this.mapHeight - 16, this.localY + dy * spd));
+      localEntity.container.setPosition(this.localX, this.localY);
+    }
+
+    // Send movement to server (throttled to 20/fps) for authoritative position
     if (isNowMoving) {
       if (time - this.lastSentMs >= SEND_INTERVAL_MS) {
         this.room.send("move", { dx, dy });
