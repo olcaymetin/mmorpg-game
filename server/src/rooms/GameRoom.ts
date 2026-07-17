@@ -670,6 +670,106 @@ export class GameRoom extends Room<GameState> {
       console.log(`[Username] ${client.sessionId.slice(0, 8)} set username: ${name}`);
     });
 
+    // ─── Character Creation ────────────────────────────────────────────────────
+
+    /** Sent once after username is set to finalize the character look and start playing */
+    this.onMessage("character-create", (client: Client, msg: {
+      gender: string; skinTone: string; hairStyle: string; hairColor: string;
+      eyeColor: string; clothesColor: string;
+    }) => {
+      const player = this.state.players.get(client.sessionId);
+      if (!player || player.characterCreated) return;
+      player.gender = msg.gender || "male";
+      player.skinTone = msg.skinTone || "1";
+      player.hairStyle = msg.hairStyle || "Standard";
+      player.hairColor = msg.hairColor || "Black";
+      player.eyeColor = msg.eyeColor || "Black";
+      player.clothesColor = msg.clothesColor || "";
+      player.characterCreated = true;
+      client.send("character-created", {});
+      this.triggerDebouncedSave();
+      console.log(`[Char] ${player.username} created character: skin=${player.skinTone} hair=${player.hairStyle}/${player.hairColor}`);
+    });
+
+    // ─── Cosmetic Shop ────────────────────────────────────────────────────────
+
+    /** Cosmetic item prices in gold */
+    const COSMETIC_PRICES: Record<string, number> = {
+      // Hair styles (already has Standard free)
+      "hair_Fawn": 200, "hair_Iridessa": 200, "hair_Josh": 200,
+      "hair_Lyria": 200, "hair_Sebastian": 200, "hair_Silvermist": 200,
+      // Clothes colors
+      "clothes_Blue": 100, "clothes_Green": 100, "clothes_Pink": 150,
+      "clothes_Purple": 150, "clothes_Red": 100,
+      // Beard colors
+      "beard_Black": 80, "beard_Blonde": 80, "beard_Brown": 80, "beard_Ginger": 80,
+      // Accessories
+      "acc_Beret": 120, "acc_Wizard": 300, "acc_Pirate": 250, "acc_Farm": 80,
+      "acc_Santa_hat": 200, "acc_Leprechaun": 180, "acc_Cook": 120,
+      "acc_Chicken": 200, "acc_Cow": 200, "acc_Frog": 200, "acc_Deer": 200,
+    };
+
+    this.onMessage("buy-cosmetic", (client: Client, msg: { itemKey: string }) => {
+      const player = this.state.players.get(client.sessionId);
+      if (!player) return;
+      const key = msg.itemKey;
+      if (player.ownedCosmetics.get(key)) {
+        client.send("shop-error", { message: "Bu kozmetik zaten sahipsin!" }); return;
+      }
+      const price = COSMETIC_PRICES[key];
+      if (!price) { client.send("shop-error", { message: "Geçersiz ürün." }); return; }
+      if (player.gold < price) {
+        client.send("shop-error", { message: `Yetersiz altın! Gerekli: ${price} 🪙` }); return;
+      }
+      player.gold -= price;
+      player.ownedCosmetics.set(key, true);
+      client.send("cosmetic-bought", { itemKey: key, newGold: player.gold });
+      this.triggerDebouncedSave();
+      console.log(`[Shop] ${player.username} bought cosmetic: ${key} for ${price}g`);
+    });
+
+    this.onMessage("equip-cosmetic", (client: Client, msg: {
+      type: string; value: string; // type: "hairStyle"|"hairColor"|"eyeColor"|"clothesColor"|"beardColor"|"accItem"
+    }) => {
+      const player = this.state.players.get(client.sessionId);
+      if (!player) return;
+      const { type, value } = msg;
+
+      // Check ownership (Standard hair/eye colors and skin tones are always free)
+      const freeItems: Record<string, string[]> = {
+        hairStyle: ["Standard"],
+        hairColor: ["Black", "Blonde", "Brown", "Ginger"], // all hair colors free to use once owned
+        eyeColor: ["Black", "Blue", "Brown", "Green"],
+        clothesColor: [""], // naked is always free
+        beardColor: [""], // no beard is free
+        accItem: [""], // no acc is free
+      };
+      const isFree = freeItems[type]?.includes(value);
+      if (!isFree) {
+        // Construct ownership key
+        const ownerKey = type === "clothesColor" ? `clothes_${value}` :
+                         type === "beardColor" ? `beard_${value}` :
+                         type === "accItem" ? `acc_${value}` :
+                         type === "hairStyle" ? `hair_${value}` : "";
+        if (ownerKey && !player.ownedCosmetics.get(ownerKey)) {
+          client.send("shop-error", { message: "Önce bu kozmetiği satın alman gerekiyor!" }); return;
+        }
+      }
+
+      switch (type) {
+        case "hairStyle": player.hairStyle = value; break;
+        case "hairColor": player.hairColor = value; break;
+        case "eyeColor": player.eyeColor = value; break;
+        case "clothesColor": player.clothesColor = value; break;
+        case "beardColor": player.beardColor = value; break;
+        case "accItem": player.accItem = value; break;
+      }
+      client.send("cosmetic-equipped", { type, value });
+      this.triggerDebouncedSave();
+    });
+
+
+
     // ─── Marketplace ──────────────────────────────────────────────────────────
 
     this.onMessage("market-list", (client: Client, msg: { itemType: string; itemCategory: string; quantity: number; pricePerUnit: number }) => {
@@ -1052,9 +1152,19 @@ export class GameRoom extends Room<GameState> {
     player.guildId = "";
     (player as any).lastActivityAt = Date.now();
 
-    // Assign a random skin
-    const skins = ["farmer_1", "farmer_2", "body_2"];
-    player.skin = skins[Math.floor(Math.random() * skins.length)];
+    // Layered character system (pack-based)
+    player.characterCreated = false; // will be set true after character creation screen
+    player.gender = "male";
+    player.skinTone = "1";
+    player.hairStyle = "Standard";
+    player.hairColor = "Black";
+    player.eyeColor = "Black";
+    player.clothesColor = ""; // naked until dressed
+    player.beardColor = "";
+    player.accItem = "";
+    // Keep legacy skin field for backwards compat (will be ignored once client uses layered render)
+    player.skin = "pack_char"; // signals to client to use layered rendering
+
     player.state = "idle";
     player.direction = "down";
     player.gold = 100;
@@ -1088,7 +1198,7 @@ export class GameRoom extends Room<GameState> {
 
     this.state.players.set(client.sessionId, player);
     console.log(
-      `[JOIN]  ${client.sessionId.slice(0, 8)}… → color=${player.color} skin=${player.skin} x=${player.x.toFixed(0)} y=${player.y.toFixed(0)}`
+      `[JOIN]  ${client.sessionId.slice(0, 8)}… → color=${player.color} x=${player.x.toFixed(0)} y=${player.y.toFixed(0)}`
     );
   }
 

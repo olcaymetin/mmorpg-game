@@ -12,6 +12,8 @@ import CharacterStats from "./components/CharacterStats";
 import FriendsPanel from "./components/FriendsPanel";
 import PlayerProfileModal from "./components/PlayerProfileModal";
 import GuildPanel from "./components/GuildPanel";
+import CharacterCreator from "./CharacterCreator";
+
 
 
 
@@ -99,6 +101,91 @@ const CROP_PRICES: Record<string, { buySeed: number; sellCrop: number }> = {
   Wheat:        { buySeed: 4,  sellCrop: 9 },
 };
 
+const COSMETICS_LIST = [
+  { key: "hair_Fawn", type: "hairStyle", value: "Fawn", label: "Fawn Saç Stili", price: 200, category: "💇 Saç" },
+  { key: "hair_Iridessa", type: "hairStyle", value: "Iridessa", label: "Iridessa Saç Stili", price: 200, category: "💇 Saç" },
+  { key: "hair_Josh", type: "hairStyle", value: "Josh", label: "Josh Saç Stili", price: 200, category: "💇 Saç" },
+  { key: "hair_Lyria", type: "hairStyle", value: "Lyria", label: "Lyria Saç Stili", price: 200, category: "💇 Saç" },
+  { key: "hair_Sebastian", type: "hairStyle", value: "Sebastian", label: "Sebastian Saç Stili", price: 200, category: "💇 Saç" },
+  { key: "hair_Silvermist", type: "hairStyle", value: "Silvermist", label: "Silvermist Saç Stili", price: 200, category: "💇 Saç" },
+
+  { key: "clothes_Blue", type: "clothesColor", value: "Blue", label: "Mavi Tulum", price: 100, category: "👕 Kıyafet" },
+  { key: "clothes_Green", type: "clothesColor", value: "Green", label: "Yeşil Tulum", price: 100, category: "👕 Kıyafet" },
+  { key: "clothes_Pink", type: "clothesColor", value: "Pink", label: "Pembe Tulum", price: 150, category: "👕 Kıyafet" },
+  { key: "clothes_Purple", type: "clothesColor", value: "Purple", label: "Mor Tulum", price: 150, category: "👕 Kıyafet" },
+  { key: "clothes_Red", type: "clothesColor", value: "Red", label: "Kırmızı Tulum", price: 100, category: "👕 Kıyafet" },
+
+  { key: "beard_Black", type: "beardColor", value: "Black", label: "Siyah Sakal", price: 80, category: "🧔 Sakal" },
+  { key: "beard_Blonde", type: "beardColor", value: "Blonde", label: "Sarı Sakal", price: 80, category: "🧔 Sakal" },
+  { key: "beard_Brown", type: "beardColor", value: "Brown", label: "Kahverengi Sakal", price: 80, category: "🧔 Sakal" },
+  { key: "beard_Ginger", type: "beardColor", value: "Ginger", label: "Kızıl Sakal", price: 80, category: "🧔 Sakal" },
+
+  { key: "acc_Beret", type: "accItem", value: "Beret", label: "Ressam Beresi", price: 120, category: "👒 Aksesuar" },
+  { key: "acc_Wizard", type: "accItem", value: "Wizard", label: "Büyücü Şapkası", price: 300, category: "👒 Aksesuar" },
+  { key: "acc_Pirate", type: "accItem", value: "Pirate", label: "Korsan Şapkası", price: 250, category: "👒 Aksesuar" },
+  { key: "acc_Farm", type: "accItem", value: "Farm", label: "Hasır Şapka", price: 80, category: "👒 Aksesuar" },
+  { key: "acc_Santa_hat", type: "accItem", value: "Santa_hat", label: "Noel Baba Şapkası", price: 200, category: "👒 Aksesuar" },
+  { key: "acc_Leprechaun", type: "accItem", value: "Leprechaun", label: "Leprikon Şapkası", price: 180, category: "👒 Aksesuar" },
+  { key: "acc_Cook", type: "accItem", value: "Cook", label: "Aşçı Şapkası", price: 120, category: "👒 Aksesuar" },
+  { key: "acc_Chicken", type: "accItem", value: "Chicken", label: "Tavuk Şapkası", price: 200, category: "👒 Aksesuar" },
+  { key: "acc_Cow", type: "accItem", value: "Cow", label: "İnek Şapkası", price: 200, category: "👒 Aksesuar" },
+  { key: "acc_Frog", type: "accItem", value: "Frog", label: "Kurbağa Şapkası", price: 200, category: "👒 Aksesuar" },
+  { key: "acc_Deer", type: "accItem", value: "Deer", label: "Geyik Boynuzu", price: 200, category: "👒 Aksesuar" },
+];
+
+const TILESETS_CONFIG: Record<string, { startGid: number; cols: number; rows: number; width: number; height: number; url: string; label: string }> = {
+  terrains: { startGid: 0, cols: 32, rows: 23, width: 512, height: 368, url: "/assets/terrains.png", label: "🌱 Çimenler" },
+  fences: { startGid: 2000, cols: 32, rows: 17, width: 512, height: 272, url: "/assets/fences.png", label: "🪵 Çitler" },
+  zemin2: { startGid: 3000, cols: 5, rows: 27, width: 80, height: 432, url: "/assets/zemin2.png", label: "🧱 Taş/Zemin" },
+  iskele: { startGid: 4000, cols: 9, rows: 4, width: 144, height: 64, url: "/assets/iskele.png", label: "⚓ İskele" },
+  dekor2: { startGid: 5000, cols: 7, rows: 12, width: 112, height: 192, url: "/assets/dekor2.png", label: "🏡 Dekorasyon" },
+  spring: { startGid: 6000, cols: 24, rows: 40, width: 384, height: 640, url: "/assets/pack/tilesets/Tileset_Grass_Spring.png", label: "🌸 Bahar" },
+  summer: { startGid: 7000, cols: 24, rows: 40, width: 384, height: 640, url: "/assets/pack/tilesets/Tileset_Grass_Summer.png", label: "☀️ Yaz" },
+  fall: { startGid: 8000, cols: 24, rows: 40, width: 384, height: 640, url: "/assets/pack/tilesets/Tileset_Grass_Fall.png", label: "🍁 Sonbahar" },
+  winter: { startGid: 9000, cols: 24, rows: 40, width: 384, height: 640, url: "/assets/pack/tilesets/Tileset_Grass_Winter.png", label: "❄️ Kış" },
+  path: { startGid: 10000, cols: 24, rows: 16, width: 384, height: 256, url: "/assets/pack/tilesets/Path_tiles.png", label: "🛣️ Yollar" },
+  barn: { startGid: 11000, cols: 12, rows: 15, width: 192, height: 240, url: "/assets/pack/tilesets/Barn_tileset.png", label: "🏚️ Ahır" },
+  cave: { startGid: 12000, cols: 24, rows: 16, width: 384, height: 256, url: "/assets/pack/tilesets/Cave_Water_Ground_animations_tiles.png", label: "🌋 Mağara" }
+};
+
+const PACK_TREES = [
+  { key: "pack_tree_birch_tree", label: "Huş Ağacı", path: "/assets/pack/objects/trees/Birch_Tree.png" },
+  { key: "pack_tree_mahogany_tree", label: "Maun Ağacı", path: "/assets/pack/objects/trees/Mahogany_Tree.png" },
+  { key: "pack_tree_maple_tree", label: "Akçaağaç", path: "/assets/pack/objects/trees/Maple_Tree.png" },
+  { key: "pack_tree_pine_tree", label: "Çam Ağacı", path: "/assets/pack/objects/trees/Pine_Tree.png" },
+];
+
+const PACK_EXTERIOR_PROPS = [
+  { key: "pack_ext_bus", label: "Otobüs", path: "/assets/pack/objects/exterior/Bus.png" },
+  { key: "pack_ext_chest", label: "Sandık", path: "/assets/pack/objects/exterior/chest.png" },
+  { key: "pack_ext_cotton_candy_cart", label: "Pamuk Şeker", path: "/assets/pack/objects/exterior/Cotton_candy_cart.png" },
+  { key: "pack_ext_halloween_content", label: "Cadılar", path: "/assets/pack/objects/exterior/Halloween_Content.png" },
+  { key: "pack_ext_ice_cream_car", label: "Dondurma Ar.", path: "/assets/pack/objects/exterior/ice_cream_car.png" },
+  { key: "pack_ext_ice_cream_cart", label: "Dondurma Tez.", path: "/assets/pack/objects/exterior/ice_cream_cart.png" },
+  { key: "pack_ext_newsstand", label: "Gazete Bayii", path: "/assets/pack/objects/exterior/Newsstand.png" },
+  { key: "pack_ext_picnic", label: "Piknik Alanı", path: "/assets/pack/objects/exterior/Picnic.png" },
+  { key: "pack_ext_playground", label: "Oyun Parkı", path: "/assets/pack/objects/exterior/Playground.png" },
+  { key: "pack_ext_popcorn_", label: "Mısır Arabası", path: "/assets/pack/objects/exterior/Popcorn_.png" },
+  { key: "pack_ext_scarescrow", label: "Korkuluk", path: "/assets/pack/objects/exterior/Scarescrow.png" },
+  { key: "pack_ext_snowman", label: "Kardan Adam", path: "/assets/pack/objects/exterior/Snowman.png" },
+  { key: "pack_ext_water_fountain", label: "Fıskiye", path: "/assets/pack/objects/exterior/Water_fountain.png" },
+  { key: "pack_ext_well_", label: "Su Kuyusu", path: "/assets/pack/objects/exterior/Well_.png" },
+];
+
+const PACK_INTERIOR_PROPS = [
+  { key: "pack_int_beds", label: "Yatak", path: "/assets/pack/objects/interior/Beds.png" },
+  { key: "pack_int_blacksmith", label: "Demirhane", path: "/assets/pack/objects/interior/Blacksmith.png" },
+  { key: "pack_int_chairs", label: "Sandalyeler", path: "/assets/pack/objects/interior/Chairs.png" },
+  { key: "pack_int_closet", label: "Dolap", path: "/assets/pack/objects/interior/Closet.png" },
+  { key: "pack_int_fireplace", label: "Şömine", path: "/assets/pack/objects/interior/Fireplace.png" },
+  { key: "pack_int_cats_furniture", label: "Kedi Eşyası", path: "/assets/pack/objects/interior/cats_furniture.png" },
+  { key: "pack_int_sofa_and_armchair", label: "Koltuklar", path: "/assets/pack/objects/interior/Sofa_and_armchair.png" },
+  { key: "pack_int_tables_and_desks", label: "Masalar", path: "/assets/pack/objects/interior/Tables_and_desks.png" },
+  { key: "pack_int_xmas", label: "Yılbaşı Ağacı", path: "/assets/pack/objects/interior/Xmas.png" },
+  { key: "pack_int_school", label: "Okul Eşyaları", path: "/assets/pack/objects/interior/School.png" },
+  { key: "pack_int_temple", label: "Tapınak Eşyaları", path: "/assets/pack/objects/interior/Temple.png" },
+];
+
 /**
  * App — root React component.
  *
@@ -127,7 +214,18 @@ const App: React.FC = () => {
 
   // Shop state
   const [isShopOpen, setIsShopOpen] = useState(false);
-  const [shopTab, setShopTab] = useState<"buy" | "sell" | "survival">("buy");
+  const [shopTab, setShopTab] = useState<"buy" | "sell" | "survival" | "cosmetics">("buy");
+  const [ownedCosmetics, setOwnedCosmetics] = useState<Record<string, boolean>>({});
+  const [myAppearance, setMyAppearance] = useState({
+    gender: "male",
+    skinTone: "1",
+    hairStyle: "Standard",
+    hairColor: "Black",
+    eyeColor: "Black",
+    clothesColor: "",
+    beardColor: "",
+    accItem: "",
+  });
 
   // Inventory UI tabs: "crops" (mahsuller), "seeds" (tohumlar), "survival" (yiyecek/su), or "tools" (araçlar)
   const [inventoryTab, setInventoryTab] = useState<"crops" | "seeds" | "survival" | "tools">("crops");
@@ -149,7 +247,7 @@ const App: React.FC = () => {
   const [isSelectingTileset, setIsSelectingTileset] = useState(false);
 
   // Active tileset tab (terrains or fences)
-  const [activeTileset, setActiveTileset] = useState<"terrains" | "fences" | "zemin2" | "iskele" | "dekor2">("terrains");
+  const [activeTileset, setActiveTileset] = useState<keyof typeof TILESETS_CONFIG>("terrains");
   const [paintOnTop, setPaintOnTop] = useState(false);
 
   // Legacy map migration state
@@ -169,6 +267,7 @@ const App: React.FC = () => {
   // ── Player info ─────────────────────────────────────────────────────────────
   const [myUsername, setMyUsername] = useState("");
   const [usernameSet, setUsernameSet] = useState(false);
+  const [characterCreated, setCharacterCreated] = useState(true); // default true to avoid flicker on initial load
   const [language, setLanguage] = useState("en");
 
   // ── Skills (farming, combat, etc.) ──────────────────────────────────────────
@@ -317,7 +416,25 @@ const App: React.FC = () => {
         setCoin(player.coin !== undefined ? player.coin : 0);
         setMyUsername(player.username || "");
         setUsernameSet(!!player.usernameSet);
+        setCharacterCreated(player.characterCreated === undefined ? true : player.characterCreated);
         setTotalLevel(player.totalLevel || 1);
+
+        // Sync cosmetics
+        if (player.ownedCosmetics) {
+          const cosmetics: Record<string, boolean> = {};
+          player.ownedCosmetics.forEach((val: boolean, key: string) => { cosmetics[key] = val; });
+          setOwnedCosmetics(cosmetics);
+        }
+        setMyAppearance({
+          gender: player.gender || "male",
+          skinTone: player.skinTone || "1",
+          hairStyle: player.hairStyle || "Standard",
+          hairColor: player.hairColor || "Black",
+          eyeColor: player.eyeColor || "Black",
+          clothesColor: player.clothesColor || "",
+          beardColor: player.beardColor || "",
+          accItem: player.accItem || "",
+        });
 
         setHp(player.hp !== undefined ? player.hp : 100);
         setMaxHp(player.maxHp !== undefined ? player.maxHp : 100);
@@ -524,18 +641,18 @@ const App: React.FC = () => {
 
     const col = Math.floor(clickX / 16);
     const row = Math.floor(clickY / 16);
-    const maxRow = activeTileset === "fences" ? 17 : (activeTileset === "zemin2" ? 27 : (activeTileset === "iskele" ? 4 : (activeTileset === "dekor2" ? 12 : 23)));
-    const maxCol = activeTileset === "zemin2" ? 5 : (activeTileset === "iskele" ? 9 : (activeTileset === "dekor2" ? 7 : 32));
+    const config = TILESETS_CONFIG[activeTileset];
+    const maxRow = config.rows;
+    const maxCol = config.cols;
 
     if (col >= 0 && col < maxCol && row >= 0 && row < maxRow) {
       setSelectionStart({ col, row });
       setSelectionEnd({ col, row });
       setIsSelectingTileset(true);
       setSelectedObject(null);
-      // Immediately switch brush to tile mode on tile panel click
-      // (this sets the brush type even if eraser was selected before)
-      const startGid = activeTileset === "fences" ? 2000 : (activeTileset === "zemin2" ? 3000 : (activeTileset === "iskele" ? 4000 : (activeTileset === "dekor2" ? 5000 : 0)));
-      const colsCount = activeTileset === "zemin2" ? 5 : (activeTileset === "iskele" ? 9 : (activeTileset === "dekor2" ? 7 : 32));
+      
+      const startGid = config.startGid;
+      const colsCount = config.cols;
       const index = startGid + (row * colsCount + col);
       setSelectedTile(index);
       if (game) {
@@ -550,8 +667,9 @@ const App: React.FC = () => {
     const clickX = e.clientX - rect.left;
     const clickY = e.clientY - rect.top;
 
-    const maxRow = activeTileset === "fences" ? 16 : (activeTileset === "zemin2" ? 26 : (activeTileset === "iskele" ? 3 : (activeTileset === "dekor2" ? 11 : 22)));
-    const maxCol = activeTileset === "zemin2" ? 4 : (activeTileset === "iskele" ? 8 : (activeTileset === "dekor2" ? 6 : 31));
+    const config = TILESETS_CONFIG[activeTileset];
+    const maxRow = config.rows - 1;
+    const maxCol = config.cols - 1;
     const col = Math.max(0, Math.min(maxCol, Math.floor(clickX / 16)));
     const row = Math.max(0, Math.min(maxRow, Math.floor(clickY / 16)));
 
@@ -569,8 +687,9 @@ const App: React.FC = () => {
 
     const w = colEnd - colStart + 1;
     const h = rowEnd - rowStart + 1;
-    const startGid = activeTileset === "fences" ? 2000 : (activeTileset === "zemin2" ? 3000 : (activeTileset === "iskele" ? 4000 : (activeTileset === "dekor2" ? 5000 : 0)));
-    const colsCount = activeTileset === "zemin2" ? 5 : (activeTileset === "iskele" ? 9 : (activeTileset === "dekor2" ? 7 : 32));
+    const config = TILESETS_CONFIG[activeTileset];
+    const startGid = config.startGid;
+    const colsCount = config.cols;
 
     if (w === 1 && h === 1) {
       // Single tile selection
@@ -1331,44 +1450,71 @@ const App: React.FC = () => {
                 </div>
               )}
 
-              {/* Tab 2: Customization / Decorations (11 items + 24 custom sheet items) */}
+              {/* Tab 2: Customization / Decorations */}
               {activeTab === "decorations" && (
-                <div className="object-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
-                  {Array.from({ length: 11 }, (_, i) => i + 1).map(idx => (
-                    <button
-                      key={`decor-${idx}`}
-                      className={`obj-btn obj-btn--small ${selectedTile === -2 && selectedObjectName === `decor_grass_${idx}` ? "obj-btn--active" : ""}`}
-                      onClick={() => handleSelectObjectBrush(`decor_grass_${idx}`)}
-                    >
-                      <img src={`/assets/customization/Grass_Tufts_Flowers_${idx}.png`} alt={`decor-${idx}`} className="obj-thumb obj-thumb--small" />
-                      <span style={{ fontSize: "6px" }}>Dekor #{idx}</span>
-                    </button>
-                  ))}
-                  {[0, 1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 13, 14, 15, 17, 18, 19, 22, 23, 24, 28, 29, 30, 38].map(frameIdx => {
-                    const col = frameIdx % 11;
-                    const row = Math.floor(frameIdx / 11);
-                    return (
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "400px", overflowY: "auto", paddingRight: "4px" }}>
+                  
+                  {/* Trees */}
+                  <div style={{ fontSize: "11px", fontWeight: "bold", color: "#f0c040", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "2px" }}>🌳 Ağaçlar</div>
+                  <div className="object-grid" style={{ gridTemplateColumns: "repeat(2, 1fr)", gap: "6px" }}>
+                    {PACK_TREES.map((item) => (
                       <button
-                        key={`decor-gorsel-${frameIdx}`}
-                        className={`obj-btn obj-btn--small ${selectedTile === -2 && selectedObjectName === `decor_gorsel_${frameIdx}` ? "obj-btn--active" : ""}`}
-                        onClick={() => handleSelectObjectBrush(`decor_gorsel_${frameIdx}`)}
+                        key={item.key}
+                        className={`obj-btn ${selectedTile === -2 && selectedObjectName === item.key ? "obj-btn--active" : ""}`}
+                        onClick={() => handleSelectObjectBrush(item.key)}
                       >
-                        <div
-                          className="obj-thumb obj-thumb--small"
-                          style={{
-                            width: "16px",
-                            height: "16px",
-                            backgroundImage: "url('/assets/customization/gorsel.png')",
-                            backgroundSize: `${11 * 16}px ${4 * 16}px`,
-                            backgroundPosition: `-${col * 16}px -${row * 16}px`,
-                            imageRendering: "pixelated",
-                            margin: "0 auto",
-                          }}
-                        />
-                        <span style={{ fontSize: "6px" }}>Görsel #{frameIdx}</span>
+                        <img src={item.path} alt={item.label} className="obj-thumb" style={{ height: "40px", objectFit: "contain", margin: "0 auto 4px" }} />
+                        <span style={{ fontSize: "9px" }}>{item.label}</span>
                       </button>
-                    );
-                  })}
+                    ))}
+                  </div>
+
+                  {/* Dış Mekan Props */}
+                  <div style={{ fontSize: "11px", fontWeight: "bold", color: "#f0c040", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "2px", marginTop: "8px" }}>🏡 Dış Mekan Dekorları</div>
+                  <div className="object-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "6px" }}>
+                    {PACK_EXTERIOR_PROPS.map((item) => (
+                      <button
+                        key={item.key}
+                        className={`obj-btn obj-btn--small ${selectedTile === -2 && selectedObjectName === item.key ? "obj-btn--active" : ""}`}
+                        onClick={() => handleSelectObjectBrush(item.key)}
+                        style={{ padding: "6px 2px" }}
+                      >
+                        <img src={item.path} alt={item.label} className="obj-thumb obj-thumb--small" style={{ height: "24px", objectFit: "contain", margin: "0 auto 4px" }} />
+                        <span style={{ fontSize: "8px" }}>{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* İç Mekan Props */}
+                  <div style={{ fontSize: "11px", fontWeight: "bold", color: "#f0c040", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "2px", marginTop: "8px" }}>🛋️ İç Mekan Eşyaları</div>
+                  <div className="object-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "6px" }}>
+                    {PACK_INTERIOR_PROPS.map((item) => (
+                      <button
+                        key={item.key}
+                        className={`obj-btn obj-btn--small ${selectedTile === -2 && selectedObjectName === item.key ? "obj-btn--active" : ""}`}
+                        onClick={() => handleSelectObjectBrush(item.key)}
+                        style={{ padding: "6px 2px" }}
+                      >
+                        <img src={item.path} alt={item.label} className="obj-thumb obj-thumb--small" style={{ height: "24px", objectFit: "contain", margin: "0 auto 4px" }} />
+                        <span style={{ fontSize: "8px" }}>{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Grass & Legacy sheet */}
+                  <div style={{ fontSize: "11px", fontWeight: "bold", color: "#888", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "2px", marginTop: "8px" }}>🌸 Çiçekler & Klasik</div>
+                  <div className="object-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "6px" }}>
+                    {Array.from({ length: 11 }, (_, i) => i + 1).map(idx => (
+                      <button
+                        key={`decor-${idx}`}
+                        className={`obj-btn obj-btn--small ${selectedTile === -2 && selectedObjectName === `decor_grass_${idx}` ? "obj-btn--active" : ""}`}
+                        onClick={() => handleSelectObjectBrush(`decor_grass_${idx}`)}
+                      >
+                        <img src={`/assets/customization/Grass_Tufts_Flowers_${idx}.png`} alt={`decor-${idx}`} className="obj-thumb obj-thumb--small" />
+                        <span style={{ fontSize: "8px" }}>Klasik #{idx}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -1581,46 +1727,26 @@ const App: React.FC = () => {
               <div className="section-title">Zemin & Çit Fayansları (16x16) {selectedTile >= 0 ? `[Seçilen ID: ${selectedTile}]` : ""}</div>
 
               {/* Sub-Tabs to switch between Terrains and Fences */}
-              <div className="editor-tabs" style={{ marginTop: "6px", marginBottom: "8px" }}>
-                <button
-                  className={`tab-btn ${activeTileset === "terrains" ? "tab-btn--active" : ""}`}
-                  onClick={() => setActiveTileset("terrains")}
-                >
-                  🏞️ Zeminler
-                </button>
-                <button
-                  className={`tab-btn ${activeTileset === "fences" ? "tab-btn--active" : ""}`}
-                  onClick={() => setActiveTileset("fences")}
-                >
-                  🚧 Çitler (Şeffaf)
-                </button>
-                <button
-                  className={`tab-btn ${activeTileset === "zemin2" ? "tab-btn--active" : ""}`}
-                  onClick={() => setActiveTileset("zemin2")}
-                >
-                  🧱 Zemin 2
-                </button>
-                <button
-                  className={`tab-btn ${activeTileset === "iskele" ? "tab-btn--active" : ""}`}
-                  onClick={() => setActiveTileset("iskele")}
-                >
-                  🪵 İskele
-                </button>
-                <button
-                  className={`tab-btn ${activeTileset === "dekor2" ? "tab-btn--active" : ""}`}
-                  onClick={() => setActiveTileset("dekor2")}
-                >
-                  🏡 Dekor 2
-                </button>
+              <div className="editor-tabs" style={{ marginTop: "6px", marginBottom: "8px", display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                {Object.entries(TILESETS_CONFIG).map(([key, cfg]) => (
+                  <button
+                    key={key}
+                    className={`tab-btn ${activeTileset === key ? "tab-btn--active" : ""}`}
+                    onClick={() => setActiveTileset(key as any)}
+                    style={{ fontSize: "11px", padding: "4px 8px" }}
+                  >
+                    {cfg.label}
+                  </button>
+                ))}
               </div>
 
-              <div className="tileset-container">
+              <div className="tileset-container" style={{ overflow: "auto", maxHeight: "280px" }}>
                 <div
                   className="tileset-wrapper"
                   style={{
                     position: "relative",
-                    width: activeTileset === "zemin2" ? "80px" : (activeTileset === "iskele" ? "144px" : (activeTileset === "dekor2" ? "112px" : "512px")),
-                    height: activeTileset === "zemin2" ? "432px" : (activeTileset === "iskele" ? "64px" : (activeTileset === "dekor2" ? "192px" : (activeTileset === "fences" ? "272px" : "368px"))),
+                    width: `${TILESETS_CONFIG[activeTileset].width}px`,
+                    height: `${TILESETS_CONFIG[activeTileset].height}px`,
                     cursor: "pointer"
                   }}
                   onMouseDown={handleTilesetMouseDown}
@@ -1629,39 +1755,45 @@ const App: React.FC = () => {
                   onMouseLeave={handleTilesetMouseUp}
                 >
                   <img
-                    src={activeTileset === "zemin2" ? "/assets/zemin2.png" : (activeTileset === "iskele" ? "/assets/iskele.png" : (activeTileset === "dekor2" ? "/assets/dekor2.png" : (activeTileset === "fences" ? "/assets/fences.png" : "/assets/terrains.png")))}
+                    src={TILESETS_CONFIG[activeTileset].url}
                     alt="tileset"
                     draggable={false}
                     onDragStart={(e) => e.preventDefault()}
                     style={{
                       display: "block",
-                      width: activeTileset === "zemin2" ? "80px" : (activeTileset === "iskele" ? "144px" : (activeTileset === "dekor2" ? "112px" : "512px")),
-                      height: activeTileset === "zemin2" ? "432px" : (activeTileset === "iskele" ? "64px" : (activeTileset === "dekor2" ? "192px" : (activeTileset === "fences" ? "272px" : "368px"))),
+                      width: `${TILESETS_CONFIG[activeTileset].width}px`,
+                      height: `${TILESETS_CONFIG[activeTileset].height}px`,
                       imageRendering: "pixelated",
                       userSelect: "none",
                     }}
                   />
                   
                   {/* Active single selection highlighting box */}
-                  {((selectedTile >= 5000 && activeTileset === "dekor2") ||
-                    (selectedTile >= 4000 && selectedTile < 5000 && activeTileset === "iskele") ||
-                    (selectedTile >= 3000 && selectedTile < 4000 && activeTileset === "zemin2") ||
-                    (selectedTile >= 2000 && selectedTile < 3000 && activeTileset === "fences") || 
-                    (selectedTile >= 0 && selectedTile < 2000 && activeTileset === "terrains")) && (
-                    <div
-                      className="selection-box"
-                      style={{
-                        position: "absolute",
-                        border: "2px solid #55ff22",
-                        boxShadow: "0 0 6px rgba(85, 255, 34, 0.9)",
-                        width: "16px",
-                        height: "16px",
-                        left: `${((selectedTile >= 5000 ? selectedTile - 5000 : (selectedTile >= 4000 ? selectedTile - 4000 : (selectedTile >= 3000 ? selectedTile - 3000 : (selectedTile >= 2000 ? selectedTile - 2000 : selectedTile)))) % (activeTileset === "zemin2" ? 5 : (activeTileset === "iskele" ? 9 : (activeTileset === "dekor2" ? 7 : 32)))) * 16}px`,
-                        top: `${Math.floor((selectedTile >= 5000 ? selectedTile - 5000 : (selectedTile >= 4000 ? selectedTile - 4000 : (selectedTile >= 3000 ? selectedTile - 3000 : (selectedTile >= 2000 ? selectedTile - 2000 : selectedTile)))) / (activeTileset === "zemin2" ? 5 : (activeTileset === "iskele" ? 9 : (activeTileset === "dekor2" ? 7 : 32)))) * 16}px`,
-                        pointerEvents: "none",
-                      }}
-                    />
-                  )}
+                  {(() => {
+                    const cfg = TILESETS_CONFIG[activeTileset];
+                    const localIndex = selectedTile - cfg.startGid;
+                    const isValid = localIndex >= 0 && localIndex < (cfg.cols * cfg.rows);
+                    if (!isValid) return null;
+
+                    const col = localIndex % cfg.cols;
+                    const row = Math.floor(localIndex / cfg.cols);
+
+                    return (
+                      <div
+                        className="selection-box"
+                        style={{
+                          position: "absolute",
+                          border: "2px solid #55ff22",
+                          boxShadow: "0 0 6px rgba(85, 255, 34, 0.9)",
+                          width: "16px",
+                          height: "16px",
+                          left: `${col * 16}px`,
+                          top: `${row * 16}px`,
+                          pointerEvents: "none",
+                        }}
+                      />
+                    );
+                  })()}
 
                   {/* Multi-tile selection preview (during drag or when stamp is selected) */}
                   {getSelectionRect() && (selectedTile === -3 || isSelectingTileset) && (
@@ -1728,6 +1860,12 @@ const App: React.FC = () => {
                 onClick={() => setShopTab("survival")}
               >
                 🍗 Yiyecek/Su Al
+              </button>
+              <button
+                className={`shop-tab-btn ${shopTab === "cosmetics" ? "shop-tab-btn--active" : ""}`}
+                onClick={() => setShopTab("cosmetics")}
+              >
+                💇 Kozmetik / Berber
               </button>
             </div>
 
@@ -1796,7 +1934,7 @@ const App: React.FC = () => {
                     );
                   })}
                 </div>
-              ) : (
+              ) : shopTab === "survival" ? (
                 /* SURVIVAL SHOP TAB */
                 <div className="shop-list">
                   <div className="shop-item">
@@ -1830,6 +1968,53 @@ const App: React.FC = () => {
                       Satın Al
                     </button>
                   </div>
+                </div>
+              ) : (
+                /* COSMETICS SHOP TAB */
+                <div className="shop-list" style={{ maxHeight: "400px", overflowY: "auto" }}>
+                  {COSMETICS_LIST.map((cosm) => {
+                    const isOwned = cosm.key === "hair_Standard" || !!ownedCosmetics[cosm.key];
+                    const isEquipped = (myAppearance as any)[cosm.type] === cosm.value;
+
+                    return (
+                      <div key={cosm.key} className="shop-item" style={{ borderLeft: isEquipped ? "4px solid #f0c040" : "4px solid transparent" }}>
+                        <span style={{ fontSize: "24px", padding: "6px", width: "40px", textAlign: "center" }}>
+                          {cosm.type === "hairStyle" ? "💇" : cosm.type === "clothesColor" ? "👕" : cosm.type === "beardColor" ? "🧔" : "👒"}
+                        </span>
+                        <div className="shop-item-info">
+                          <span className="shop-item-name">{cosm.label}</span>
+                          <span className="shop-item-price" style={{ color: isOwned ? "#888" : "#f1c40f" }}>
+                            {isOwned ? "✅ Sahip Olunuyor" : `💰 ${cosm.price} Altın`}
+                          </span>
+                          <span className="shop-item-stock">{cosm.category}</span>
+                        </div>
+                        {isEquipped ? (
+                          <button
+                            className="shop-action-btn"
+                            style={{ background: "#27ae60", color: "#fff", cursor: "default" }}
+                            disabled
+                          >
+                            Kuşanıldı
+                          </button>
+                        ) : isOwned ? (
+                          <button
+                            className="shop-action-btn shop-action-btn--buy"
+                            onClick={() => room?.send("equip-cosmetic", { type: cosm.type, value: cosm.value })}
+                          >
+                            Kuşan
+                          </button>
+                        ) : (
+                          <button
+                            className="shop-action-btn shop-action-btn--buy"
+                            disabled={gold < cosm.price}
+                            onClick={() => room?.send("buy-cosmetic", { itemKey: cosm.key })}
+                          >
+                            Satın Al
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -2231,6 +2416,15 @@ const App: React.FC = () => {
             Yeniden Bağlan
           </button>
         </div>
+      )}
+
+      {/* ── Character Creator Modal ──────────────────────────────────────── */}
+      {isLoggedIn && room && sessionId && !characterCreated && (
+        <CharacterCreator
+          onConfirm={(opts) => {
+            room.send("character-create", opts);
+          }}
+        />
       )}
     </div>
   );

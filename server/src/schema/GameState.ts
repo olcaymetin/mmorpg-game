@@ -124,6 +124,20 @@ export class Player extends Schema {
 
   // Fishing
   @type("int32") rodTier: number = 1;
+
+  // ── Layered Character Appearance ────────────────────────────────────────
+  @type("boolean") characterCreated: boolean = false; // false = show creation screen
+  @type("string")  gender: string = "male";           // "male" | "female"
+  @type("string")  skinTone: string = "1";            // "1" | "2" | "3" | "4"
+  @type("string")  hairStyle: string = "Standard";    // Standard|Fawn|Iridessa|Josh|Lyria|Sebastian|Silvermist
+  @type("string")  hairColor: string = "Black";       // Black|Blonde|Brown|Ginger
+  @type("string")  eyeColor: string = "Black";        // Black|Blue|Brown|Green
+  @type("string")  clothesColor: string = "";         // ""=naked, Blue|Green|Pink|Purple|Red
+  @type("string")  beardColor: string = "";           // ""=no beard, Black|Blonde|Brown|Ginger
+  @type("string")  accItem: string = "";              // "" or acc name e.g. "Beret","Wizard"
+
+  // ── Owned Cosmetics (shop purchases) ────────────────────────────────────
+  @type({ map: "boolean" }) ownedCosmetics = new MapSchema<boolean>(); // key = "hair_Fawn" | "clothes_Blue" | "beard_Black" | "acc_Wizard" etc.
 }
 
 export class GameState extends Schema {

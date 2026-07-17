@@ -18,6 +18,15 @@ interface SceneData {
 interface PlayerEntity {
   container: Phaser.GameObjects.Container;
   sprite: Phaser.GameObjects.Sprite;
+  isLayered?: boolean;
+  layers?: {
+    skin: Phaser.GameObjects.Sprite;
+    eyes?: Phaser.GameObjects.Sprite;
+    hair?: Phaser.GameObjects.Sprite;
+    beard?: Phaser.GameObjects.Sprite;
+    clothes?: Phaser.GameObjects.Sprite;
+    acc?: Phaser.GameObjects.Sprite;
+  };
 }
 
 interface PlacedObject {
@@ -228,7 +237,7 @@ export class GameScene extends Phaser.Scene {
       this.load.image(fileObj.key, `assets/ahir/${fileObj.file}`);
     }
 
-    this.load.spritesheet("farm_tile_sheet", "assets/tarla_cropped.png", { frameWidth: 418, frameHeight: 418 });
+    this.load.spritesheet("farm_tile_sheet", "assets/tarla.png", { frameWidth: 418, frameHeight: 418 });
 
     // Load material gift items as spritesheets
     this.load.spritesheet("mg_stable_gate", "assets/material_gift/Stable_Gate_16x16.png", { frameWidth: 32, frameHeight: 32 });
@@ -244,11 +253,99 @@ export class GameScene extends Phaser.Scene {
       const fileName = `${cropName}_Growth_Stages_16x16.png`;
       this.load.image(`crop_${cropName}`, `assets/crops/${fileName}`);
     }
+
+    // ─── Farm RPG Pack Character Spritesheets Preload ────────────────────────
+    const charBase = "assets/pack/char";
+
+    // 1. Skins
+    for (let t = 1; t <= 4; t++) {
+      this.load.spritesheet(`pack_skin_${t}_idle`, `${charBase}/idle/skins/${t}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_skin_${t}_walk`, `${charBase}/walk/skins/${t}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_skin_${t}_run`, `${charBase}/run/skins/${t}.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+
+    // 2. Hairs
+    const stylesList = ["Standard", "Fawn", "Iridessa", "Josh", "Lyria", "Sebastian", "Silvermist"];
+    const colorsList = ["Black", "Blonde", "Brown", "Ginger"];
+    for (const s of stylesList) {
+      for (const c of colorsList) {
+        this.load.spritesheet(`pack_hair_${s}_${c}_idle`, `${charBase}/idle/hair/${s}/${c}.png`, { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet(`pack_hair_${s}_${c}_walk`, `${charBase}/walk/hair/${s}/${c}.png`, { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet(`pack_hair_${s}_${c}_run`, `${charBase}/run/hair/${s}/${c}.png`, { frameWidth: 32, frameHeight: 32 });
+      }
+    }
+
+    // 3. Clothes
+    const clothesList = ["Blue", "Green", "Pink", "Purple", "Red"];
+    for (const c of clothesList) {
+      this.load.spritesheet(`pack_clothes_${c}_idle`, `${charBase}/idle/clothes/Farm/${c}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_clothes_${c}_walk`, `${charBase}/walk/clothes/Farm/${c}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_clothes_${c}_run`, `${charBase}/run/clothes/Farm/${c}.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+
+    // 4. Beards
+    const beardsList = ["Black", "Blonde", "Brown", "Ginger"];
+    for (const b of beardsList) {
+      this.load.spritesheet(`pack_beard_${b}_idle`, `${charBase}/idle/acc/Beard/${b}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_beard_${b}_walk`, `${charBase}/walk/acc/Beard/${b}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_beard_${b}_run`, `${charBase}/run/acc/Beard/${b}.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+
+    // 5. Accessories
+    const accsList = ["Beret", "Wizard", "Pirate", "Farm", "Santa_hat", "Leprechaun", "Cook", "Chicken", "Cow", "Frog", "Deer"];
+    for (const a of accsList) {
+      this.load.spritesheet(`pack_acc_${a}_idle`, `${charBase}/idle/acc/${a}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_acc_${a}_walk`, `${charBase}/walk/acc/${a}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_acc_${a}_run`, `${charBase}/run/acc/${a}.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+
+    // 6. Eyes
+    const gendersList = ["Male", "Female"];
+    const eyeColorsList = ["Black", "Blue", "Brown", "Green"];
+    for (const g of gendersList) {
+      for (const ec of eyeColorsList) {
+        this.load.spritesheet(`pack_eyes_${g}_${ec}_idle`, `${charBase}/idle/eyes/${g}/${ec}.png`, { frameWidth: 32, frameHeight: 32 });
+      }
+    }
+
+    // 7. New Tilesets
+    this.load.image("tileset_spring", "assets/pack/tilesets/Tileset_Grass_Spring.png");
+    this.load.image("tileset_summer", "assets/pack/tilesets/Tileset_Grass_Summer.png");
+    this.load.image("tileset_fall", "assets/pack/tilesets/Tileset_Grass_Fall.png");
+    this.load.image("tileset_winter", "assets/pack/tilesets/Tileset_Grass_Winter.png");
+    this.load.image("tileset_path", "assets/pack/tilesets/Path_tiles.png");
+    this.load.image("tileset_barn", "assets/pack/tilesets/Barn_tileset.png");
+    this.load.image("tileset_cave", "assets/pack/tilesets/Cave_Water_Ground_animations_tiles.png");
+
+    // 8. Trees
+    const trees = ["Birch_Tree", "Mahogany_Tree", "Maple_Tree", "Pine_Tree"];
+    for (const tree of trees) {
+      this.load.image(`pack_tree_${tree.toLowerCase()}`, `assets/pack/objects/trees/${tree}.png`);
+    }
+
+    // 9. Exterior Props
+    const exteriorProps = [
+      "Bus", "chest", "Cotton_candy_cart", "Halloween_Content", "ice_cream_car",
+      "ice_cream_cart", "Newsstand", "Picnic", "Playground", "Popcorn_", "Scarescrow",
+      "Snowman", "Water_fountain", "Well_"
+    ];
+    for (const prop of exteriorProps) {
+      this.load.image(`pack_ext_${prop.toLowerCase()}`, `assets/pack/objects/exterior/${prop}.png`);
+    }
+
+    // 10. Interior Props
+    const interiorProps = [
+      "Beds", "Blacksmith", "Chairs", "Closet", "Fireplace", "cats_furniture",
+      "Sofa_and_armchair", "Tables_and_desks", "Xmas", "School", "Temple"
+    ];
+    for (const prop of interiorProps) {
+      this.load.image(`pack_int_${prop.toLowerCase()}`, `assets/pack/objects/interior/${prop}.png`);
+    }
   }
 
   private getLayerForTileIndex(tileIndex: number): "terrain" | "decor" {
     const cleanIndex = tileIndex & 0xFFFF;
-    if ((cleanIndex >= 2000 && cleanIndex < 3000) || cleanIndex >= 4000) {
+    if ((cleanIndex >= 2000 && cleanIndex < 3000) || (cleanIndex >= 4000 && cleanIndex < 6000)) {
       return "decor";
     }
     return "terrain";
@@ -267,7 +364,7 @@ export class GameScene extends Phaser.Scene {
     if (type.startsWith("silo")) {
       return 1.0;
     }
-    if (type.startsWith("ahir_") || type.startsWith("decor_grass_") || type.startsWith("decor_gorsel_") || type.startsWith("vfx_") || type.startsWith("mg_") || type.startsWith("rock_") || type.startsWith("house_") || type.startsWith("table_")) {
+    if (type.startsWith("pack_") || type.startsWith("ahir_") || type.startsWith("decor_grass_") || type.startsWith("decor_gorsel_") || type.startsWith("vfx_") || type.startsWith("mg_") || type.startsWith("rock_") || type.startsWith("house_") || type.startsWith("table_")) {
       return 2.0;
     }
     return 0.15;
@@ -295,8 +392,18 @@ export class GameScene extends Phaser.Scene {
     const zemin2Tileset = this.map.addTilesetImage("zemin2", "zemin2", 16, 16, 0, 0, 3000)!;
     const iskeleTileset = this.map.addTilesetImage("iskele", "iskele", 16, 16, 0, 0, 4000)!;
     const dekor2Tileset = this.map.addTilesetImage("dekor2", "dekor2", 16, 16, 0, 0, 5000)!;
+    const springTileset = this.map.addTilesetImage("tileset_spring", "tileset_spring", 16, 16, 0, 0, 6000)!;
+    const summerTileset = this.map.addTilesetImage("tileset_summer", "tileset_summer", 16, 16, 0, 0, 7000)!;
+    const fallTileset   = this.map.addTilesetImage("tileset_fall", "tileset_fall", 16, 16, 0, 0, 8000)!;
+    const winterTileset = this.map.addTilesetImage("tileset_winter", "tileset_winter", 16, 16, 0, 0, 9000)!;
+    const pathTileset   = this.map.addTilesetImage("tileset_path", "tileset_path", 16, 16, 0, 0, 10000)!;
+    const barnTileset   = this.map.addTilesetImage("tileset_barn", "tileset_barn", 16, 16, 0, 0, 11000)!;
+    const caveTileset   = this.map.addTilesetImage("tileset_cave", "tileset_cave", 16, 16, 0, 0, 12000)!;
 
-    const allTilesets = [tileset, fencesTileset, zemin2Tileset, iskeleTileset, dekor2Tileset];
+    const allTilesets = [
+      tileset, fencesTileset, zemin2Tileset, iskeleTileset, dekor2Tileset,
+      springTileset, summerTileset, fallTileset, winterTileset, pathTileset, barnTileset, caveTileset
+    ];
     this.layer = this.map.createBlankLayer("terrain_layer", allTilesets)!;
     this.layer.setScale(2); // Scale 16x16 tiles to 32x32
 
@@ -618,7 +725,113 @@ export class GameScene extends Phaser.Scene {
           });
         });
       });
-    });
+    // ─── Farm RPG Pack Character Anim Generator ──────────────────────────────
+    const directionsList = ["down", "right", "up", "left"];
+    const packDirections = ["down", "down_right", "right", "up_right", "up", "up_left", "left", "down_left"];
+
+    const buildAnims = (keyPrefix: string) => {
+      // 1. Idle (16 frames, 2 frames per direction)
+      const idleKey = `${keyPrefix}_idle`;
+      if (this.textures.exists(idleKey)) {
+        directionsList.forEach((dir) => {
+          const dirIndex = packDirections.indexOf(dir);
+          const start = dirIndex * 2;
+          const end = start + 1;
+          this.anims.create({
+            key: `${idleKey}_${dir}`,
+            frames: this.anims.generateFrameNumbers(idleKey, { start, end }),
+            frameRate: 4,
+            repeat: -1,
+          });
+        });
+      }
+
+      // 2. Walk (24 frames, 3 frames per direction)
+      const walkKey = `${keyPrefix}_walk`;
+      if (this.textures.exists(walkKey)) {
+        directionsList.forEach((dir) => {
+          const dirIndex = packDirections.indexOf(dir);
+          const start = dirIndex * 3;
+          const end = start + 2;
+          this.anims.create({
+            key: `${walkKey}_${dir}`,
+            frames: this.anims.generateFrameNumbers(walkKey, { start, end }),
+            frameRate: 8,
+            repeat: -1,
+          });
+        });
+      }
+
+      // 3. Run (32 frames, 4 frames per direction)
+      const runKey = `${keyPrefix}_run`;
+      if (this.textures.exists(runKey)) {
+        directionsList.forEach((dir) => {
+          const dirIndex = packDirections.indexOf(dir);
+          const start = dirIndex * 4;
+          const end = start + 3;
+          this.anims.create({
+            key: `${runKey}_${dir}`,
+            frames: this.anims.generateFrameNumbers(runKey, { start, end }),
+            frameRate: 10,
+            repeat: -1,
+          });
+        });
+      }
+    };
+
+    // Build skins
+    for (let t = 1; t <= 4; t++) {
+      buildAnims(`pack_skin_${t}`);
+    }
+
+    // Build hairs
+    const styles = ["Standard", "Fawn", "Iridessa", "Josh", "Lyria", "Sebastian", "Silvermist"];
+    const colors = ["Black", "Blonde", "Brown", "Ginger"];
+    for (const s of styles) {
+      for (const c of colors) {
+        buildAnims(`pack_hair_${s}_${c}`);
+      }
+    }
+
+    // Build clothes
+    const cColors = ["Blue", "Green", "Pink", "Purple", "Red"];
+    for (const c of cColors) {
+      buildAnims(`pack_clothes_${c}`);
+    }
+
+    // Build beards
+    const bColors = ["Black", "Blonde", "Brown", "Ginger"];
+    for (const b of bColors) {
+      buildAnims(`pack_beard_${b}`);
+    }
+
+    // Build accessories
+    const accs = ["Beret", "Wizard", "Pirate", "Farm", "Santa_hat", "Leprechaun", "Cook", "Chicken", "Cow", "Frog", "Deer"];
+    for (const a of accs) {
+      buildAnims(`pack_acc_${a}`);
+    }
+
+    // Build eyes (idle only)
+    const genders = ["Male", "Female"];
+    const eyeColors = ["Black", "Blue", "Brown", "Green"];
+    for (const g of genders) {
+      for (const ec of eyeColors) {
+        const eyeKey = `pack_eyes_${g}_${ec}_idle`;
+        if (this.textures.exists(eyeKey)) {
+          directionsList.forEach((dir) => {
+            const dirIndex = packDirections.indexOf(dir);
+            const start = dirIndex * 2;
+            const end = start + 1;
+            this.anims.create({
+              key: `${eyeKey}_${dir}`,
+              frames: this.anims.generateFrameNumbers(eyeKey, { start, end }),
+              frameRate: 4,
+              repeat: -1,
+            });
+          });
+        }
+      }
+    }
   }
 
   // ─── Grid Overlay Drawing ──────────────────────────────────────────────────
@@ -1210,9 +1423,13 @@ export class GameScene extends Phaser.Scene {
             entity.container.setPosition(player.x, player.y);
           }
 
-          const animKey = `${player.skin}_${player.state}_${player.direction}`;
-          if (entity.sprite.anims.currentAnim?.key !== animKey) {
-            entity.sprite.play(animKey, true);
+          if (entity.isLayered) {
+            this.updatePlayerLayers(entity, player);
+          } else {
+            const animKey = `${player.skin}_${player.state}_${player.direction}`;
+            if (entity.sprite.anims.currentAnim?.key !== animKey) {
+              entity.sprite.play(animKey, true);
+            }
           }
         }
 
@@ -1447,14 +1664,10 @@ export class GameScene extends Phaser.Scene {
     // ── Shadow ───────────────────────────────────────────────────────────────
     const shadow = this.add.graphics();
     shadow.fillStyle(0x000000, 0.25);
-    shadow.fillEllipse(0, 16, 18, 7);
-
-    // ── Character Sprite ─────────────────────────────────────────────────────
-    const sprite = this.add.sprite(0, -6, player.skin);
-    sprite.play(`${player.skin}_idle_${player.direction}`);
+    shadow.fillEllipse(0, 14, 18, 7);
 
     // ── Name tag ──────────────────────────────────────────────────────────────
-    const label = isLocal ? "▶ YOU" : sessionId.slice(0, 5);
+    const label = isLocal ? "▶ YOU" : (player.username || sessionId.slice(0, 5));
     const tag = this.add
       .text(0, -28, label, {
         fontFamily: "'Press Start 2P', monospace",
@@ -1466,8 +1679,45 @@ export class GameScene extends Phaser.Scene {
       })
       .setOrigin(0.5, 1);
 
-    container.add([shadow, sprite, tag]);
-    this.entities.set(sessionId, { container, sprite });
+    let sprite: Phaser.GameObjects.Sprite;
+    let isLayered = false;
+    let layersObj: any = undefined;
+
+    if (player.skin === "pack_char") {
+      isLayered = true;
+      // Stacking order: shadow -> skin -> eyes -> beard -> clothes -> hair -> acc -> tag
+      const skinTone = player.skinTone || "1";
+      const skinSpr = this.add.sprite(0, -6, `pack_skin_${skinTone}_idle`);
+      const eyesSpr = this.add.sprite(0, -6, `pack_eyes_${(player.gender || "male") === "male" ? "Male" : "Female"}_${player.eyeColor || "Black"}_idle`);
+      const beardSpr = this.add.sprite(0, -6, `pack_beard_${player.beardColor || "Black"}_idle`).setVisible(false);
+      const clothesSpr = this.add.sprite(0, -6, `pack_clothes_${player.clothesColor || "Blue"}_idle`).setVisible(false);
+      const hairSpr = this.add.sprite(0, -6, `pack_hair_${player.hairStyle || "Standard"}_${player.hairColor || "Black"}_idle`).setVisible(false);
+      const accSpr = this.add.sprite(0, -6, `pack_acc_${player.accItem || "Beret"}_idle`).setVisible(false);
+
+      sprite = skinSpr;
+
+      container.add([shadow, skinSpr, eyesSpr, beardSpr, clothesSpr, hairSpr, accSpr, tag]);
+
+      layersObj = {
+        skin: skinSpr,
+        eyes: eyesSpr,
+        beard: beardSpr,
+        clothes: clothesSpr,
+        hair: hairSpr,
+        acc: accSpr,
+      };
+    } else {
+      sprite = this.add.sprite(0, -6, player.skin);
+      sprite.play(`${player.skin}_idle_${player.direction}`);
+      container.add([shadow, sprite, tag]);
+    }
+
+    const entity: PlayerEntity = { container, sprite, isLayered, layers: layersObj };
+    this.entities.set(sessionId, entity);
+
+    if (isLayered) {
+      this.updatePlayerLayers(entity, player);
+    }
 
     if (!isLocal) {
       container.setSize(32, 48);
@@ -1480,6 +1730,120 @@ export class GameScene extends Phaser.Scene {
       this.cameras.main.startFollow(container, true, 1, 1);
     }
     this.updatePlayerVisibilities();
+  }
+
+  private updatePlayerLayers(entity: PlayerEntity, player: any): void {
+    if (!entity.isLayered || !entity.layers) return;
+
+    const layers = entity.layers;
+    const isMoving = player.state === "walk";
+    const animType = isMoving ? "walk" : "idle";
+    const dir = player.direction || "down";
+
+    // 1. Skin Layer
+    const skinTone = player.skinTone || "1";
+    const skinKey = `pack_skin_${skinTone}_${animType}`;
+    if (layers.skin.texture.key !== skinKey) {
+      layers.skin.setTexture(skinKey);
+    }
+    const skinAnim = `${skinKey}_${dir}`;
+    if (layers.skin.anims.currentAnim?.key !== skinAnim) {
+      layers.skin.play(skinAnim, true);
+    }
+
+    // 2. Eyes Layer (Idle only)
+    if (layers.eyes) {
+      if (animType === "idle") {
+        layers.eyes.setVisible(true);
+        const g = (player.gender || "male") === "male" ? "Male" : "Female";
+        const ec = player.eyeColor || "Black";
+        const eyesKey = `pack_eyes_${g}_${ec}_idle`;
+        if (this.textures.exists(eyesKey)) {
+          if (layers.eyes.texture.key !== eyesKey) {
+            layers.eyes.setTexture(eyesKey);
+          }
+          const eyesAnim = `${eyesKey}_${dir}`;
+          if (layers.eyes.anims.currentAnim?.key !== eyesAnim) {
+            layers.eyes.play(eyesAnim, true);
+          }
+        }
+      } else {
+        layers.eyes.setVisible(false);
+      }
+    }
+
+    // 3. Hair Layer
+    if (layers.hair) {
+      const hStyle = player.hairStyle || "Standard";
+      const hColor = player.hairColor || "Black";
+      const hairKey = `pack_hair_${hStyle}_${hColor}_${animType}`;
+      if (this.textures.exists(hairKey)) {
+        layers.hair.setVisible(true);
+        if (layers.hair.texture.key !== hairKey) {
+          layers.hair.setTexture(hairKey);
+        }
+        const hairAnim = `${hairKey}_${dir}`;
+        if (layers.hair.anims.currentAnim?.key !== hairAnim) {
+          layers.hair.play(hairAnim, true);
+        }
+      } else {
+        layers.hair.setVisible(false);
+      }
+    }
+
+    // 4. Clothes Layer
+    if (layers.clothes) {
+      const cColor = player.clothesColor || "";
+      const clothesKey = cColor ? `pack_clothes_${cColor}_${animType}` : "";
+      if (cColor && this.textures.exists(clothesKey)) {
+        layers.clothes.setVisible(true);
+        if (layers.clothes.texture.key !== clothesKey) {
+          layers.clothes.setTexture(clothesKey);
+        }
+        const clothesAnim = `${clothesKey}_${dir}`;
+        if (layers.clothes.anims.currentAnim?.key !== clothesAnim) {
+          layers.clothes.play(clothesAnim, true);
+        }
+      } else {
+        layers.clothes.setVisible(false);
+      }
+    }
+
+    // 5. Beard Layer
+    if (layers.beard) {
+      const bColor = player.beardColor || "";
+      const beardKey = bColor ? `pack_beard_${bColor}_${animType}` : "";
+      if (bColor && this.textures.exists(beardKey)) {
+        layers.beard.setVisible(true);
+        if (layers.beard.texture.key !== beardKey) {
+          layers.beard.setTexture(beardKey);
+        }
+        const beardAnim = `${beardKey}_${dir}`;
+        if (layers.beard.anims.currentAnim?.key !== beardAnim) {
+          layers.beard.play(beardAnim, true);
+        }
+      } else {
+        layers.beard.setVisible(false);
+      }
+    }
+
+    // 6. Accessories Layer
+    if (layers.acc) {
+      const accItem = player.accItem || "";
+      const accKey = accItem ? `pack_acc_${accItem}_${animType}` : "";
+      if (accItem && this.textures.exists(accKey)) {
+        layers.acc.setVisible(true);
+        if (layers.acc.texture.key !== accKey) {
+          layers.acc.setTexture(accKey);
+        }
+        const accAnim = `${accKey}_${dir}`;
+        if (layers.acc.anims.currentAnim?.key !== accAnim) {
+          layers.acc.play(accAnim, true);
+        }
+      } else {
+        layers.acc.setVisible(false);
+      }
+    }
   }
 
   private updatePlayerVisibilities(): void {
