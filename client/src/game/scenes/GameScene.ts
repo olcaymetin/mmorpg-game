@@ -317,29 +317,66 @@ export class GameScene extends Phaser.Scene {
     this.load.image("tileset_barn", "assets/pack/tilesets/Barn_tileset.png");
     this.load.image("tileset_cave", "assets/pack/tilesets/Cave_Water_Ground_animations_tiles.png");
 
-    // 8. Trees
-    const trees = ["Birch_Tree", "Mahogany_Tree", "Maple_Tree", "Pine_Tree"];
-    for (const tree of trees) {
-      this.load.image(`pack_tree_${tree.toLowerCase()}`, `assets/pack/objects/trees/${tree}.png`);
+    // 8. Sliced Trees & Flora
+    const treeSheets = [
+      { key: "pack_tree_birch_tree", path: "assets/pack/objects/trees/Birch_Tree.png", fw: 64, fh: 96 },
+      { key: "pack_tree_mahogany_tree", path: "assets/pack/objects/trees/Mahogany_Tree.png", fw: 64, fh: 96 },
+      { key: "pack_tree_maple_tree", path: "assets/pack/objects/trees/Maple_Tree.png", fw: 56, fh: 96 },
+      { key: "pack_tree_pine_tree", path: "assets/pack/objects/trees/Pine_Tree.png", fw: 64, fh: 96 },
+      { key: "pack_tree_big_old_tree", path: "assets/pack/objects/trees/Big_old_Tree.png", fw: 128, fh: 160 },
+      { key: "pack_tree_bushes", path: "assets/pack/objects/trees/bushes.png", fw: 48, fh: 48 },
+      { key: "pack_tree_fantasy_mushroom", path: "assets/pack/objects/trees/Fantasy_Mushroom.png", fw: 32, fh: 48 },
+      { key: "pack_tree_root", path: "assets/pack/objects/trees/Root.png", fw: 32, fh: 48 },
+      { key: "pack_tree_root_water_1", path: "assets/pack/objects/trees/Root_Water_1.png", fw: 32, fh: 48 },
+      { key: "pack_tree_root_water_2", path: "assets/pack/objects/trees/Root_Water_2.png", fw: 32, fh: 48 },
+      { key: "pack_tree_root_water_3", path: "assets/pack/objects/trees/Root_Water_3.png", fw: 32, fh: 48 },
+      { key: "pack_tree_tree", path: "assets/pack/objects/trees/Tree.png", fw: 32, fh: 48 },
+      { key: "pack_tree_tree_water_1", path: "assets/pack/objects/trees/Tree_Water_1.png", fw: 32, fh: 48 },
+      { key: "pack_tree_tree_water_2", path: "assets/pack/objects/trees/Tree_Water_2.png", fw: 32, fh: 48 },
+      { key: "pack_tree_tree_water_3", path: "assets/pack/objects/trees/Tree_Water_3.png", fw: 32, fh: 48 }
+    ];
+    for (const s of treeSheets) {
+      this.load.spritesheet(s.key, s.path, { frameWidth: s.fw, frameHeight: s.fh });
     }
 
-    // 9. Exterior Props
-    const exteriorProps = [
-      "Bus", "chest", "Cotton_candy_cart", "Halloween_Content", "ice_cream_car",
-      "ice_cream_cart", "Newsstand", "Picnic", "Playground", "Popcorn_", "Scarescrow",
-      "Snowman", "Water_fountain", "Well_"
+    // 9. Exterior Props (as Spritesheets)
+    const exteriorSheets = [
+      { key: "pack_ext_bus", path: "assets/pack/objects/exterior/Bus.png", fw: 128, fh: 128 },
+      { key: "pack_ext_chest", path: "assets/pack/objects/exterior/chest.png", fw: 32, fh: 32 },
+      { key: "pack_ext_cotton_candy_cart", path: "assets/pack/objects/exterior/Cotton_candy_cart.png", fw: 64, fh: 48 },
+      { key: "pack_ext_halloween_content", path: "assets/pack/objects/exterior/Halloween_Content.png", fw: 48, fh: 48 },
+      { key: "pack_ext_ice_cream_car", path: "assets/pack/objects/exterior/ice_cream_car.png", fw: 96, fh: 64 },
+      { key: "pack_ext_ice_cream_cart", path: "assets/pack/objects/exterior/ice_cream_cart.png", fw: 64, fh: 48 },
+      { key: "pack_ext_newsstand", path: "assets/pack/objects/exterior/Newsstand.png", fw: 32, fh: 48 },
+      { key: "pack_ext_picnic", path: "assets/pack/objects/exterior/Picnic.png", fw: 96, fh: 48 },
+      { key: "pack_ext_playground", path: "assets/pack/objects/exterior/Playground.png", fw: 96, fh: 96 },
+      { key: "pack_ext_playground_1", path: "assets/pack/objects/exterior/playground_1.png", fw: 256, fh: 144 },
+      { key: "pack_ext_popcorn_", path: "assets/pack/objects/exterior/Popcorn_.png", fw: 48, fh: 48 },
+      { key: "pack_ext_scarescrow", path: "assets/pack/objects/exterior/Scarescrow.png", fw: 32, fh: 32 },
+      { key: "pack_ext_snowman", path: "assets/pack/objects/exterior/Snowman.png", fw: 32, fh: 32 },
+      { key: "pack_ext_water_fountain", path: "assets/pack/objects/exterior/Water_fountain.png", fw: 64, fh: 64 },
+      { key: "pack_ext_well_", path: "assets/pack/objects/exterior/Well_.png", fw: 64, fh: 96 }
     ];
-    for (const prop of exteriorProps) {
-      this.load.image(`pack_ext_${prop.toLowerCase()}`, `assets/pack/objects/exterior/${prop}.png`);
+    for (const s of exteriorSheets) {
+      this.load.spritesheet(s.key, s.path, { frameWidth: s.fw, frameHeight: s.fh });
     }
 
-    // 10. Interior Props
-    const interiorProps = [
-      "Beds", "Blacksmith", "Chairs", "Closet", "Fireplace", "cats_furniture",
-      "Sofa_and_armchair", "Tables_and_desks", "Xmas", "School", "Temple"
+    // 10. Interior Props (as Spritesheets)
+    const interiorSheets = [
+      { key: "pack_int_beds", path: "assets/pack/objects/interior/Beds.png", fw: 32, fh: 64 },
+      { key: "pack_int_blacksmith", path: "assets/pack/objects/interior/Blacksmith.png", fw: 64, fh: 48 },
+      { key: "pack_int_chairs", path: "assets/pack/objects/interior/Chairs.png", fw: 16, fh: 32 },
+      { key: "pack_int_closet", path: "assets/pack/objects/interior/Closet.png", fw: 32, fh: 48 },
+      { key: "pack_int_fireplace", path: "assets/pack/objects/interior/Fireplace.png", fw: 32, fh: 64 },
+      { key: "pack_int_cats_furniture", path: "assets/pack/objects/interior/cats_furniture.png", fw: 32, fh: 32 },
+      { key: "pack_int_sofa_and_armchair", path: "assets/pack/objects/interior/Sofa_and_armchair.png", fw: 32, fh: 32 },
+      { key: "pack_int_tables_and_desks", path: "assets/pack/objects/interior/Tables_and_desks.png", fw: 32, fh: 32 },
+      { key: "pack_int_xmas", path: "assets/pack/objects/interior/Xmas.png", fw: 32, fh: 48 },
+      { key: "pack_int_school", path: "assets/pack/objects/interior/School.png", fw: 32, fh: 32 },
+      { key: "pack_int_temple", path: "assets/pack/objects/interior/Temple.png", fw: 32, fh: 32 }
     ];
-    for (const prop of interiorProps) {
-      this.load.image(`pack_int_${prop.toLowerCase()}`, `assets/pack/objects/interior/${prop}.png`);
+    for (const s of interiorSheets) {
+      this.load.spritesheet(s.key, s.path, { frameWidth: s.fw, frameHeight: s.fh });
     }
   }
 
@@ -1328,6 +1365,11 @@ export class GameScene extends Phaser.Scene {
       img = this.add.image(x, y, "farm_tile_sheet", 1);
     } else if (type === "farm_tile_watered") {
       img = this.add.image(x, y, "farm_tile_sheet", 2);
+    } else if (type.includes(":")) {
+      const parts = type.split(":");
+      const sheetKey = parts[0];
+      const frameIdx = parseInt(parts[1], 10) || 0;
+      img = this.add.sprite(x, y, sheetKey, frameIdx);
     } else {
       img = isAnimated ? this.add.sprite(x, y, type) : this.add.image(x, y, type);
     }

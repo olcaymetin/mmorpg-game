@@ -149,41 +149,369 @@ const TILESETS_CONFIG: Record<string, { startGid: number; cols: number; rows: nu
 };
 
 const PACK_TREES = [
-  { key: "pack_tree_birch_tree", label: "Huş Ağacı", path: "/assets/pack/objects/trees/Birch_Tree.png" },
-  { key: "pack_tree_mahogany_tree", label: "Maun Ağacı", path: "/assets/pack/objects/trees/Mahogany_Tree.png" },
-  { key: "pack_tree_maple_tree", label: "Akçaağaç", path: "/assets/pack/objects/trees/Maple_Tree.png" },
-  { key: "pack_tree_pine_tree", label: "Çam Ağacı", path: "/assets/pack/objects/trees/Pine_Tree.png" },
+  // Birch Tree (64x96)
+  { key: "pack_tree_birch_tree:0", sheetKey: "pack_tree_birch_tree", path: "/assets/pack/objects/trees/Birch_Tree.png", label: "Huş (Bahar)", fw: 64, fh: 96, col: 0, row: 0, sheetW: 256, sheetH: 96, scale: 2.0 },
+  { key: "pack_tree_birch_tree:1", sheetKey: "pack_tree_birch_tree", path: "/assets/pack/objects/trees/Birch_Tree.png", label: "Huş (Sonbahar)", fw: 64, fh: 96, col: 1, row: 0, sheetW: 256, sheetH: 96, scale: 2.0 },
+  { key: "pack_tree_birch_tree:2", sheetKey: "pack_tree_birch_tree", path: "/assets/pack/objects/trees/Birch_Tree.png", label: "Huş (Kış)", fw: 64, fh: 96, col: 2, row: 0, sheetW: 256, sheetH: 96, scale: 2.0 },
+  { key: "pack_tree_birch_tree:3", sheetKey: "pack_tree_birch_tree", path: "/assets/pack/objects/trees/Birch_Tree.png", label: "Huş (Ölü)", fw: 64, fh: 96, col: 3, row: 0, sheetW: 256, sheetH: 96, scale: 2.0 },
+  
+  // Mahogany Tree (64x96)
+  { key: "pack_tree_mahogany_tree:0", sheetKey: "pack_tree_mahogany_tree", path: "/assets/pack/objects/trees/Mahogany_Tree.png", label: "Maun (İlkbahar)", fw: 64, fh: 96, col: 0, row: 0, sheetW: 384, sheetH: 96, scale: 2.0 },
+  { key: "pack_tree_mahogany_tree:1", sheetKey: "pack_tree_mahogany_tree", path: "/assets/pack/objects/trees/Mahogany_Tree.png", label: "Maun (Yaz)", fw: 64, fh: 96, col: 1, row: 0, sheetW: 384, sheetH: 96, scale: 2.0 },
+  { key: "pack_tree_mahogany_tree:2", sheetKey: "pack_tree_mahogany_tree", path: "/assets/pack/objects/trees/Mahogany_Tree.png", label: "Maun (Sonbahar)", fw: 64, fh: 96, col: 2, row: 0, sheetW: 384, sheetH: 96, scale: 2.0 },
+  { key: "pack_tree_mahogany_tree:3", sheetKey: "pack_tree_mahogany_tree", path: "/assets/pack/objects/trees/Mahogany_Tree.png", label: "Maun (Kış)", fw: 64, fh: 96, col: 3, row: 0, sheetW: 384, sheetH: 96, scale: 2.0 },
+  { key: "pack_tree_mahogany_tree:4", sheetKey: "pack_tree_mahogany_tree", path: "/assets/pack/objects/trees/Mahogany_Tree.png", label: "Maun (Ölü)", fw: 64, fh: 96, col: 4, row: 0, sheetW: 384, sheetH: 96, scale: 2.0 },
+  { key: "pack_tree_mahogany_tree:5", sheetKey: "pack_tree_mahogany_tree", path: "/assets/pack/objects/trees/Mahogany_Tree.png", label: "Maun (Kütük)", fw: 64, fh: 96, col: 5, row: 0, sheetW: 384, sheetH: 96, scale: 2.0 },
+
+  // Pine Tree (64x96)
+  { key: "pack_tree_pine_tree:0", sheetKey: "pack_tree_pine_tree", path: "/assets/pack/objects/trees/Pine_Tree.png", label: "Çam (Yeşil)", fw: 64, fh: 96, col: 0, row: 0, sheetW: 256, sheetH: 96, scale: 2.0 },
+  { key: "pack_tree_pine_tree:1", sheetKey: "pack_tree_pine_tree", path: "/assets/pack/objects/trees/Pine_Tree.png", label: "Çam (Mavi)", fw: 64, fh: 96, col: 1, row: 0, sheetW: 256, sheetH: 96, scale: 2.0 },
+  { key: "pack_tree_pine_tree:2", sheetKey: "pack_tree_pine_tree", path: "/assets/pack/objects/trees/Pine_Tree.png", label: "Çam (Karlı)", fw: 64, fh: 96, col: 2, row: 0, sheetW: 256, sheetH: 96, scale: 2.0 },
+  { key: "pack_tree_pine_tree:3", sheetKey: "pack_tree_pine_tree", path: "/assets/pack/objects/trees/Pine_Tree.png", label: "Çam (Kuru)", fw: 64, fh: 96, col: 3, row: 0, sheetW: 256, sheetH: 96, scale: 2.0 },
+
+  // Maple Tree (56x96)
+  { key: "pack_tree_maple_tree:0", sheetKey: "pack_tree_maple_tree", path: "/assets/pack/objects/trees/Maple_Tree.png", label: "Akçaağaç (Bahar)", fw: 56, fh: 96, col: 0, row: 0, sheetW: 224, sheetH: 192, scale: 2.0 },
+  { key: "pack_tree_maple_tree:1", sheetKey: "pack_tree_maple_tree", path: "/assets/pack/objects/trees/Maple_Tree.png", label: "Akçaağaç (Yaz)", fw: 56, fh: 96, col: 1, row: 0, sheetW: 224, sheetH: 192, scale: 2.0 },
+  { key: "pack_tree_maple_tree:2", sheetKey: "pack_tree_maple_tree", path: "/assets/pack/objects/trees/Maple_Tree.png", label: "Akçaağaç (Sonbahar)", fw: 56, fh: 96, col: 2, row: 0, sheetW: 224, sheetH: 192, scale: 2.0 },
+  { key: "pack_tree_maple_tree:3", sheetKey: "pack_tree_maple_tree", path: "/assets/pack/objects/trees/Maple_Tree.png", label: "Akçaağaç (Kızıl)", fw: 56, fh: 96, col: 3, row: 0, sheetW: 224, sheetH: 192, scale: 2.0 },
+  { key: "pack_tree_maple_tree:4", sheetKey: "pack_tree_maple_tree", path: "/assets/pack/objects/trees/Maple_Tree.png", label: "Akçaağaç (Kış)", fw: 56, fh: 96, col: 0, row: 1, sheetW: 224, sheetH: 192, scale: 2.0 },
+  { key: "pack_tree_maple_tree:5", sheetKey: "pack_tree_maple_tree", path: "/assets/pack/objects/trees/Maple_Tree.png", label: "Akçaağaç (Kuru)", fw: 56, fh: 96, col: 1, row: 1, sheetW: 224, sheetH: 192, scale: 2.0 },
+  { key: "pack_tree_maple_tree:6", sheetKey: "pack_tree_maple_tree", path: "/assets/pack/objects/trees/Maple_Tree.png", label: "Akçaağaç (Kütük 1)", fw: 56, fh: 96, col: 2, row: 1, sheetW: 224, sheetH: 192, scale: 2.0 },
+  { key: "pack_tree_maple_tree:7", sheetKey: "pack_tree_maple_tree", path: "/assets/pack/objects/trees/Maple_Tree.png", label: "Akçaağaç (Kütük 2)", fw: 56, fh: 96, col: 3, row: 1, sheetW: 224, sheetH: 192, scale: 2.0 },
+
+  // Big Old Tree (128x160)
+  { key: "pack_tree_big_old_tree:0", sheetKey: "pack_tree_big_old_tree", path: "/assets/pack/objects/trees/Big_old_Tree.png", label: "Kocaman Yaşlı Ağaç", fw: 128, fh: 160, col: 0, row: 0, sheetW: 128, sheetH: 160, scale: 1.0 },
+
+  // Sliced bushes (48x48, 144x288, 3x6 = 18 frames)
+  ...Array.from({ length: 18 }, (_, i) => ({
+    key: `pack_tree_bushes:${i}`,
+    sheetKey: "pack_tree_bushes",
+    path: "/assets/pack/objects/trees/bushes.png",
+    label: `Çalı #${i + 1}`,
+    fw: 48,
+    fh: 48,
+    col: i % 3,
+    row: Math.floor(i / 3),
+    sheetW: 144,
+    sheetH: 288,
+    scale: 1.5,
+  })),
+
+  // Sliced mushrooms (32x48, 96x288, 3x6 = 18 frames)
+  ...Array.from({ length: 18 }, (_, i) => ({
+    key: `pack_tree_fantasy_mushroom:${i}`,
+    sheetKey: "pack_tree_fantasy_mushroom",
+    path: "/assets/pack/objects/trees/Fantasy_Mushroom.png",
+    label: `Mantar #${i + 1}`,
+    fw: 32,
+    fh: 48,
+    col: i % 3,
+    row: Math.floor(i / 3),
+    sheetW: 96,
+    sheetH: 288,
+    scale: 1.5,
+  })),
+
+  // Sliced roots (32x48, 96x240, 3x5 = 15 frames)
+  ...Array.from({ length: 15 }, (_, i) => ({
+    key: `pack_tree_root:${i}`,
+    sheetKey: "pack_tree_root",
+    path: "/assets/pack/objects/trees/Root.png",
+    label: `Kök #${i + 1}`,
+    fw: 32,
+    fh: 48,
+    col: i % 3,
+    row: Math.floor(i / 3),
+    sheetW: 96,
+    sheetH: 240,
+    scale: 1.5,
+  })),
 ];
 
 const PACK_EXTERIOR_PROPS = [
-  { key: "pack_ext_bus", label: "Otobüs", path: "/assets/pack/objects/exterior/Bus.png" },
-  { key: "pack_ext_chest", label: "Sandık", path: "/assets/pack/objects/exterior/chest.png" },
-  { key: "pack_ext_cotton_candy_cart", label: "Pamuk Şeker", path: "/assets/pack/objects/exterior/Cotton_candy_cart.png" },
-  { key: "pack_ext_halloween_content", label: "Cadılar", path: "/assets/pack/objects/exterior/Halloween_Content.png" },
-  { key: "pack_ext_ice_cream_car", label: "Dondurma Ar.", path: "/assets/pack/objects/exterior/ice_cream_car.png" },
-  { key: "pack_ext_ice_cream_cart", label: "Dondurma Tez.", path: "/assets/pack/objects/exterior/ice_cream_cart.png" },
-  { key: "pack_ext_newsstand", label: "Gazete Bayii", path: "/assets/pack/objects/exterior/Newsstand.png" },
-  { key: "pack_ext_picnic", label: "Piknik Alanı", path: "/assets/pack/objects/exterior/Picnic.png" },
-  { key: "pack_ext_playground", label: "Oyun Parkı", path: "/assets/pack/objects/exterior/Playground.png" },
-  { key: "pack_ext_popcorn_", label: "Mısır Arabası", path: "/assets/pack/objects/exterior/Popcorn_.png" },
-  { key: "pack_ext_scarescrow", label: "Korkuluk", path: "/assets/pack/objects/exterior/Scarescrow.png" },
-  { key: "pack_ext_snowman", label: "Kardan Adam", path: "/assets/pack/objects/exterior/Snowman.png" },
-  { key: "pack_ext_water_fountain", label: "Fıskiye", path: "/assets/pack/objects/exterior/Water_fountain.png" },
-  { key: "pack_ext_well_", label: "Su Kuyusu", path: "/assets/pack/objects/exterior/Well_.png" },
+  // Bus (128x128, 896x128, 7 frames)
+  ...Array.from({ length: 7 }, (_, i) => ({
+    key: `pack_ext_bus:${i}`,
+    sheetKey: "pack_ext_bus",
+    path: "/assets/pack/objects/exterior/Bus.png",
+    label: `Otobüs #${i + 1}`,
+    fw: 128,
+    fh: 128,
+    col: i,
+    row: 0,
+    sheetW: 896,
+    sheetH: 128,
+    scale: 1.0,
+  })),
+  // Chest (32x32, 256x32, 8 frames)
+  ...Array.from({ length: 8 }, (_, i) => ({
+    key: `pack_ext_chest:${i}`,
+    sheetKey: "pack_ext_chest",
+    path: "/assets/pack/objects/exterior/chest.png",
+    label: `Sandık #${i + 1}`,
+    fw: 32,
+    fh: 32,
+    col: i,
+    row: 0,
+    sheetW: 256,
+    sheetH: 32,
+    scale: 1.5,
+  })),
+  // Scarecrow (32x32, 256x32, 8 frames)
+  ...Array.from({ length: 8 }, (_, i) => ({
+    key: `pack_ext_scarescrow:${i}`,
+    sheetKey: "pack_ext_scarescrow",
+    path: "/assets/pack/objects/exterior/Scarescrow.png",
+    label: `Korkuluk #${i + 1}`,
+    fw: 32,
+    fh: 32,
+    col: i,
+    row: 0,
+    sheetW: 256,
+    sheetH: 32,
+    scale: 1.5,
+  })),
+  // Snowman (32x32, 96x32, 3 frames)
+  ...Array.from({ length: 3 }, (_, i) => ({
+    key: `pack_ext_snowman:${i}`,
+    sheetKey: "pack_ext_snowman",
+    path: "/assets/pack/objects/exterior/Snowman.png",
+    label: `Kardan Adam #${i + 1}`,
+    fw: 32,
+    fh: 32,
+    col: i,
+    row: 0,
+    sheetW: 96,
+    sheetH: 32,
+    scale: 1.5,
+  })),
+  // Water fountain (64x64, 192x128, 6 frames)
+  ...Array.from({ length: 6 }, (_, i) => ({
+    key: `pack_ext_water_fountain:${i}`,
+    sheetKey: "pack_ext_water_fountain",
+    path: "/assets/pack/objects/exterior/Water_fountain.png",
+    label: `Fıskiye #${i + 1}`,
+    fw: 64,
+    fh: 64,
+    col: i % 3,
+    row: Math.floor(i / 3),
+    sheetW: 192,
+    sheetH: 128,
+    scale: 1.5,
+  })),
+  // Well (64x96, 128x192, 4 frames)
+  ...Array.from({ length: 4 }, (_, i) => ({
+    key: `pack_ext_well_:${i}`,
+    sheetKey: "pack_ext_well_",
+    path: "/assets/pack/objects/exterior/Well_.png",
+    label: `Kuyu #${i + 1}`,
+    fw: 64,
+    fh: 96,
+    col: i % 2,
+    row: Math.floor(i / 2),
+    sheetW: 128,
+    sheetH: 192,
+    scale: 1.5,
+  })),
+  // Cotton Candy Cart (64x48)
+  { key: "pack_ext_cotton_candy_cart:0", sheetKey: "pack_ext_cotton_candy_cart", path: "/assets/pack/objects/exterior/Cotton_candy_cart.png", label: "Pamuk Şeker", fw: 64, fh: 48, col: 0, row: 0, sheetW: 64, sheetH: 48, scale: 1.5 },
+  // Ice cream car (96x64)
+  { key: "pack_ext_ice_cream_car:0", sheetKey: "pack_ext_ice_cream_car", path: "/assets/pack/objects/exterior/ice_cream_car.png", label: "Dondurma Ar.", fw: 96, fh: 64, col: 0, row: 0, sheetW: 96, sheetH: 64, scale: 1.5 },
+  // Ice cream cart (64x48)
+  { key: "pack_ext_ice_cream_cart:0", sheetKey: "pack_ext_ice_cream_cart", path: "/assets/pack/objects/exterior/ice_cream_cart.png", label: "Dondurma Tez.", fw: 64, fh: 48, col: 0, row: 0, sheetW: 64, sheetH: 48, scale: 1.5 },
+  // Newsstand (32x48)
+  { key: "pack_ext_newsstand:0", sheetKey: "pack_ext_newsstand", path: "/assets/pack/objects/exterior/Newsstand.png", label: "Gazete Bayii", fw: 32, fh: 48, col: 0, row: 0, sheetW: 32, sheetH: 48, scale: 1.5 },
+  // Picnic (96x48, 384x144, 12 frames)
+  ...Array.from({ length: 12 }, (_, i) => ({
+    key: `pack_ext_picnic:${i}`,
+    sheetKey: "pack_ext_picnic",
+    path: "/assets/pack/objects/exterior/Picnic.png",
+    label: `Piknik #${i + 1}`,
+    fw: 96,
+    fh: 48,
+    col: i % 4,
+    row: Math.floor(i / 4),
+    sheetW: 384,
+    sheetH: 144,
+    scale: 1.5,
+  })),
+  // Playground (96x96, 288x192, 6 frames)
+  ...Array.from({ length: 6 }, (_, i) => ({
+    key: `pack_ext_playground:${i}`,
+    sheetKey: "pack_ext_playground",
+    path: "/assets/pack/objects/exterior/Playground.png",
+    label: `Oyun Parkı #${i + 1}`,
+    fw: 96,
+    fh: 96,
+    col: i % 3,
+    row: Math.floor(i / 3),
+    sheetW: 288,
+    sheetH: 192,
+    scale: 1.5,
+  })),
 ];
 
-const PACK_INTERIOR_PROPS = [
-  { key: "pack_int_beds", label: "Yatak", path: "/assets/pack/objects/interior/Beds.png" },
-  { key: "pack_int_blacksmith", label: "Demirhane", path: "/assets/pack/objects/interior/Blacksmith.png" },
-  { key: "pack_int_chairs", label: "Sandalyeler", path: "/assets/pack/objects/interior/Chairs.png" },
-  { key: "pack_int_closet", label: "Dolap", path: "/assets/pack/objects/interior/Closet.png" },
-  { key: "pack_int_fireplace", label: "Şömine", path: "/assets/pack/objects/interior/Fireplace.png" },
-  { key: "pack_int_cats_furniture", label: "Kedi Eşyası", path: "/assets/pack/objects/interior/cats_furniture.png" },
-  { key: "pack_int_sofa_and_armchair", label: "Koltuklar", path: "/assets/pack/objects/interior/Sofa_and_armchair.png" },
-  { key: "pack_int_tables_and_desks", label: "Masalar", path: "/assets/pack/objects/interior/Tables_and_desks.png" },
-  { key: "pack_int_xmas", label: "Yılbaşı Ağacı", path: "/assets/pack/objects/interior/Xmas.png" },
-  { key: "pack_int_school", label: "Okul Eşyaları", path: "/assets/pack/objects/interior/School.png" },
-  { key: "pack_int_temple", label: "Tapınak Eşyaları", path: "/assets/pack/objects/interior/Temple.png" },
+// Sliced interior beds (32x64, 384x512, 96 beds)
+const PACK_BEDS = Array.from({ length: 96 }, (_, i) => ({
+  key: `pack_int_beds:${i}`,
+  sheetKey: "pack_int_beds",
+  path: "/assets/pack/objects/interior/Beds.png",
+  label: `Yatak #${i + 1}`,
+  fw: 32,
+  fh: 64,
+  col: i % 12,
+  row: Math.floor(i / 12),
+  sheetW: 384,
+  sheetH: 512,
+  scale: 1.0,
+}));
+
+// Sliced interior chairs (16x32, 304x224, 133 chairs)
+const PACK_CHAIRS = Array.from({ length: 133 }, (_, i) => ({
+  key: `pack_int_chairs:${i}`,
+  sheetKey: "pack_int_chairs",
+  path: "/assets/pack/objects/interior/Chairs.png",
+  label: `Sandalye #${i + 1}`,
+  fw: 16,
+  fh: 32,
+  col: i % 19,
+  row: Math.floor(i / 19),
+  sheetW: 304,
+  sheetH: 224,
+  scale: 1.5,
+}));
+
+// Sliced interior closets (32x48, 672x576, 252 closets)
+const PACK_CLOSETS = Array.from({ length: 252 }, (_, i) => ({
+  key: `pack_int_closet:${i}`,
+  sheetKey: "pack_int_closet",
+  path: "/assets/pack/objects/interior/Closet.png",
+  label: `Dolap #${i + 1}`,
+  fw: 32,
+  fh: 48,
+  col: i % 21,
+  row: Math.floor(i / 21),
+  sheetW: 672,
+  sheetH: 576,
+  scale: 1.0,
+}));
+
+// Sliced interior tables (32x32, 512x384, 192 tables) & Sofas (32x32, 320x192, 60 sofas)
+const PACK_TABLES_SOFAS = [
+  ...Array.from({ length: 192 }, (_, i) => ({
+    key: `pack_int_tables_and_desks:${i}`,
+    sheetKey: "pack_int_tables_and_desks",
+    path: "/assets/pack/objects/interior/Tables_and_desks.png",
+    label: `Masa #${i + 1}`,
+    fw: 32,
+    fh: 32,
+    col: i % 16,
+    row: Math.floor(i / 16),
+    sheetW: 512,
+    sheetH: 384,
+    scale: 1.0,
+  })),
+  ...Array.from({ length: 60 }, (_, i) => ({
+    key: `pack_int_sofa_and_armchair:${i}`,
+    sheetKey: "pack_int_sofa_and_armchair",
+    path: "/assets/pack/objects/interior/Sofa_and_armchair.png",
+    label: `Koltuk #${i + 1}`,
+    fw: 32,
+    fh: 32,
+    col: i % 10,
+    row: Math.floor(i / 10),
+    sheetW: 320,
+    sheetH: 192,
+    scale: 1.0,
+  })),
+];
+
+// Sliced other interior items (Blacksmith, Xmas, School, Temple, Cats, Fireplace)
+const PACK_INTERIOR_OTHERS = [
+  // Fireplace (32x64, 256x256, 32 items)
+  ...Array.from({ length: 32 }, (_, i) => ({
+    key: `pack_int_fireplace:${i}`,
+    sheetKey: "pack_int_fireplace",
+    path: "/assets/pack/objects/interior/Fireplace.png",
+    label: `Şömine #${i + 1}`,
+    fw: 32,
+    fh: 64,
+    col: i % 8,
+    row: Math.floor(i / 8),
+    sheetW: 256,
+    sheetH: 256,
+    scale: 1.0,
+  })),
+  // Xmas (32x48, 208x224, 24 items)
+  ...Array.from({ length: 24 }, (_, i) => ({
+    key: `pack_int_xmas:${i}`,
+    sheetKey: "pack_int_xmas",
+    path: "/assets/pack/objects/interior/Xmas.png",
+    label: `Yılbaşı #${i + 1}`,
+    fw: 32,
+    fh: 48,
+    col: i % 6,
+    row: Math.floor(i / 6),
+    sheetW: 208,
+    sheetH: 224,
+    scale: 1.0,
+  })),
+  // Cats Furniture (32x32, 400x128, 48 items)
+  ...Array.from({ length: 48 }, (_, i) => ({
+    key: `pack_int_cats_furniture:${i}`,
+    sheetKey: "pack_int_cats_furniture",
+    path: "/assets/pack/objects/interior/cats_furniture.png",
+    label: `Kedi Eşyası #${i + 1}`,
+    fw: 32,
+    fh: 32,
+    col: i % 12,
+    row: Math.floor(i / 12),
+    sheetW: 400,
+    sheetH: 128,
+    scale: 1.0,
+  })),
+  // Blacksmith (64x48, 256x96, 8 items)
+  ...Array.from({ length: 8 }, (_, i) => ({
+    key: `pack_int_blacksmith:${i}`,
+    sheetKey: "pack_int_blacksmith",
+    path: "/assets/pack/objects/interior/Blacksmith.png",
+    label: `Demirhane #${i + 1}`,
+    fw: 64,
+    fh: 48,
+    col: i % 4,
+    row: Math.floor(i / 4),
+    sheetW: 256,
+    sheetH: 96,
+    scale: 1.0,
+  })),
+  // Temple (32x32, 192x80, 12 items)
+  ...Array.from({ length: 12 }, (_, i) => ({
+    key: `pack_int_temple:${i}`,
+    sheetKey: "pack_int_temple",
+    path: "/assets/pack/objects/interior/Temple.png",
+    label: `Tapınak #${i + 1}`,
+    fw: 32,
+    fh: 32,
+    col: i % 6,
+    row: Math.floor(i / 6),
+    sheetW: 192,
+    sheetH: 80,
+    scale: 1.0,
+  })),
+  // School (32x32, 400x256, 96 items)
+  ...Array.from({ length: 96 }, (_, i) => ({
+    key: `pack_int_school:${i}`,
+    sheetKey: "pack_int_school",
+    path: "/assets/pack/objects/interior/School.png",
+    label: `Okul #${i + 1}`,
+    fw: 32,
+    fh: 32,
+    col: i % 12,
+    row: Math.floor(i / 12),
+    sheetW: 400,
+    sheetH: 256,
+    scale: 1.0,
+  })),
 ];
 
 /**
@@ -238,8 +566,8 @@ const App: React.FC = () => {
   // AFK Kick status
   const [afkKickReason, setAfkKickReason] = useState("");
 
-  // Active tab inside spawning objects selector
   const [activeTab, setActiveTab] = useState<"structures" | "decorations" | "effects" | "materials" | "seeds" | "mining" | "ahir">("structures");
+  const [decorCategory, setDecorCategory] = useState<"trees" | "exterior" | "beds" | "chairs" | "tables" | "closets" | "others">("trees");
 
   // Selection box start/end for multi-tile selection
   const [selectionStart, setSelectionStart] = useState<{ col: number; row: number } | null>(null);
@@ -1451,72 +1779,93 @@ const App: React.FC = () => {
               )}
 
               {/* Tab 2: Customization / Decorations */}
-              {activeTab === "decorations" && (
-                <>
+              {activeTab === "decorations" && (() => {
+                const renderSlicedButton = (item: any) => {
+                  const col = item.col;
+                  const row = item.row;
+                  const fw = item.fw;
+                  const fh = item.fh;
                   
-                  {/* Trees */}
-                  <div style={{ fontSize: "11px", fontWeight: "bold", color: "#f0c040", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "2px" }}>🌳 Ağaçlar</div>
-                  <div className="object-grid" style={{ gridTemplateColumns: "repeat(2, 1fr)", gap: "6px", marginBottom: "12px" }}>
-                    {PACK_TREES.map((item) => (
-                      <button
-                        key={item.key}
-                        className={`obj-btn ${selectedTile === -2 && selectedObjectName === item.key ? "obj-btn--active" : ""}`}
-                        onClick={() => handleSelectObjectBrush(item.key)}
-                      >
-                        <img src={item.path} alt={item.label} className="obj-thumb" style={{ height: "40px", objectFit: "contain", margin: "0 auto 4px" }} />
-                        <span style={{ fontSize: "9px" }}>{item.label}</span>
-                      </button>
-                    ))}
-                  </div>
+                  const maxThumbSize = 40;
+                  const ratio = Math.min(maxThumbSize / fw, maxThumbSize / fh, 1.0);
+                  const displayW = Math.round(fw * ratio);
+                  const displayH = Math.round(fh * ratio);
+                  const bgSizeW = Math.round(item.sheetW * ratio);
+                  const bgSizeH = Math.round(item.sheetH * ratio);
+                  const bgPosX = -Math.round(col * fw * ratio);
+                  const bgPosY = -Math.round(row * fh * ratio);
 
-                  {/* Dış Mekan Props */}
-                  <div style={{ fontSize: "11px", fontWeight: "bold", color: "#f0c040", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "2px", marginTop: "8px" }}>🏡 Dış Mekan Dekorları</div>
-                  <div className="object-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "6px", marginBottom: "12px" }}>
-                    {PACK_EXTERIOR_PROPS.map((item) => (
-                      <button
-                        key={item.key}
-                        className={`obj-btn obj-btn--small ${selectedTile === -2 && selectedObjectName === item.key ? "obj-btn--active" : ""}`}
-                        onClick={() => handleSelectObjectBrush(item.key)}
-                        style={{ padding: "6px 2px" }}
-                      >
-                        <img src={item.path} alt={item.label} className="obj-thumb obj-thumb--small" style={{ height: "24px", objectFit: "contain", margin: "0 auto 4px" }} />
-                        <span style={{ fontSize: "8px" }}>{item.label}</span>
-                      </button>
-                    ))}
-                  </div>
+                  return (
+                    <button
+                      key={item.key}
+                      className={`obj-btn ${selectedTile === -2 && selectedObjectName === item.key ? "obj-btn--active" : ""}`}
+                      onClick={() => handleSelectObjectBrush(item.key)}
+                      style={{ padding: "6px 2px", display: "flex", flexDirection: "column", alignItems: "center" }}
+                    >
+                      <div
+                        style={{
+                          width: `${displayW}px`,
+                          height: `${displayH}px`,
+                          backgroundImage: `url(${item.path})`,
+                          backgroundSize: `${bgSizeW}px ${bgSizeH}px`,
+                          backgroundPosition: `${bgPosX}px ${bgPosY}px`,
+                          imageRendering: "pixelated",
+                          margin: "0 auto 4px"
+                        }}
+                      />
+                      <span style={{ fontSize: "8px", textAlign: "center", display: "block", width: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {item.label}
+                      </span>
+                    </button>
+                  );
+                };
 
-                  {/* İç Mekan Props */}
-                  <div style={{ fontSize: "11px", fontWeight: "bold", color: "#f0c040", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "2px", marginTop: "8px" }}>🛋️ İç Mekan Eşyaları</div>
-                  <div className="object-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "6px", marginBottom: "12px" }}>
-                    {PACK_INTERIOR_PROPS.map((item) => (
-                      <button
-                        key={item.key}
-                        className={`obj-btn obj-btn--small ${selectedTile === -2 && selectedObjectName === item.key ? "obj-btn--active" : ""}`}
-                        onClick={() => handleSelectObjectBrush(item.key)}
-                        style={{ padding: "6px 2px" }}
-                      >
-                        <img src={item.path} alt={item.label} className="obj-thumb obj-thumb--small" style={{ height: "24px", objectFit: "contain", margin: "0 auto 4px" }} />
-                        <span style={{ fontSize: "8px" }}>{item.label}</span>
-                      </button>
-                    ))}
-                  </div>
+                return (
+                  <>
+                    {/* Decor Sub-Categories Row */}
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "12px", borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: "8px" }}>
+                      {[
+                        { id: "trees", label: "🌳 Ağaç" },
+                        { id: "exterior", label: "🏡 Dış" },
+                        { id: "beds", label: "🛏️ Yatak" },
+                        { id: "chairs", label: "🪑 Sandalye" },
+                        { id: "tables", label: "🛋️ Masa/Koltuk" },
+                        { id: "closets", label: "🚪 Dolap" },
+                        { id: "others", label: "🧸 Diğer" }
+                      ].map(cat => (
+                        <button
+                          key={cat.id}
+                          onClick={() => setDecorCategory(cat.id as any)}
+                          style={{
+                            flex: "1 1 auto",
+                            fontSize: "8px",
+                            padding: "4px 6px",
+                            borderRadius: "4px",
+                            border: decorCategory === cat.id ? "1px solid #4ade80" : "1px solid rgba(255,255,255,0.1)",
+                            background: decorCategory === cat.id ? "rgba(74, 222, 128, 0.15)" : "rgba(0,0,0,0.2)",
+                            color: decorCategory === cat.id ? "#4ade80" : "rgba(255,255,255,0.7)",
+                            cursor: "pointer",
+                            fontWeight: "bold",
+                            fontFamily: 'monospace'
+                          }}
+                        >
+                          {cat.label}
+                        </button>
+                      ))}
+                    </div>
 
-                  {/* Grass & Legacy sheet */}
-                  <div style={{ fontSize: "11px", fontWeight: "bold", color: "#888", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "2px", marginTop: "8px" }}>🌸 Çiçekler & Klasik</div>
-                  <div className="object-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "6px" }}>
-                    {Array.from({ length: 11 }, (_, i) => i + 1).map(idx => (
-                      <button
-                        key={`decor-${idx}`}
-                        className={`obj-btn obj-btn--small ${selectedTile === -2 && selectedObjectName === `decor_grass_${idx}` ? "obj-btn--active" : ""}`}
-                        onClick={() => handleSelectObjectBrush(`decor_grass_${idx}`)}
-                      >
-                        <img src={`/assets/customization/Grass_Tufts_Flowers_${idx}.png`} alt={`decor-${idx}`} className="obj-thumb obj-thumb--small" />
-                        <span style={{ fontSize: "8px" }}>Klasik #{idx}</span>
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
+                    <div className="object-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "6px" }}>
+                      {decorCategory === "trees" && PACK_TREES.map(renderSlicedButton)}
+                      {decorCategory === "exterior" && PACK_EXTERIOR_PROPS.map(renderSlicedButton)}
+                      {decorCategory === "beds" && PACK_BEDS.map(renderSlicedButton)}
+                      {decorCategory === "chairs" && PACK_CHAIRS.map(renderSlicedButton)}
+                      {decorCategory === "tables" && PACK_TABLES_SOFAS.map(renderSlicedButton)}
+                      {decorCategory === "closets" && PACK_CLOSETS.map(renderSlicedButton)}
+                      {decorCategory === "others" && PACK_INTERIOR_OTHERS.map(renderSlicedButton)}
+                    </div>
+                  </>
+                );
+              })()}
 
               {/* Tab 3: VFX / Gifts (Gifs) */}
               {activeTab === "effects" && (
