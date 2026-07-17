@@ -1703,6 +1703,15 @@ export class GameScene extends Phaser.Scene {
   private spawnPlayer(player: Player, sessionId: string): void {
     const isLocal = sessionId === this.localId;
 
+    // Clean up existing container if any to prevent duplicates/ghost weapons
+    if (this.entities.has(sessionId)) {
+      const existing = this.entities.get(sessionId);
+      if (existing && existing.container) {
+        existing.container.destroy();
+      }
+      this.entities.delete(sessionId);
+    }
+
     const container = this.add.container(player.x, player.y);
 
     // ── Shadow ───────────────────────────────────────────────────────────────
@@ -1840,7 +1849,24 @@ export class GameScene extends Phaser.Scene {
 
     // 4. Clothes Layer
     if (layers.clothes) {
-      const cColor = player.clothesColor || "";
+      // If player has equipped a chestplate or leggings, map it to a clothes color
+      let cColor = player.clothesColor || "";
+      if (player.equippedChestplate) {
+        const tier = player.equippedChestplate.split(":")[0];
+        if (tier === "1._Wood") cColor = "Red";
+        else if (tier === "2._Copper") cColor = "Purple";
+        else if (tier === "3._Iron") cColor = "Blue";
+        else if (tier === "4._Gold") cColor = "Pink";
+        else cColor = "Green"; // fallback for higher tiers
+      } else if (player.equippedLeggings) {
+        const tier = player.equippedLeggings.split(":")[0];
+        if (tier === "1._Wood") cColor = "Red";
+        else if (tier === "2._Copper") cColor = "Purple";
+        else if (tier === "3._Iron") cColor = "Blue";
+        else if (tier === "4._Gold") cColor = "Pink";
+        else cColor = "Green";
+      }
+
       const clothesKey = cColor ? `pack_clothes_${cColor}_${animType}` : "";
       if (cColor && this.textures.exists(clothesKey)) {
         layers.clothes.setVisible(true);
@@ -1876,7 +1902,22 @@ export class GameScene extends Phaser.Scene {
 
     // 6. Accessories Layer
     if (layers.acc) {
-      const accItem = player.accItem || "";
+      // If player has equipped a helmet, map it to a cosmetic hat representing the helmet
+      let accItem = player.accItem || "";
+      if (player.equippedHelmet) {
+        const tier = player.equippedHelmet.split(":")[0];
+        if (tier === "1._Wood") accItem = "Farm";
+        else if (tier === "2._Copper") accItem = "Leprechaun";
+        else if (tier === "3._Iron") accItem = "Pirate";
+        else if (tier === "4._Gold") accItem = "Santa_hat";
+        else if (tier === "5._Plat") accItem = "Cook";
+        else if (tier === "6._Crim") accItem = "Beret";
+        else if (tier === "7._Fro") accItem = "Wizard";
+        else if (tier === "8._Sha") accItem = "Wizard";
+        else if (tier === "9._Obs") accItem = "Wizard";
+        else if (tier === "9._Fai") accItem = "Chicken";
+      }
+
       const accKey = accItem ? `pack_acc_${accItem}_${animType}` : "";
       if (accItem && this.textures.exists(accKey)) {
         layers.acc.setVisible(true);
