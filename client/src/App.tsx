@@ -212,7 +212,10 @@ export const EXTRA_PACK_SPRITESHEETS = [
 
   // İskeleler / Docks
   { key: "pack_dock_iskele", path: "/assets/pack/objects/exterior/iskele.png", fw: 16, fh: 16, label: "Mavi İskele", scale: 2.0, category: "dock", sheetW: 144, sheetH: 64 },
-  { key: "pack_dock_tahta_iskele", path: "/assets/pack/objects/exterior/tahta iskele.png", fw: 16, fh: 16, label: "Tahta İskele", scale: 2.0, category: "dock", sheetW: 208, sheetH: 144 }
+  { key: "pack_dock_tahta_iskele", path: "/assets/pack/objects/exterior/tahta iskele.png", fw: 16, fh: 16, label: "Tahta İskele", scale: 2.0, category: "dock", sheetW: 208, sheetH: 144 },
+
+  // Çitler / Fences
+  { key: "pack_fences_tilemap", path: "/assets/fences.png", fw: 16, fh: 16, label: "Çit", scale: 2.0, category: "fences", sheetW: 512, sheetH: 272 }
 ];
 
 const PACK_TREES = [
@@ -2477,7 +2480,12 @@ const App: React.FC = () => {
                     )}
                     {decorCategory === "houses" && PACK_HOUSES.map(renderSlicedButton)}
                     {decorCategory === "workbenches" && PACK_WORKBENCHES.map(renderSlicedButton)}
-                    {decorCategory === "fences" && PACK_FENCES_BRIDGES.map(renderSlicedButton)}
+                    {decorCategory === "fences" && (
+                      <>
+                        {PACK_FENCES_BRIDGES.map(renderSlicedButton)}
+                        {renderExtraCategory("fences")}
+                      </>
+                    )}
                     {decorCategory === "animals" && PACK_ANIMALS.map(renderSlicedButton)}
                     {decorCategory === "beds" && PACK_BEDS.map(renderSlicedButton)}
                     {decorCategory === "chairs" && PACK_CHAIRS.map(renderSlicedButton)}
