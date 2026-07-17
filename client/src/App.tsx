@@ -514,6 +514,90 @@ const PACK_INTERIOR_OTHERS = [
   })),
 ];
 
+const EQUIP_TIERS = [
+  { id: "1._Wood", label: "Tahta", color: "#8B5A2B" },
+  { id: "2._Cooper", label: "Bakır", color: "#D2691E" },
+  { id: "3._Iron", label: "Demir", color: "#A9A9A9" },
+  { id: "4._Gold", label: "Altın", color: "#FFD700" },
+  { id: "5._Platinum", label: "Platin", color: "#E5E4E2" },
+  { id: "6._Crimson", label: "Kızıl", color: "#DC143C" },
+  { id: "7._Frost", label: "Buz", color: "#00FFFF" },
+  { id: "8._Shadow", label: "Gölge", color: "#4B0082" },
+  { id: "9._Fairy", label: "Peri", color: "#FF69B4" },
+  { id: "9._Obsidian", label: "Obsidyen", color: "#800080" }
+];
+
+const EQUIP_WEAPONS = [
+  { name: "Sword", label: "Kılıç", icon: "Sword.png", desc: "Saldırı gücünü artırır" },
+  { name: "Bow", label: "Yay", icon: "Bow.png", desc: "Menzilli saldırı gücü" },
+  { name: "Staff", label: "Asa", icon: "Staff.png", desc: "Büyü saldırı gücü" }
+];
+
+const EQUIP_ARMORS = [
+  { name: "Helmet", slot: "helmet", label: "Kask", icon: "Helmet.png", desc: "Kalkan koruması sağlar" },
+  { name: "Chestplate", slot: "chestplate", label: "Zırh", icon: "Chestplate.png", desc: "Yüksek kalkan koruması" },
+  { name: "Leggings", slot: "leggings", label: "Pantolon", icon: "Leggings.png", desc: "Orta kalkan koruması" },
+  { name: "Boots", slot: "boots", label: "Botlar", icon: "Boots.png", desc: "Kalkan ve hafif koruma" }
+];
+
+const EQUIP_TOOLS = [
+  { name: "Axe", label: "Balta", icon: "Axe.png", desc: "Ağaç kesmek için kullanılır" },
+  { name: "Pickaxe", label: "Kazma", icon: "Pickaxe.png", desc: "Maden kazmak için kullanılır" },
+  { name: "Shovel", label: "Kürek", icon: "Shovel.png", desc: "Toprak kazmak için kullanılır" },
+  { name: "Sickle", label: "Orak", icon: "Sickle.png", desc: "Ekin biçmek için kullanılır" },
+  { name: "Fishing_Rod", label: "Olta", icon: "Fishing_Rod.png", desc: "Balık tutmak için kullanılır" },
+  { name: "Watering_can", label: "Sulama Bidonu", icon: "Watering_can.png", desc: "Ekinleri sulamak için kullanılır" }
+];
+
+const COSMETIC_HATS = [
+  { id: "Beret", label: "Bere" },
+  { id: "Chicken", label: "Tavuk Şapkası" },
+  { id: "Cook", label: "Aşçı Şapkası" },
+  { id: "Cow", label: "İnek Şapkası" },
+  { id: "Deer", label: "Geyik Şapkası" },
+  { id: "Farm", label: "Çiftçi Şapkası" },
+  { id: "Frog", label: "Kurbağa Şapkası" },
+  { id: "Leprechaun", label: "Cüce Şapkası" },
+  { id: "pirate_eye_patch", label: "Korsan Göz Bandı" },
+  { id: "Pirate", label: "Korsan Şapkası" },
+  { id: "Santa_hat", label: "Noel Baba Şapkası" },
+  { id: "Wizard", label: "Büyücü Şapkası" }
+];
+
+const getAttackBonus = (key: string) => {
+  if (!key) return 0;
+  const parts = key.split(":");
+  const tier = parts[0];
+  if (tier.includes("Wood")) return 5;
+  if (tier.includes("Cooper")) return 12;
+  if (tier.includes("Iron")) return 25;
+  if (tier.includes("Gold")) return 50;
+  if (tier.includes("Platinum")) return 75;
+  if (tier.includes("Crimson")) return 110;
+  if (tier.includes("Frost")) return 150;
+  if (tier.includes("Shadow")) return 200;
+  if (tier.includes("Fairy")) return 270;
+  if (tier.includes("Obsidian")) return 380;
+  return 0;
+};
+
+const getShieldBonus = (key: string) => {
+  if (!key) return 0;
+  const parts = key.split(":");
+  const tier = parts[0];
+  if (tier.includes("Wood")) return 10;
+  if (tier.includes("Cooper")) return 25;
+  if (tier.includes("Iron")) return 50;
+  if (tier.includes("Gold")) return 100;
+  if (tier.includes("Platinum")) return 150;
+  if (tier.includes("Crimson")) return 220;
+  if (tier.includes("Frost")) return 300;
+  if (tier.includes("Shadow")) return 400;
+  if (tier.includes("Fairy")) return 550;
+  if (tier.includes("Obsidian")) return 800;
+  return 0;
+};
+
 /**
  * App — root React component.
  *
@@ -568,6 +652,15 @@ const App: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<"structures" | "decorations" | "effects" | "materials" | "seeds" | "mining" | "ahir">("structures");
   const [decorCategory, setDecorCategory] = useState<"trees" | "exterior" | "beds" | "chairs" | "tables" | "closets" | "others">("trees");
+
+  // Equipment states
+  const [isEquipmentOpen, setIsEquipmentOpen] = useState(false);
+  const [equipCategory, setEquipCategory] = useState<"weapons" | "armors" | "tools" | "hats">("weapons");
+  const [equippedHelmet, setEquippedHelmet] = useState("");
+  const [equippedChestplate, setEquippedChestplate] = useState("");
+  const [equippedLeggings, setEquippedLeggings] = useState("");
+  const [equippedBoots, setEquippedBoots] = useState("");
+  const [equippedWeapon, setEquippedWeapon] = useState("");
 
   // Selection box start/end for multi-tile selection
   const [selectionStart, setSelectionStart] = useState<{ col: number; row: number } | null>(null);
@@ -763,6 +856,12 @@ const App: React.FC = () => {
           beardColor: player.beardColor || "",
           accItem: player.accItem || "",
         });
+
+        setEquippedHelmet(player.equippedHelmet || "");
+        setEquippedChestplate(player.equippedChestplate || "");
+        setEquippedLeggings(player.equippedLeggings || "");
+        setEquippedBoots(player.equippedBoots || "");
+        setEquippedWeapon(player.equippedWeapon || "");
 
         setHp(player.hp !== undefined ? player.hp : 100);
         setMaxHp(player.maxHp !== undefined ? player.maxHp : 100);
@@ -1216,6 +1315,7 @@ const App: React.FC = () => {
         {/* HUD action buttons */}
         {connected && !editMode && (
           <>
+            <button className="chip chip--clickable" onClick={() => setIsEquipmentOpen(true)} style={{ background: "rgba(59, 130, 246, 0.2)", border: "1px solid rgba(59, 130, 246, 0.4)", color: "#93c5fd" }}>👤 Karakter</button>
             <button className="chip chip--clickable" onClick={() => setIsMarketOpen(true)}>🛒 Market</button>
             <button className="chip chip--clickable" onClick={() => setIsLeaderboardOpen(true)}>🏆 Leaderboard</button>
             <button className="chip chip--clickable" onClick={() => setIsSettingsOpen(true)}>⚙️ Settings</button>
@@ -2687,6 +2787,303 @@ const App: React.FC = () => {
 
       {/* ── Craft Timer HUD ─────────────────────────────────────────────── */}
       <CraftTimer timers={craftTimers} onRemove={removeCraftTimer} onInstant={handleInstantCraft} />
+
+      {/* ── Character & Equipment Modal ── */}
+      {isEquipmentOpen && room && (
+        <div className="modal-overlay" style={{ zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(12px)" }}>
+          <div className="modal-content" style={{
+            background: "rgba(20, 25, 40, 0.95)",
+            border: "2px solid rgba(59, 130, 246, 0.4)",
+            borderRadius: "16px",
+            width: "800px",
+            maxWidth: "95%",
+            height: "550px",
+            display: "flex",
+            flexDirection: "column",
+            boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
+            overflow: "hidden",
+            color: "#fff",
+            fontFamily: "monospace"
+          }}>
+            {/* Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(59, 130, 246, 0.1)" }}>
+              <h2 style={{ margin: 0, fontSize: "16px", fontWeight: "bold", color: "#60a5fa", display: "flex", alignItems: "center", gap: "8px" }}>
+                👤 Karakter & Ekipman Paneli
+              </h2>
+              <button 
+                onClick={() => setIsEquipmentOpen(false)}
+                style={{ background: "none", border: "none", color: "rgba(255,255,255,0.6)", cursor: "pointer", fontSize: "18px" }}
+                onMouseOver={e => e.currentTarget.style.color = "#fff"}
+                onMouseOut={e => e.currentTarget.style.color = "rgba(255,255,255,0.6)"}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Split Body */}
+            <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+              {/* Left Side: Character Sheet */}
+              <div style={{ width: "300px", borderRight: "1px solid rgba(255,255,255,0.08)", padding: "16px", display: "flex", flexDirection: "column", gap: "16px", overflowY: "auto", background: "rgba(0,0,0,0.15)" }}>
+                
+                {/* Profile Box */}
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                  <div style={{ fontSize: "28px" }}>🧙‍♂️</div>
+                  <div>
+                    <div style={{ fontWeight: "bold", fontSize: "14px", color: "#e2e8f0" }}>{myUsername || "Oyuncu"}</div>
+                    <div style={{ fontSize: "10px", color: "#94a3b8", marginTop: "2px" }}>Seviye: {totalLevel}</div>
+                  </div>
+                </div>
+
+                {/* Equipment Paper Doll */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <div style={{ fontSize: "12px", fontWeight: "bold", color: "#60a5fa" }}>Giyili Eşyalar</div>
+                  
+                  {/* Slots Grid */}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
+                    {[
+                      { slot: "helmet", label: "Kask", icon: "🧢", val: equippedHelmet },
+                      { slot: "acc", label: "Şapka", icon: "👒", val: myAppearance.accItem },
+                      { slot: "chestplate", label: "Zırh", icon: "🛡️", val: equippedChestplate },
+                      { slot: "leggings", label: "Pantolon", icon: "👖", val: equippedLeggings },
+                      { slot: "boots", label: "Bot", icon: "🥾", val: equippedBoots },
+                      { slot: "weapon", label: "Alet/Silah", icon: "⚔️", val: equippedWeapon },
+                    ].map(s => {
+                      const [tierId, itemType] = s.val ? s.val.split(":") : ["", ""];
+                      // Determine preview
+                      let content = <div style={{ fontSize: "18px", opacity: 0.3 }}>{s.icon}</div>;
+                      let tooltip = "Boş";
+                      
+                      if (s.val) {
+                        if (s.slot === "acc") {
+                          tooltip = `Şapka: ${s.val}`;
+                          content = (
+                            <div style={{
+                              width: "32px",
+                              height: "32px",
+                              backgroundImage: `url(/assets/pack/char/PNG/1._Idle/Acc/${s.val}.png)`,
+                              backgroundSize: "96px 128px",
+                              backgroundPosition: "0px 0px",
+                              imageRendering: "pixelated"
+                            }} />
+                          );
+                        } else {
+                          tooltip = `${itemType} (${tierId.replace(/^\d+\._/, "")})`;
+                          const isTool = ["Axe", "Pickaxe", "Shovel", "Sickle", "Fishing_Rod", "Watering_can"].includes(itemType);
+                          content = (
+                            <img 
+                              src={`/assets/pack/icons/RPG_icons/Weapons_and_Armor/${tierId}/${itemType}.png`}
+                              alt={itemType} 
+                              style={{ width: "24px", height: "24px", imageRendering: "pixelated" }} 
+                            />
+                          );
+                        }
+                      }
+
+                      return (
+                        <div key={s.slot} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+                          <button
+                            onClick={() => {
+                              if (s.val) {
+                                room.send("equip-item", { slot: s.slot, itemKey: "" });
+                              }
+                            }}
+                            title={s.val ? `${tooltip} (Çıkarmak için tıkla)` : "Boş"}
+                            style={{
+                              width: "56px",
+                              height: "56px",
+                              background: s.val ? "rgba(59, 130, 246, 0.15)" : "rgba(255,255,255,0.02)",
+                              border: s.val ? "1px solid rgba(59, 130, 246, 0.5)" : "1px solid rgba(255,255,255,0.08)",
+                              borderRadius: "8px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              cursor: s.val ? "pointer" : "default",
+                              transition: "all 0.2s"
+                            }}
+                            onMouseOver={e => { if (s.val) e.currentTarget.style.borderColor = "#ef4444"; }}
+                            onMouseOut={e => { if (s.val) e.currentTarget.style.borderColor = "rgba(59, 130, 246, 0.5)"; }}
+                          >
+                            {content}
+                          </button>
+                          <span style={{ fontSize: "8px", color: s.val ? "#4ade80" : "#64748b" }}>{s.label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Stats Panel */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", background: "rgba(255,255,255,0.02)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                  <div style={{ fontSize: "12px", fontWeight: "bold", color: "#60a5fa", borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: "4px" }}>İstatistikler</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "11px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ color: "#f87171" }}>❤️ Can (HP):</span>
+                      <strong style={{ color: "#ef4444" }}>{hp} / {maxHp}</strong>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ color: "#60a5fa" }}>🛡️ Kalkan:</span>
+                      <strong style={{ color: "#3b82f6" }}>{shield} / {maxShield}</strong>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ color: "#fbbf24" }}>⚔️ Hasar (Atk):</span>
+                      <strong style={{ color: "#f59e0b" }}>{10 + (equippedWeapon ? getAttackBonus(equippedWeapon) : 0)}</strong>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Right Side: Inventory Vault */}
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                
+                {/* Vault Tabs */}
+                <div style={{ display: "flex", background: "rgba(0,0,0,0.2)", borderBottom: "1px solid rgba(255,255,255,0.08)", padding: "8px 12px", gap: "6px" }}>
+                  {[
+                    { id: "weapons", label: "⚔️ Silahlar" },
+                    { id: "armors", label: "🛡️ Zırhlar" },
+                    { id: "tools", label: "🪓 Aletler" },
+                    { id: "hats", label: "👒 Şapkalar" }
+                  ].map(tab => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setEquipCategory(tab.id as any)}
+                      style={{
+                        padding: "6px 12px",
+                        fontSize: "11px",
+                        borderRadius: "6px",
+                        border: equipCategory === tab.id ? "1px solid #3b82f6" : "1px solid transparent",
+                        background: equipCategory === tab.id ? "rgba(59, 130, 246, 0.15)" : "transparent",
+                        color: equipCategory === tab.id ? "#60a5fa" : "rgba(255,255,255,0.6)",
+                        fontWeight: "bold",
+                        cursor: "pointer"
+                      }}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Items List Grid */}
+                <div style={{ flex: 1, padding: "16px", overflowY: "auto" }}>
+                  {equipCategory === "hats" ? (
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
+                      {COSMETIC_HATS.map(hat => {
+                        const isEquipped = myAppearance.accItem === hat.id;
+                        return (
+                          <div key={hat.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "10px", background: "rgba(255,255,255,0.02)", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                            <div style={{
+                              width: "32px",
+                              height: "32px",
+                              backgroundImage: `url(/assets/pack/char/PNG/1._Idle/Acc/${hat.id}.png)`,
+                              backgroundSize: "96px 128px",
+                              backgroundPosition: "0px 0px",
+                              imageRendering: "pixelated",
+                              marginBottom: "6px"
+                            }} />
+                            <div style={{ fontSize: "10px", fontWeight: "bold", textAlign: "center", marginBottom: "8px", minHeight: "24px" }}>{hat.label}</div>
+                            <button
+                              onClick={() => room.send("equip-item", { slot: "acc", itemKey: isEquipped ? "" : hat.id })}
+                              style={{
+                                padding: "4px 10px",
+                                fontSize: "9px",
+                                borderRadius: "4px",
+                                border: isEquipped ? "1px solid #ef4444" : "1px solid #10b981",
+                                background: isEquipped ? "rgba(239,68,68,0.1)" : "rgba(16,185,129,0.1)",
+                                color: isEquipped ? "#f87171" : "#34d399",
+                                cursor: "pointer",
+                                width: "100%"
+                              }}
+                            >
+                              {isEquipped ? "Çıkar" : "Kuşan"}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                      {EQUIP_TIERS.map(tier => {
+                        let list: any[] = [];
+                        let slotName = "";
+                        if (equipCategory === "weapons") {
+                          list = EQUIP_WEAPONS;
+                          slotName = "weapon";
+                        } else if (equipCategory === "armors") {
+                          list = EQUIP_ARMORS;
+                        } else {
+                          list = EQUIP_TOOLS;
+                          slotName = "weapon";
+                        }
+
+                        return (
+                          <div key={tier.id} style={{ border: "1px solid rgba(255,255,255,0.05)", borderRadius: "10px", background: "rgba(0,0,0,0.1)", padding: "10px", marginBottom: "12px" }}>
+                            <div style={{ fontSize: "11px", fontWeight: "bold", color: tier.color, marginBottom: "8px", borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: "4px" }}>
+                              ⚔️ {tier.label} Serisi
+                            </div>
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
+                              {list.map(item => {
+                                const itemKey = `${tier.id}:${item.name}`;
+                                const currentSlot = equipCategory === "armors" ? item.slot : slotName;
+                                const isEquipped = currentSlot === "weapon" ? equippedWeapon === itemKey : (
+                                  currentSlot === "helmet" ? equippedHelmet === itemKey : (
+                                    currentSlot === "chestplate" ? equippedChestplate === itemKey : (
+                                      currentSlot === "leggings" ? equippedLeggings === itemKey : equippedBoots === itemKey
+                                    )
+                                  )
+                                );
+
+                                // Stats display
+                                let statText = "";
+                                if (equipCategory === "weapons") {
+                                  statText = `+${getAttackBonus(itemKey)} Hasar`;
+                                } else if (equipCategory === "armors") {
+                                  statText = `+${getShieldBonus(itemKey)} Kalkan`;
+                                } else {
+                                  statText = "Alet";
+                                }
+
+                                return (
+                                  <div key={item.name} style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "8px", background: "rgba(255,255,255,0.02)", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                                    <img 
+                                      src={`/assets/pack/icons/RPG_icons/Weapons_and_Armor/${tier.id}/${item.icon}`}
+                                      alt={item.name} 
+                                      style={{ width: "24px", height: "24px", imageRendering: "pixelated", marginBottom: "4px" }} 
+                                    />
+                                    <div style={{ fontSize: "9px", fontWeight: "bold" }}>{item.label}</div>
+                                    <div style={{ fontSize: "7px", color: "#64748b", margin: "2px 0 6px" }}>{statText}</div>
+                                    <button
+                                      onClick={() => room.send("equip-item", { slot: currentSlot, itemKey: isEquipped ? "" : itemKey })}
+                                      style={{
+                                        padding: "4px 8px",
+                                        fontSize: "8px",
+                                        borderRadius: "4px",
+                                        border: isEquipped ? "1px solid #ef4444" : "1px solid #3b82f6",
+                                        background: isEquipped ? "rgba(239,68,68,0.15)" : "rgba(59,130,246,0.15)",
+                                        color: isEquipped ? "#f87171" : "#60a5fa",
+                                        cursor: "pointer",
+                                        width: "100%",
+                                        fontWeight: "bold"
+                                      }}
+                                    >
+                                      {isEquipped ? "Çıkar" : "Kuşan"}
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
 
       {/* ── Marketplace Modal ───────────────────────────────────────────── */}
       {isMarketOpen && room && (

@@ -135,6 +135,11 @@ export class Player extends Schema {
   @type("string")  clothesColor: string = "";         // ""=naked, Blue|Green|Pink|Purple|Red
   @type("string")  beardColor: string = "";           // ""=no beard, Black|Blonde|Brown|Ginger
   @type("string")  accItem: string = "";              // "" or acc name e.g. "Beret","Wizard"
+  @type("string")  equippedHelmet: string = "";
+  @type("string")  equippedChestplate: string = "";
+  @type("string")  equippedLeggings: string = "";
+  @type("string")  equippedBoots: string = "";
+  @type("string")  equippedWeapon: string = "";
 
   // ── Owned Cosmetics (shop purchases) ────────────────────────────────────
   @type({ map: "boolean" }) ownedCosmetics = new MapSchema<boolean>(); // key = "hair_Fawn" | "clothes_Blue" | "beard_Black" | "acc_Wizard" etc.

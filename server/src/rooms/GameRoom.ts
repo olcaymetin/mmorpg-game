@@ -1135,6 +1135,85 @@ export class GameRoom extends Room<GameState> {
 
       client.send("report-success", { message: "Oyuncu başarıyla rapor edildi. Teşekkürler!" });
     });
+
+    // --- Equipment System ---
+    this.onMessage("equip-item", (client: Client, msg: { slot: string; itemKey: string }) => {
+      const player = this.state.players.get(client.sessionId);
+      if (!player) return;
+      (player as any).lastActivityAt = Date.now();
+
+      const slot = msg.slot; // "helmet" | "chestplate" | "leggings" | "boots" | "weapon" | "acc"
+      const itemKey = msg.itemKey || ""; // e.g. "4._Gold:Helmet", "3._Iron:Sword", "" to unequip
+
+      if (slot === "helmet") {
+        player.equippedHelmet = itemKey;
+      } else if (slot === "chestplate") {
+        player.equippedChestplate = itemKey;
+      } else if (slot === "leggings") {
+        player.equippedLeggings = itemKey;
+      } else if (slot === "boots") {
+        player.equippedBoots = itemKey;
+      } else if (slot === "weapon") {
+        player.equippedWeapon = itemKey;
+      } else if (slot === "acc") {
+        player.accItem = itemKey;
+      }
+
+      // Recalculate stats based on equipped gear
+      let bonusShield = 0;
+      let bonusAttack = 0;
+      let bonusMaxHp = 0;
+
+      const getGearStats = (key: string) => {
+        if (!key) return { shield: 0, hp: 0, attack: 0 };
+        const parts = key.split(":");
+        const tierName = parts[0]; // e.g. "1._Wood", "4._Gold"
+        if (tierName.includes("Wood")) return { shield: 10, hp: 5, attack: 5 };
+        if (tierName.includes("Cooper")) return { shield: 25, hp: 10, attack: 12 };
+        if (tierName.includes("Iron")) return { shield: 50, hp: 20, attack: 25 };
+        if (tierName.includes("Gold")) return { shield: 100, hp: 40, attack: 50 };
+        if (tierName.includes("Platinum")) return { shield: 150, hp: 60, attack: 75 };
+        if (tierName.includes("Crimson")) return { shield: 220, hp: 80, attack: 110 };
+        if (tierName.includes("Frost")) return { shield: 300, hp: 100, attack: 150 };
+        if (tierName.includes("Shadow")) return { shield: 400, hp: 130, attack: 200 };
+        if (tierName.includes("Fairy")) return { shield: 550, hp: 160, attack: 270 };
+        if (tierName.includes("Obsidian")) return { shield: 800, hp: 200, attack: 380 };
+        return { shield: 0, hp: 0, attack: 0 };
+      };
+
+      // Add helmet
+      const hStats = getGearStats(player.equippedHelmet);
+      bonusShield += hStats.shield;
+      bonusMaxHp += hStats.hp;
+
+      // Add chestplate
+      const cStats = getGearStats(player.equippedChestplate);
+      bonusShield += cStats.shield;
+      bonusMaxHp += cStats.hp;
+
+      // Add leggings
+      const lStats = getGearStats(player.equippedLeggings);
+      bonusShield += lStats.shield;
+      bonusMaxHp += lStats.hp;
+
+      // Add boots
+      const bStats = getGearStats(player.equippedBoots);
+      bonusShield += bStats.shield;
+      bonusMaxHp += bStats.hp;
+
+      // Add weapon / tool
+      const wStats = getGearStats(player.equippedWeapon);
+      bonusAttack += wStats.attack;
+
+      player.maxHp = 100 + bonusMaxHp;
+      player.maxShield = 100 + bonusShield;
+
+      // Sync current HP/Shield to max for test convenience
+      player.hp = player.maxHp;
+      player.shield = player.maxShield;
+
+      console.log(`[Equipment] Player ${player.username || client.sessionId} equipped ${slot} -> ${itemKey}. MaxHP:${player.maxHp} MaxShield:${player.maxShield}`);
+    });
   }
 
   /**

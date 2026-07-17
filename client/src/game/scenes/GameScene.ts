@@ -26,6 +26,7 @@ interface PlayerEntity {
     beard?: Phaser.GameObjects.Sprite;
     clothes?: Phaser.GameObjects.Sprite;
     acc?: Phaser.GameObjects.Sprite;
+    tool?: Phaser.GameObjects.Sprite;
   };
 }
 
@@ -1736,10 +1737,12 @@ export class GameScene extends Phaser.Scene {
       const clothesSpr = this.add.sprite(0, 10, `pack_clothes_${player.clothesColor || "Blue"}_idle`).setVisible(false);
       const hairSpr = this.add.sprite(0, 10, `pack_hair_${player.hairStyle || "Standard"}_${player.hairColor || "Black"}_idle`).setVisible(false);
       const accSpr = this.add.sprite(0, 10, `pack_acc_${player.accItem || "Beret"}_idle`).setVisible(false);
+      const toolSpr = this.add.sprite(0, 0, "").setVisible(false);
+      toolSpr.setScale(0.65);
 
       sprite = skinSpr;
 
-      container.add([shadow, skinSpr, eyesSpr, beardSpr, clothesSpr, hairSpr, accSpr, tag]);
+      container.add([shadow, skinSpr, eyesSpr, beardSpr, clothesSpr, hairSpr, accSpr, toolSpr, tag]);
 
       layersObj = {
         skin: skinSpr,
@@ -1748,6 +1751,7 @@ export class GameScene extends Phaser.Scene {
         clothes: clothesSpr,
         hair: hairSpr,
         acc: accSpr,
+        tool: toolSpr,
       };
     } else {
       sprite = this.add.sprite(0, -6, player.skin);
@@ -1885,6 +1889,57 @@ export class GameScene extends Phaser.Scene {
         }
       } else {
         layers.acc.setVisible(false);
+      }
+    }
+
+    // 7. Tool/Weapon Layer
+    if (layers.tool) {
+      const eqWeapon = player.equippedWeapon || "";
+      if (eqWeapon) {
+        const parts = eqWeapon.split(":");
+        const tierName = parts[0]; // e.g. "4._Gold", "1._Wood"
+        const toolName = parts[1]; // e.g. "Sword", "Pickaxe"
+        const cacheKey = `eq_tool_${tierName}_${toolName}`;
+        
+        const applyToolPosition = () => {
+          if (dir === "up") {
+            layers.tool.setVisible(false);
+          } else {
+            layers.tool.setVisible(true);
+            if (dir === "left") {
+              layers.tool.setPosition(-8, 12);
+              layers.tool.setAngle(-25);
+              layers.tool.setFlipX(true);
+            } else if (dir === "right") {
+              layers.tool.setPosition(8, 12);
+              layers.tool.setAngle(25);
+              layers.tool.setFlipX(false);
+            } else { // down
+              layers.tool.setPosition(8, 14);
+              layers.tool.setAngle(0);
+              layers.tool.setFlipX(false);
+            }
+          }
+        };
+
+        if (!this.textures.exists(cacheKey)) {
+          const path = `assets/pack/icons/RPG_icons/Weapons_and_Armor/${tierName}/${toolName}.png`;
+          this.load.image(cacheKey, path);
+          this.load.once(`filecomplete-image-${cacheKey}`, () => {
+            if (layers.tool) {
+              layers.tool.setTexture(cacheKey);
+              applyToolPosition();
+            }
+          });
+          this.load.start();
+        } else {
+          if (layers.tool.texture.key !== cacheKey) {
+            layers.tool.setTexture(cacheKey);
+          }
+          applyToolPosition();
+        }
+      } else {
+        layers.tool.setVisible(false);
       }
     }
   }
