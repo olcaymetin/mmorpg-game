@@ -725,6 +725,7 @@ export class GameScene extends Phaser.Scene {
           });
         });
       });
+    });
     // ─── Farm RPG Pack Character Anim Generator ──────────────────────────────
     const directionsList = ["down", "right", "up", "left"];
     const packDirections = ["down", "down_right", "right", "up_right", "up", "up_left", "left", "down_left"];
