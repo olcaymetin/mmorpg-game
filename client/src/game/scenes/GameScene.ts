@@ -1688,12 +1688,12 @@ export class GameScene extends Phaser.Scene {
       isLayered = true;
       // Stacking order: shadow -> skin -> eyes -> beard -> clothes -> hair -> acc -> tag
       const skinTone = player.skinTone || "1";
-      const skinSpr = this.add.sprite(0, -6, `pack_skin_${skinTone}_idle`);
-      const eyesSpr = this.add.sprite(0, -6, `pack_eyes_${(player.gender || "male") === "male" ? "Male" : "Female"}_${player.eyeColor || "Black"}_idle`);
-      const beardSpr = this.add.sprite(0, -6, `pack_beard_${player.beardColor || "Black"}_idle`).setVisible(false);
-      const clothesSpr = this.add.sprite(0, -6, `pack_clothes_${player.clothesColor || "Blue"}_idle`).setVisible(false);
-      const hairSpr = this.add.sprite(0, -6, `pack_hair_${player.hairStyle || "Standard"}_${player.hairColor || "Black"}_idle`).setVisible(false);
-      const accSpr = this.add.sprite(0, -6, `pack_acc_${player.accItem || "Beret"}_idle`).setVisible(false);
+      const skinSpr = this.add.sprite(0, 10, `pack_skin_${skinTone}_idle`);
+      const eyesSpr = this.add.sprite(0, 10, `pack_eyes_${(player.gender || "male") === "male" ? "Male" : "Female"}_${player.eyeColor || "Black"}_idle`);
+      const beardSpr = this.add.sprite(0, 10, `pack_beard_${player.beardColor || "Black"}_idle`).setVisible(false);
+      const clothesSpr = this.add.sprite(0, 10, `pack_clothes_${player.clothesColor || "Blue"}_idle`).setVisible(false);
+      const hairSpr = this.add.sprite(0, 10, `pack_hair_${player.hairStyle || "Standard"}_${player.hairColor || "Black"}_idle`).setVisible(false);
+      const accSpr = this.add.sprite(0, 10, `pack_acc_${player.accItem || "Beret"}_idle`).setVisible(false);
 
       sprite = skinSpr;
 
@@ -1987,7 +1987,7 @@ export class GameScene extends Phaser.Scene {
 
   // ─── Game loop ────────────────────────────────────────────────────────────
 
-  update(time: number): void {
+  update(time: number, delta: number): void {
     // ── 1. depth Y-Sorting ──
     this.layer.setDepth(0); // Ground is always at the bottom
     this.decorLayer.setDepth(1); // Fences/decors on top of ground, under players
@@ -1996,8 +1996,6 @@ export class GameScene extends Phaser.Scene {
     this.entities.forEach((entity, sessionId) => {
       entity.container.setDepth(entity.container.y);
     });
-
-
 
     if (this.editorMode) {
       this.drawSelectionOutline();
@@ -2015,12 +2013,23 @@ export class GameScene extends Phaser.Scene {
 
     const isNowMoving = dx !== 0 || dy !== 0;
 
-    // Client-Side Prediction: move local player sprite immediately every frame
+    // Client-Side Prediction & Soft Reconciliation:
     const localEntity = this.entities.get(this.localId);
-    if (localEntity && isNowMoving) {
-      const spd = GameScene.CLIENT_SPEED;
-      this.localX = Math.max(16, Math.min(this.mapWidth - 16, this.localX + dx * spd));
-      this.localY = Math.max(16, Math.min(this.mapHeight - 16, this.localY + dy * spd));
+    if (localEntity) {
+      if (isNowMoving) {
+        // Server moves at 4px per 50ms = 0.08px/ms. Scale by delta for frame-rate independence.
+        const spd = 0.08 * delta;
+        this.localX = Math.max(16, Math.min(this.mapWidth - 16, this.localX + dx * spd));
+        this.localY = Math.max(16, Math.min(this.mapHeight - 16, this.localY + dy * spd));
+      }
+      
+      // Soft reconciliation: gradually nudge predicted coordinates to server coordinates
+      const playerState = this.room.state.players.get(this.localId);
+      if (playerState) {
+        this.localX = Phaser.Math.Linear(this.localX, playerState.x, 0.15);
+        this.localY = Phaser.Math.Linear(this.localY, playerState.y, 0.15);
+      }
+      
       localEntity.container.setPosition(this.localX, this.localY);
     }
 
