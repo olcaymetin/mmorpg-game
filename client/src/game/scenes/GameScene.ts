@@ -1915,9 +1915,9 @@ export class GameScene extends Phaser.Scene {
               layers.tool.setAngle(25);
               layers.tool.setFlipX(false);
             } else { // down
-              layers.tool.setPosition(8, 14);
+              layers.tool.setPosition(-8, 14);
               layers.tool.setAngle(0);
-              layers.tool.setFlipX(false);
+              layers.tool.setFlipX(true);
             }
           }
         };

@@ -2860,8 +2860,8 @@ const App: React.FC = () => {
                             <div style={{
                               width: "32px",
                               height: "32px",
-                              backgroundImage: `url(/assets/pack/char/PNG/1._Idle/Acc/${s.val}.png)`,
-                              backgroundSize: "96px 128px",
+                              backgroundImage: `url(/assets/pack/char/idle/acc/${s.val}.png)`,
+                              backgroundSize: "512px 32px",
                               backgroundPosition: "0px 0px",
                               imageRendering: "pixelated"
                             }} />
@@ -2974,8 +2974,8 @@ const App: React.FC = () => {
                             <div style={{
                               width: "32px",
                               height: "32px",
-                              backgroundImage: `url(/assets/pack/char/PNG/1._Idle/Acc/${hat.id}.png)`,
-                              backgroundSize: "96px 128px",
+                              backgroundImage: `url(/assets/pack/char/idle/acc/${hat.id}.png)`,
+                              backgroundSize: "512px 32px",
                               backgroundPosition: "0px 0px",
                               imageRendering: "pixelated",
                               marginBottom: "6px"
