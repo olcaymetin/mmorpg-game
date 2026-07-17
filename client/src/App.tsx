@@ -1452,11 +1452,11 @@ const App: React.FC = () => {
 
               {/* Tab 2: Customization / Decorations */}
               {activeTab === "decorations" && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "400px", overflowY: "auto", paddingRight: "4px" }}>
+                <>
                   
                   {/* Trees */}
                   <div style={{ fontSize: "11px", fontWeight: "bold", color: "#f0c040", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "2px" }}>🌳 Ağaçlar</div>
-                  <div className="object-grid" style={{ gridTemplateColumns: "repeat(2, 1fr)", gap: "6px" }}>
+                  <div className="object-grid" style={{ gridTemplateColumns: "repeat(2, 1fr)", gap: "6px", marginBottom: "12px" }}>
                     {PACK_TREES.map((item) => (
                       <button
                         key={item.key}
@@ -1471,7 +1471,7 @@ const App: React.FC = () => {
 
                   {/* Dış Mekan Props */}
                   <div style={{ fontSize: "11px", fontWeight: "bold", color: "#f0c040", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "2px", marginTop: "8px" }}>🏡 Dış Mekan Dekorları</div>
-                  <div className="object-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "6px" }}>
+                  <div className="object-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "6px", marginBottom: "12px" }}>
                     {PACK_EXTERIOR_PROPS.map((item) => (
                       <button
                         key={item.key}
@@ -1487,7 +1487,7 @@ const App: React.FC = () => {
 
                   {/* İç Mekan Props */}
                   <div style={{ fontSize: "11px", fontWeight: "bold", color: "#f0c040", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "2px", marginTop: "8px" }}>🛋️ İç Mekan Eşyaları</div>
-                  <div className="object-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "6px" }}>
+                  <div className="object-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "6px", marginBottom: "12px" }}>
                     {PACK_INTERIOR_PROPS.map((item) => (
                       <button
                         key={item.key}
@@ -1515,7 +1515,7 @@ const App: React.FC = () => {
                       </button>
                     ))}
                   </div>
-                </div>
+                </>
               )}
 
               {/* Tab 3: VFX / Gifts (Gifs) */}
