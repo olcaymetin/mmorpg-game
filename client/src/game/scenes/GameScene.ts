@@ -1714,7 +1714,22 @@ export class GameScene extends Phaser.Scene {
       const frameVal = isNaN(parsedInt) ? frameStr : parsedInt;
       img = this.add.sprite(x, y, sheetKey, frameVal);
     } else {
-      img = isAnimated ? this.add.sprite(x, y, type) : this.add.image(x, y, type);
+      const isPackSpritesheet = type.startsWith("pack_") && 
+                                !type.startsWith("pack_ride_") && 
+                                !type.startsWith("pack_acc_") && 
+                                !type.startsWith("pack_eyes_") && 
+                                !type.startsWith("pack_hair_") &&
+                                !type.startsWith("pack_clothes_") &&
+                                !type.startsWith("pack_beard_");
+      if (isPackSpritesheet) {
+        if (type === "pack_int_closet") {
+          img = this.add.sprite(x, y, type, "frame_c1_0_0");
+        } else {
+          img = this.add.sprite(x, y, type, 0);
+        }
+      } else {
+        img = isAnimated ? this.add.sprite(x, y, type) : this.add.image(x, y, type);
+      }
     }
     
     img.setScale(scale);
