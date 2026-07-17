@@ -207,8 +207,12 @@ export const EXTRA_PACK_SPRITESHEETS = [
   { key: "pack_tree_fx_red", path: "/assets/pack/objects/Tree/Common/Effects/FX Effects Red Leafs Fall.png", fw: 32, fh: 48, label: "Kızıl Yaprak Efekti", scale: 2.0, category: "effects", sheetW: 96, sheetH: 48 },
   { key: "pack_tree_fx_snow", path: "/assets/pack/objects/Tree/Common/Effects/FX Effects Snow Leafs Winter 2.png", fw: 32, fh: 48, label: "Kar Yaprak Efekti", scale: 2.0, category: "effects", sheetW: 96, sheetH: 48 },
   { key: "pack_tree_old_birch", path: "/assets/pack/objects/Tree/Old/Common/Birch Tree-Sheet copiar.png", fw: 48, fh: 96, label: "Eski Huş Ağacı", scale: 2.0, category: "trees", sheetW: 480, sheetH: 96 },
-  { key: "pack_tree_old_maple", path: "/assets/pack/objects/Tree/Old/Common/Maple Tree copiar.png", fw: 48, fh: 96, label: "Eski Akçaağaç", scale: 2.0, category: "trees", sheetW: 624, sheetH: 96 },
-  { key: "pack_tree_old_pine", path: "/assets/pack/objects/Tree/Old/Common/Pine Tree copiar.png", fw: 48, fh: 96, label: "Eski Çam Ağacı", scale: 2.0, category: "trees", sheetW: 432, sheetH: 96 }
+  {key: "pack_tree_old_maple", path: "/assets/pack/objects/Tree/Old/Common/Maple Tree copiar.png", fw: 48, fh: 96, label: "Eski Akçaağaç", scale: 2.0, category: "trees", sheetW: 624, sheetH: 96 },
+  { key: "pack_tree_old_pine", path: "/assets/pack/objects/Tree/Old/Common/Pine Tree copiar.png", fw: 48, fh: 96, label: "Eski Çam Ağacı", scale: 2.0, category: "trees", sheetW: 432, sheetH: 96 },
+
+  // İskeleler / Docks
+  { key: "pack_dock_iskele", path: "/assets/pack/objects/exterior/iskele.png", fw: 16, fh: 16, label: "Mavi İskele", scale: 2.0, category: "dock", sheetW: 144, sheetH: 64 },
+  { key: "pack_dock_tahta_iskele", path: "/assets/pack/objects/exterior/tahta iskele.png", fw: 16, fh: 16, label: "Tahta İskele", scale: 2.0, category: "dock", sheetW: 208, sheetH: 144 }
 ];
 
 const PACK_TREES = [
@@ -913,7 +917,7 @@ const App: React.FC = () => {
   const [afkKickReason, setAfkKickReason] = useState("");
 
   const [activeTab, setActiveTab] = useState<"structures" | "decorations" | "effects" | "materials" | "seeds" | "mining" | "ahir">("structures");
-  const [decorCategory, setDecorCategory] = useState<"trees" | "exterior" | "beds" | "chairs" | "tables" | "closets" | "others" | "playground" | "beach" | "houses" | "workbenches" | "fences" | "animals" | "custom">("trees");
+  const [decorCategory, setDecorCategory] = useState<"trees" | "exterior" | "beds" | "chairs" | "tables" | "closets" | "others" | "playground" | "beach" | "houses" | "workbenches" | "fences" | "animals" | "custom" | "dock">("trees");
 
   // Equipment states
   const [isEquipmentOpen, setIsEquipmentOpen] = useState(false);
@@ -2422,6 +2426,7 @@ const App: React.FC = () => {
                       { id: "tables", label: "🛋️ Masa" },
                       { id: "closets", label: "🚪 Dolap" },
                       { id: "others", label: "🧸 Diğer" },
+                      { id: "dock", label: "🌉 İskele" },
                       { id: "custom", label: "📤 Özel" }
                     ].map(cat => (
                       <button
@@ -2489,6 +2494,7 @@ const App: React.FC = () => {
                         {renderExtraCategory("others")}
                       </>
                     )}
+                    {decorCategory === "dock" && renderExtraCategory("dock")}
                     {decorCategory === "custom" && (() => {
                         const customList: any[] = [];
                         if (room?.state.customAssets) {
