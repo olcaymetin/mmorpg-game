@@ -213,6 +213,7 @@ export const EXTRA_PACK_SPRITESHEETS = [
   // İskeleler / Docks
   { key: "pack_dock_iskele", path: "/assets/pack/objects/exterior/iskele.png", fw: 16, fh: 16, label: "Mavi İskele", scale: 2.0, category: "dock", sheetW: 144, sheetH: 64 },
   { key: "pack_dock_tahta_iskele", path: "/assets/pack/objects/exterior/tahta iskele.png", fw: 16, fh: 16, label: "Tahta İskele", scale: 2.0, category: "dock", sheetW: 208, sheetH: 144 },
+  { key: "pack_iskele_legacy", path: "/assets/iskele.png", fw: 16, fh: 16, label: "Ahşap İskele", scale: 2.0, category: "dock", sheetW: 144, sheetH: 64 },
 
   // Çitler / Fences
   { key: "pack_fences_tilemap", path: "/assets/fences.png", fw: 16, fh: 16, label: "Çit", scale: 2.0, category: "fences", sheetW: 512, sheetH: 272 }
@@ -1423,7 +1424,15 @@ const App: React.FC = () => {
       const index = startGid + (row * colsCount + col);
       setSelectedTile(index);
       if (game) {
-        game.events.emit("editor-brush-selected", { type: "tile", index });
+        if (activeTileset === "fences") {
+          const localIndex = row * colsCount + col;
+          game.events.emit("editor-brush-selected", { type: "object", name: `pack_fences_tilemap:${localIndex}` });
+        } else if (activeTileset === "iskele") {
+          const localIndex = row * colsCount + col;
+          game.events.emit("editor-brush-selected", { type: "object", name: `pack_iskele_legacy:${localIndex}` });
+        } else {
+          game.events.emit("editor-brush-selected", { type: "tile", index });
+        }
       }
     }
   };
@@ -1463,7 +1472,15 @@ const App: React.FC = () => {
       const index = startGid + (rowStart * colsCount + colStart);
       setSelectedTile(index);
       if (game) {
-        game.events.emit("editor-brush-selected", { type: "tile", index });
+        if (activeTileset === "fences") {
+          const localIndex = rowStart * colsCount + colStart;
+          game.events.emit("editor-brush-selected", { type: "object", name: `pack_fences_tilemap:${localIndex}` });
+        } else if (activeTileset === "iskele") {
+          const localIndex = rowStart * colsCount + colStart;
+          game.events.emit("editor-brush-selected", { type: "object", name: `pack_iskele_legacy:${localIndex}` });
+        } else {
+          game.events.emit("editor-brush-selected", { type: "tile", index });
+        }
       }
     } else {
       // Multi-tile stamp selection
