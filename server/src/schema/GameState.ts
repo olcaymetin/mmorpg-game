@@ -16,6 +16,8 @@ export class PlacedObjectState extends Schema {
   @type("float32") scale: number = 0.15;
   @type("float32") animSpeed: number = 1.0;
   @type("string")  mapId: string = "main";
+  @type("float32") angle: number = 0;
+  @type("boolean") flipX: boolean = false;
 }
 
 export class SkillState extends Schema {

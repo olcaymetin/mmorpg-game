@@ -3,8 +3,8 @@ import { Schema, MapSchema, ArraySchema, defineTypes } from "@colyseus/schema";
 export class CropState extends Schema { key!: string; cropType!: string; stage!: number; plantedAt!: number; mapId!: string; }
 defineTypes(CropState, { key: "string", cropType: "string", stage: "int32", plantedAt: "float64", mapId: "string" });
 
-export class PlacedObjectState extends Schema { id!: string; type!: string; x!: number; y!: number; scale!: number; animSpeed!: number; mapId!: string; }
-defineTypes(PlacedObjectState, { id: "string", type: "string", x: "float32", y: "float32", scale: "float32", animSpeed: "float32", mapId: "string" });
+export class PlacedObjectState extends Schema { id!: string; type!: string; x!: number; y!: number; scale!: number; animSpeed!: number; mapId!: string; angle!: number; flipX!: boolean; }
+defineTypes(PlacedObjectState, { id: "string", type: "string", x: "float32", y: "float32", scale: "float32", animSpeed: "float32", mapId: "string", angle: "float32", flipX: "boolean" });
 
 export class SkillState extends Schema { name!: string; xp!: number; level!: number; }
 defineTypes(SkillState, { name: "string", xp: "int32", level: "int32" });

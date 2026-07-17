@@ -148,6 +148,69 @@ const TILESETS_CONFIG: Record<string, { startGid: number; cols: number; rows: nu
   cave: { startGid: 12000, cols: 24, rows: 16, width: 384, height: 256, url: "/assets/pack/tilesets/Cave_Water_Ground_animations_tiles.png", label: "🌋 Mağara" }
 };
 
+export const EXTRA_PACK_SPRITESHEETS = [
+  // Mine & Dungeon
+  { key: "pack_mine_bonfire_fish", path: "/assets/pack/objects/exterior/Mine and Dungeon/bonfire Fish.png", fw: 32, fh: 32, label: "Balıklı Ateş", scale: 2.0, category: "others", sheetW: 288, sheetH: 32 },
+  { key: "pack_mine_bonfire", path: "/assets/pack/objects/exterior/Mine and Dungeon/bonfire.png", fw: 32, fh: 32, label: "Kamp Ateşi", scale: 2.0, category: "others", sheetW: 96, sheetH: 32 },
+  { key: "pack_mine_door", path: "/assets/pack/objects/exterior/Mine and Dungeon/Door.png", fw: 32, fh: 64, label: "Maden Kapısı", scale: 2.0, category: "others", sheetW: 128, sheetH: 64 },
+  { key: "pack_mine_fire_light", path: "/assets/pack/objects/exterior/Mine and Dungeon/Fire light.png", fw: 48, fh: 48, label: "Ateş Işığı", scale: 2.0, category: "others", sheetW: 144, sheetH: 48 },
+  { key: "pack_mine_lamp", path: "/assets/pack/objects/exterior/Mine and Dungeon/Lamp .png", fw: 16, fh: 16, label: "Maden Lambası", scale: 2.0, category: "others", sheetW: 48, sheetH: 16 },
+  { key: "pack_mine_lava_stone", path: "/assets/pack/objects/exterior/Mine and Dungeon/Lava Stone.png", fw: 32, fh: 32, label: "Lav Taşı", scale: 2.0, category: "others", sheetW: 64, sheetH: 32 },
+  { key: "pack_mine_props", path: "/assets/pack/objects/exterior/Mine and Dungeon/Mine props.png", fw: 32, fh: 48, label: "Vagon/Ray", scale: 2.0, category: "others", sheetW: 64, sheetH: 240 },
+  { key: "pack_mine_props_general", path: "/assets/pack/objects/exterior/Mine and Dungeon/Props Mine.png", fw: 32, fh: 48, label: "Maden Dekoru", scale: 2.0, category: "others", sheetW: 320, sheetH: 240 },
+  { key: "pack_mine_statue", path: "/assets/pack/objects/exterior/Mine and Dungeon/statue.png", fw: 64, fh: 96, label: "Maden Heykeli", scale: 2.0, category: "others", sheetW: 256, sheetH: 192 },
+  { key: "pack_mine_mineral_stone", path: "/assets/pack/objects/exterior/Mine and Dungeon/stone with minerals.png", fw: 16, fh: 16, label: "Cevherli Taş", scale: 2.0, category: "others", sheetW: 176, sheetH: 272 },
+  { key: "pack_mine_symbols", path: "/assets/pack/objects/exterior/Mine and Dungeon/Symbols.png", fw: 16, fh: 16, label: "Maden Sembolü", scale: 2.0, category: "others", sheetW: 128, sheetH: 192 },
+  { key: "pack_mine_trap_2", path: "/assets/pack/objects/exterior/Mine and Dungeon/Trap 2.png", fw: 32, fh: 32, label: "Tuzak 2", scale: 2.0, category: "others", sheetW: 128, sheetH: 96 },
+  { key: "pack_mine_trap", path: "/assets/pack/objects/exterior/Mine and Dungeon/Trap.png", fw: 32, fh: 32, label: "Tuzak 1", scale: 2.0, category: "others", sheetW: 64, sheetH: 96 },
+  { key: "pack_mine_web_spider", path: "/assets/pack/objects/exterior/Mine and Dungeon/web spider.png", fw: 32, fh: 32, label: "Örümcek Ağı", scale: 2.0, category: "others", sheetW: 64, sheetH: 32 },
+  { key: "pack_mine_wood_moss", path: "/assets/pack/objects/exterior/Mine and Dungeon/wood moss.png", fw: 16, fh: 16, label: "Yosunlu Odun", scale: 2.0, category: "others", sheetW: 48, sheetH: 32 },
+
+  // Interior new items
+  { key: "pack_int_basketball", path: "/assets/pack/objects/interior/basketball.png", fw: 16, fh: 16, label: "Basketbol", scale: 2.0, category: "playground", sheetW: 208, sheetH: 224 },
+  { key: "pack_int_candle_1", path: "/assets/pack/objects/interior/Candle_1.png", fw: 16, fh: 32, label: "Mum 1", scale: 2.0, category: "others", sheetW: 64, sheetH: 32 },
+  { key: "pack_int_candle_2", path: "/assets/pack/objects/interior/Candle_2.png", fw: 16, fh: 32, label: "Mum 2", scale: 2.0, category: "others", sheetW: 64, sheetH: 32 },
+  { key: "pack_int_candle_3", path: "/assets/pack/objects/interior/Candle_3.png", fw: 16, fh: 32, label: "Mum 3", scale: 2.0, category: "others", sheetW: 64, sheetH: 32 },
+  { key: "pack_int_candle_4", path: "/assets/pack/objects/interior/candle_4.png", fw: 16, fh: 32, label: "Mum 4", scale: 2.0, category: "others", sheetW: 64, sheetH: 32 },
+  { key: "pack_int_candle_5", path: "/assets/pack/objects/interior/Candle_5.png", fw: 16, fh: 32, label: "Mum 5", scale: 2.0, category: "others", sheetW: 64, sheetH: 32 },
+  { key: "pack_int_candle_6", path: "/assets/pack/objects/interior/Candle_6.png", fw: 16, fh: 32, label: "Mum 6", scale: 2.0, category: "others", sheetW: 64, sheetH: 32 },
+  { key: "pack_int_candle_small", path: "/assets/pack/objects/interior/candle.png", fw: 16, fh: 16, label: "Küçük Mum", scale: 2.0, category: "others", sheetW: 64, sheetH: 16 },
+  { key: "pack_int_cats_furniture_new", path: "/assets/pack/objects/interior/cats_furniture.png", fw: 32, fh: 32, label: "Kedi Eşyası", scale: 2.0, category: "others", sheetW: 400, sheetH: 128 },
+  { key: "pack_int_doors_windows", path: "/assets/pack/objects/interior/Doors,_windows_and_curtains.png", fw: 32, fh: 32, label: "Kapı/Pencere/Perde", scale: 2.0, category: "others", sheetW: 256, sheetH: 256 },
+  { key: "pack_int_dressers", path: "/assets/pack/objects/interior/Dressers.png", fw: 32, fh: 32, label: "Şifonyer", scale: 2.0, category: "closets", sheetW: 256, sheetH: 160 },
+  { key: "pack_int_hospital_wing", path: "/assets/pack/objects/interior/hospital_wing.png", fw: 32, fh: 32, label: "Hastane Eşyası", scale: 2.0, category: "others", sheetW: 320, sheetH: 128 },
+  { key: "pack_int_school", path: "/assets/pack/objects/interior/School.png", fw: 32, fh: 32, label: "Okul Eşyası", scale: 2.0, category: "others", sheetW: 400, sheetH: 256 },
+  { key: "pack_int_temple", path: "/assets/pack/objects/interior/Temple.png", fw: 32, fh: 32, label: "Tapınak Eşyası", scale: 2.0, category: "others", sheetW: 192, sheetH: 80 },
+  { key: "pack_int_xmas", path: "/assets/pack/objects/interior/Xmas.png", fw: 32, fh: 32, label: "Yılbaşı Eşyası", scale: 2.0, category: "others", sheetW: 208, sheetH: 224 },
+
+  // Props new items
+  { key: "pack_props_clouds", path: "/assets/pack/objects/props/clouds.png", fw: 48, fh: 32, label: "Bulut", scale: 2.0, category: "others", sheetW: 144, sheetH: 96 },
+  { key: "pack_props_ground_stones", path: "/assets/pack/objects/props/Ground_stones.png", fw: 16, fh: 16, label: "Yer Taşları", scale: 2.0, category: "exterior", sheetW: 128, sheetH: 48 },
+  { key: "pack_props_leaf", path: "/assets/pack/objects/props/Leaf.png", fw: 16, fh: 16, label: "Yer Yaprakları", scale: 2.0, category: "exterior", sheetW: 32, sheetH: 32 },
+  { key: "pack_props_shaders_winter", path: "/assets/pack/objects/props/Shaders_Winter.png", fw: 48, fh: 48, label: "Kış Gölgeleri", scale: 2.0, category: "exterior", sheetW: 144, sheetH: 192 },
+  { key: "pack_props_smoke", path: "/assets/pack/objects/props/Smoke.png", fw: 32, fh: 32, label: "Duman", scale: 2.0, category: "effects", sheetW: 288, sheetH: 64 },
+  { key: "pack_props_sprash", path: "/assets/pack/objects/props/Sprash.png", fw: 16, fh: 16, label: "Su Sıçraması", scale: 2.0, category: "effects", sheetW: 64, sheetH: 16 },
+  { key: "pack_props_stones", path: "/assets/pack/objects/props/Stones.png", fw: 16, fh: 16, label: "Taşlar (Bahar)", scale: 2.0, category: "exterior", sheetW: 128, sheetH: 32 },
+  { key: "pack_props_stones_winter", path: "/assets/pack/objects/props/Stones_.png", fw: 32, fh: 32, label: "Taşlar (Kış)", scale: 2.0, category: "exterior", sheetW: 96, sheetH: 64 },
+  { key: "pack_props_stones_summer", path: "/assets/pack/objects/props/Stones_Summer.png", fw: 16, fh: 16, label: "Taşlar (Yaz)", scale: 2.0, category: "exterior", sheetW: 64, sheetH: 32 },
+  { key: "pack_props_water_props", path: "/assets/pack/objects/props/Water_props.png", fw: 16, fh: 16, label: "Su Dekoru", scale: 2.0, category: "beach", sheetW: 64, sheetH: 16 },
+  { key: "pack_props_water_stones", path: "/assets/pack/objects/props/water_stones.png", fw: 16, fh: 16, label: "Su Taşları", scale: 2.0, category: "beach", sheetW: 48, sheetH: 48 },
+  { key: "pack_props_wood", path: "/assets/pack/objects/props/wood.png", fw: 16, fh: 16, label: "Odun", scale: 2.0, category: "exterior", sheetW: 64, sheetH: 16 },
+
+  // Trees and Effects
+  { key: "pack_tree_trunks", path: "/assets/pack/objects/Tree/TREE TRUNKS copiar.png", fw: 16, fh: 16, label: "Ağaç Kütüğü", scale: 2.0, category: "trees", sheetW: 128, sheetH: 32 },
+  { key: "pack_tree_effects_leaf", path: "/assets/pack/objects/Tree/Common/Effects/Effects.png", fw: 32, fh: 48, label: "Yaprak Döküm", scale: 2.0, category: "effects", sheetW: 96, sheetH: 336 },
+  { key: "pack_tree_fx_dark", path: "/assets/pack/objects/Tree/Common/Effects/FX Effects Dark Forest leafs 2.png", fw: 32, fh: 48, label: "Kara Yaprak Efekti", scale: 2.0, category: "effects", sheetW: 96, sheetH: 48 },
+  { key: "pack_tree_fx_orange", path: "/assets/pack/objects/Tree/Common/Effects/FX Effects Orange Leafs Fall 2.png", fw: 32, fh: 48, label: "Sarı Yaprak Efekti", scale: 2.0, category: "effects", sheetW: 96, sheetH: 48 },
+  { key: "pack_tree_fx_purple", path: "/assets/pack/objects/Tree/Common/Effects/FX Effects Pupple Leafs Fall 2.png", fw: 32, fh: 48, label: "Mor Yaprak Efekti 2", scale: 2.0, category: "effects", sheetW: 96, sheetH: 48 },
+  { key: "pack_tree_fx_purple_1", path: "/assets/pack/objects/Tree/Common/Effects/FX Effects Pupple Leafs Fall.png", fw: 32, fh: 48, label: "Mor Yaprak Efekti 1", scale: 2.0, category: "effects", sheetW: 96, sheetH: 48 },
+  { key: "pack_tree_fx_red", path: "/assets/pack/objects/Tree/Common/Effects/FX Effects Red Leafs Fall.png", fw: 32, fh: 48, label: "Kızıl Yaprak Efekti", scale: 2.0, category: "effects", sheetW: 96, sheetH: 48 },
+  { key: "pack_tree_fx_snow", path: "/assets/pack/objects/Tree/Common/Effects/FX Effects Snow Leafs Winter 2.png", fw: 32, fh: 48, label: "Kar Yaprak Efekti", scale: 2.0, category: "effects", sheetW: 96, sheetH: 48 },
+  { key: "pack_tree_old_birch", path: "/assets/pack/objects/Tree/Old/Common/Birch Tree-Sheet copiar.png", fw: 48, fh: 96, label: "Eski Huş Ağacı", scale: 2.0, category: "trees", sheetW: 480, sheetH: 96 },
+  { key: "pack_tree_old_maple", path: "/assets/pack/objects/Tree/Old/Common/Maple Tree copiar.png", fw: 48, fh: 96, label: "Eski Akçaağaç", scale: 2.0, category: "trees", sheetW: 624, sheetH: 96 },
+  { key: "pack_tree_old_pine", path: "/assets/pack/objects/Tree/Old/Common/Pine Tree copiar.png", fw: 48, fh: 96, label: "Eski Çam Ağacı", scale: 2.0, category: "trees", sheetW: 432, sheetH: 96 }
+];
+
 const PACK_TREES = [
   // Birch Tree (64x96)
   { key: "pack_tree_birch_tree:0", sheetKey: "pack_tree_birch_tree", path: "/assets/pack/objects/trees/Birch_Tree.png", label: "Huş (Bahar)", fw: 64, fh: 96, col: 0, row: 0, sheetW: 256, sheetH: 96, scale: 2.0 },
@@ -1160,6 +1223,73 @@ const App: React.FC = () => {
     }
   };
 
+  const renderSlicedButton = (item: any) => {
+    const fw = item.fw;
+    const fh = item.fh;
+    const x = item.x !== undefined ? item.x : item.col * fw;
+    const y = item.y !== undefined ? item.y : item.row * fh;
+    
+    const maxThumbSize = 40;
+    const ratio = Math.min(maxThumbSize / fw, maxThumbSize / fh, 1.0);
+    const displayW = Math.round(fw * ratio);
+    const displayH = Math.round(fh * ratio);
+    const bgSizeW = Math.round(item.sheetW * ratio);
+    const bgSizeH = Math.round(item.sheetH * ratio);
+    const bgPosX = -Math.round(x * ratio);
+    const bgPosY = -Math.round(y * ratio);
+
+    return (
+      <button
+        key={item.key}
+        className={`obj-btn ${selectedTile === -2 && selectedObjectName === item.key ? "obj-btn--active" : ""}`}
+        onClick={() => handleSelectObjectBrush(item.key)}
+        style={{ padding: "6px 2px", display: "flex", flexDirection: "column", alignItems: "center" }}
+      >
+        <div
+          style={{
+            width: `${displayW}px`,
+            height: `${displayH}px`,
+            backgroundImage: `url(${item.path})`,
+            backgroundSize: `${bgSizeW}px ${bgSizeH}px`,
+            backgroundPosition: `${bgPosX}px ${bgPosY}px`,
+            backgroundRepeat: "no-repeat",
+            imageRendering: "pixelated",
+            margin: "0 auto 4px"
+          }}
+        />
+        <span style={{ fontSize: "8px", textAlign: "center", display: "block", width: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {item.label}
+        </span>
+      </button>
+    );
+  };
+
+  const renderExtraCategory = (categoryName: string) => {
+    const list: any[] = [];
+    EXTRA_PACK_SPRITESHEETS.forEach(sheet => {
+      if (sheet.category !== categoryName) return;
+      const cols = Math.floor(sheet.sheetW / sheet.fw) || 1;
+      const rows = Math.floor(sheet.sheetH / sheet.fh) || 1;
+      const total = cols * rows;
+      for (let i = 0; i < total; i++) {
+        list.push({
+          key: `${sheet.key}:${i}`,
+          sheetKey: sheet.key,
+          path: sheet.path,
+          label: `${sheet.label} #${i + 1}`,
+          fw: sheet.fw,
+          fh: sheet.fh,
+          col: i % cols,
+          row: Math.floor(i / cols),
+          sheetW: sheet.sheetW,
+          sheetH: sheet.sheetH,
+          scale: sheet.scale
+        });
+      }
+    });
+    return list.map(renderSlicedButton);
+  };
+
   const handleSelectObjectBrush = (name: string) => {
     setSelectedTile(-2);
     setSelectedObjectName(name);
@@ -1972,6 +2102,52 @@ const App: React.FC = () => {
                     </div>
                   )}
 
+                  {/* Yön Döndürme & Yatay Çevirme Kontrolleri */}
+                  <div style={{ display: "flex", gap: "8px", margin: "10px 0" }}>
+                    <button
+                      className="btn btn--secondary"
+                      style={{ flex: 1, fontSize: "10px", padding: "6px", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}
+                      onClick={() => {
+                        if (!game) return;
+                        const scene = game.scene.keys.GameScene as any;
+                        if (scene && selectedObject) {
+                          const currentObj = scene.placedObjects.find((o: any) => o.id === selectedObject.id);
+                          const currentAngle = currentObj?.imageObj ? currentObj.imageObj.angle : 0;
+                          const nextAngle = (currentAngle + 90) % 360;
+                          game.events.emit("editor-object-rotation-changed", {
+                            id: selectedObject.id,
+                            angle: nextAngle,
+                            save: true
+                          });
+                        }
+                      }}
+                      title="Objeyi saat yönünde 90 derece döndürür (Klavye: R)"
+                    >
+                      🔄 90° Döndür
+                    </button>
+                    <button
+                      className="btn btn--secondary"
+                      style={{ flex: 1, fontSize: "10px", padding: "6px", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}
+                      onClick={() => {
+                        if (!game) return;
+                        const scene = game.scene.keys.GameScene as any;
+                        if (scene && selectedObject) {
+                          const currentObj = scene.placedObjects.find((o: any) => o.id === selectedObject.id);
+                          const currentFlip = currentObj?.imageObj ? currentObj.imageObj.flipX : false;
+                          const nextFlip = !currentFlip;
+                          game.events.emit("editor-object-flip-changed", {
+                            id: selectedObject.id,
+                            flipX: nextFlip,
+                            save: true
+                          });
+                        }
+                      }}
+                      title="Objeyi yatay olarak aynalar/çevirir (Klavye: F)"
+                    >
+                      ↔️ Yatay Çevir
+                    </button>
+                  </div>
+
                   <button className="btn btn--danger" onClick={handleObjectDelete}>
                     🗑️ Objeyi Haritadan Sil
                   </button>
@@ -2228,104 +2404,92 @@ const App: React.FC = () => {
               )}
 
               {/* Tab 2: Customization / Decorations */}
-              {activeTab === "decorations" && (() => {
-                const renderSlicedButton = (item: any) => {
-                  const fw = item.fw;
-                  const fh = item.fh;
-                  const x = item.x !== undefined ? item.x : item.col * fw;
-                  const y = item.y !== undefined ? item.y : item.row * fh;
-                  
-                  const maxThumbSize = 40;
-                  const ratio = Math.min(maxThumbSize / fw, maxThumbSize / fh, 1.0);
-                  const displayW = Math.round(fw * ratio);
-                  const displayH = Math.round(fh * ratio);
-                  const bgSizeW = Math.round(item.sheetW * ratio);
-                  const bgSizeH = Math.round(item.sheetH * ratio);
-                  const bgPosX = -Math.round(x * ratio);
-                  const bgPosY = -Math.round(y * ratio);
-
-                  return (
-                    <button
-                      key={item.key}
-                      className={`obj-btn ${selectedTile === -2 && selectedObjectName === item.key ? "obj-btn--active" : ""}`}
-                      onClick={() => handleSelectObjectBrush(item.key)}
-                      style={{ padding: "6px 2px", display: "flex", flexDirection: "column", alignItems: "center" }}
-                    >
-                      <div
+              {activeTab === "decorations" && (
+                <>
+                  {/* Decor Sub-Categories Row */}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "12px", borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: "8px" }}>
+                    {[
+                      { id: "trees", label: "🌳 Ağaç" },
+                      { id: "exterior", label: "🏡 Dış" },
+                      { id: "playground", label: "🎡 Park" },
+                      { id: "beach", label: "🏖️ Plaj" },
+                      { id: "houses", label: "🏠 Ev" },
+                      { id: "workbenches", label: "🛠️ Tezgah" },
+                      { id: "fences", label: "🪵 Çit" },
+                      { id: "animals", label: "🐄 Hayvan" },
+                      { id: "beds", label: "🛏️ Yatak" },
+                      { id: "chairs", label: "🪑 Sandalye" },
+                      { id: "tables", label: "🛋️ Masa" },
+                      { id: "closets", label: "🚪 Dolap" },
+                      { id: "others", label: "🧸 Diğer" },
+                      { id: "custom", label: "📤 Özel" }
+                    ].map(cat => (
+                      <button
+                        key={cat.id}
+                        onClick={() => setDecorCategory(cat.id as any)}
                         style={{
-                          width: `${displayW}px`,
-                          height: `${displayH}px`,
-                          backgroundImage: `url(${item.path})`,
-                          backgroundSize: `${bgSizeW}px ${bgSizeH}px`,
-                          backgroundPosition: `${bgPosX}px ${bgPosY}px`,
-                          backgroundRepeat: "no-repeat",
-                          imageRendering: "pixelated",
-                          margin: "0 auto 4px"
+                          flex: "1 1 auto",
+                          fontSize: "8px",
+                          padding: "4px 6px",
+                          borderRadius: "4px",
+                          border: decorCategory === cat.id ? "1px solid #4ade80" : "1px solid rgba(255,255,255,0.1)",
+                          background: decorCategory === cat.id ? "rgba(74, 222, 128, 0.15)" : "rgba(0,0,0,0.2)",
+                          color: decorCategory === cat.id ? "#4ade80" : "rgba(255,255,255,0.7)",
+                          cursor: "pointer",
+                          fontWeight: "bold",
+                          fontFamily: 'monospace'
                         }}
-                      />
-                      <span style={{ fontSize: "8px", textAlign: "center", display: "block", width: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {item.label}
-                      </span>
-                    </button>
-                  );
-                };
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
 
-                return (
-                  <>
-                    {/* Decor Sub-Categories Row */}
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "12px", borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: "8px" }}>
-                      {[
-                        { id: "trees", label: "🌳 Ağaç" },
-                        { id: "exterior", label: "🏡 Dış" },
-                        { id: "playground", label: "🎡 Park" },
-                        { id: "beach", label: "🏖️ Plaj" },
-                        { id: "houses", label: "🏠 Ev" },
-                        { id: "workbenches", label: "🛠️ Tezgah" },
-                        { id: "fences", label: "🪵 Çit" },
-                        { id: "animals", label: "🐄 Hayvan" },
-                        { id: "beds", label: "🛏️ Yatak" },
-                        { id: "chairs", label: "🪑 Sandalye" },
-                        { id: "tables", label: "🛋️ Masa" },
-                        { id: "closets", label: "🚪 Dolap" },
-                        { id: "others", label: "🧸 Diğer" },
-                        { id: "custom", label: "📤 Özel" }
-                      ].map(cat => (
-                        <button
-                          key={cat.id}
-                          onClick={() => setDecorCategory(cat.id as any)}
-                          style={{
-                            flex: "1 1 auto",
-                            fontSize: "8px",
-                            padding: "4px 6px",
-                            borderRadius: "4px",
-                            border: decorCategory === cat.id ? "1px solid #4ade80" : "1px solid rgba(255,255,255,0.1)",
-                            background: decorCategory === cat.id ? "rgba(74, 222, 128, 0.15)" : "rgba(0,0,0,0.2)",
-                            color: decorCategory === cat.id ? "#4ade80" : "rgba(255,255,255,0.7)",
-                            cursor: "pointer",
-                            fontWeight: "bold",
-                            fontFamily: 'monospace'
-                          }}
-                        >
-                          {cat.label}
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="object-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "6px" }}>
-                      {decorCategory === "trees" && PACK_TREES.map(renderSlicedButton)}
-                      {decorCategory === "exterior" && PACK_EXTERIOR_PROPS.map(renderSlicedButton)}
-                      {decorCategory === "playground" && PACK_PLAYGROUND_PROPS.map(renderSlicedButton)}
-                      {decorCategory === "beach" && PACK_BEACH_PROPS.map(renderSlicedButton)}
-                      {decorCategory === "houses" && PACK_HOUSES.map(renderSlicedButton)}
-                      {decorCategory === "workbenches" && PACK_WORKBENCHES.map(renderSlicedButton)}
-                      {decorCategory === "fences" && PACK_FENCES_BRIDGES.map(renderSlicedButton)}
-                      {decorCategory === "animals" && PACK_ANIMALS.map(renderSlicedButton)}
-                      {decorCategory === "beds" && PACK_BEDS.map(renderSlicedButton)}
-                      {decorCategory === "chairs" && PACK_CHAIRS.map(renderSlicedButton)}
-                      {decorCategory === "tables" && PACK_TABLES_SOFAS.map(renderSlicedButton)}
-                      {decorCategory === "closets" && PACK_CLOSETS.map(renderSlicedButton)}
-                      {decorCategory === "others" && PACK_INTERIOR_OTHERS.map(renderSlicedButton)}
-                      {decorCategory === "custom" && (() => {
+                  <div className="object-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "6px" }}>
+                    {decorCategory === "trees" && (
+                      <>
+                        {PACK_TREES.map(renderSlicedButton)}
+                        {renderExtraCategory("trees")}
+                      </>
+                    )}
+                    {decorCategory === "exterior" && (
+                      <>
+                        {PACK_EXTERIOR_PROPS.map(renderSlicedButton)}
+                        {renderExtraCategory("exterior")}
+                      </>
+                    )}
+                    {decorCategory === "playground" && (
+                      <>
+                        {PACK_PLAYGROUND_PROPS.map(renderSlicedButton)}
+                        {renderExtraCategory("playground")}
+                      </>
+                    )}
+                    {decorCategory === "beach" && (
+                      <>
+                        {PACK_BEACH_PROPS.map(renderSlicedButton)}
+                        {renderExtraCategory("beach")}
+                      </>
+                    )}
+                    {decorCategory === "houses" && PACK_HOUSES.map(renderSlicedButton)}
+                    {decorCategory === "workbenches" && PACK_WORKBENCHES.map(renderSlicedButton)}
+                    {decorCategory === "fences" && PACK_FENCES_BRIDGES.map(renderSlicedButton)}
+                    {decorCategory === "animals" && PACK_ANIMALS.map(renderSlicedButton)}
+                    {decorCategory === "beds" && PACK_BEDS.map(renderSlicedButton)}
+                    {decorCategory === "chairs" && PACK_CHAIRS.map(renderSlicedButton)}
+                    {decorCategory === "tables" && PACK_TABLES_SOFAS.map(renderSlicedButton)}
+                    {decorCategory === "closets" && (
+                      <>
+                        {PACK_CLOSETS.map(renderSlicedButton)}
+                        {renderExtraCategory("closets")}
+                      </>
+                    )}
+                    {decorCategory === "others" && (
+                      <>
+                        {PACK_INTERIOR_OTHERS.map(renderSlicedButton)}
+                        {renderExtraCategory("others")}
+                      </>
+                    )}
+                    {decorCategory === "custom" && (() => {
                         const customList: any[] = [];
                         if (room?.state.customAssets) {
                           room.state.customAssets.forEach((asset: any) => {
@@ -2363,12 +2527,11 @@ const App: React.FC = () => {
                       })()}
                     </div>
                   </>
-                );
-              })()}
+              )}
 
               {/* Tab 3: VFX / Gifts (Gifs) */}
               {activeTab === "effects" && (
-                <div className="object-grid" style={{ gridTemplateColumns: "repeat(2, 1fr)" }}>
+                <div className="object-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "6px" }}>
                   <button
                     className={`obj-btn ${selectedTile === -2 && selectedObjectName === "vfx_leaf_single" ? "obj-btn--active" : ""}`}
                     onClick={() => handleSelectObjectBrush("vfx_leaf_single")}
@@ -2418,6 +2581,7 @@ const App: React.FC = () => {
                     <img src="/assets/gift/Stone_Oven_Smoke_Effect_16x16.gif" alt="smoke" className="obj-thumb" />
                     <span>Fırın Dumanı</span>
                   </button>
+                  {renderExtraCategory("effects")}
                 </div>
               )}
 

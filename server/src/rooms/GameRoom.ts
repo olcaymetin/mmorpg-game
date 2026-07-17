@@ -73,6 +73,8 @@ interface ObjectPlaceMessage {
   y: number;
   scale: number;
   animSpeed?: number;
+  angle?: number;
+  flipX?: boolean;
 }
 
 interface ObjectMoveMessage {
@@ -374,6 +376,12 @@ export class GameRoom extends Room<GameState> {
       obj.scale = msg.scale;
       if (msg.animSpeed !== undefined) {
         obj.animSpeed = msg.animSpeed;
+      }
+      if (msg.angle !== undefined) {
+        obj.angle = msg.angle;
+      }
+      if (msg.flipX !== undefined) {
+        obj.flipX = msg.flipX;
       }
       this.state.placedObjects.set(msg.id, obj);
       this.triggerDebouncedSave();
@@ -1461,9 +1469,9 @@ export class GameRoom extends Room<GameState> {
       const decorData: { [key: string]: number } = {};
       this.state.decorData.forEach((val, key) => { decorData[key] = val; });
 
-      const placedObjects: Array<{ id: string; type: string; x: number; y: number; scale: number; animSpeed: number; mapId: string }> = [];
+      const placedObjects: Array<{ id: string; type: string; x: number; y: number; scale: number; animSpeed: number; mapId: string; angle: number; flipX: boolean }> = [];
       this.state.placedObjects.forEach((val) => {
-        placedObjects.push({ id: val.id, type: val.type, x: val.x, y: val.y, scale: val.scale, animSpeed: val.animSpeed, mapId: val.mapId || "main" });
+        placedObjects.push({ id: val.id, type: val.type, x: val.x, y: val.y, scale: val.scale, animSpeed: val.animSpeed, mapId: val.mapId || "main", angle: val.angle || 0, flipX: val.flipX || false });
       });
 
       const crops: Array<{ key: string; cropType: string; stage: number; plantedAt: number; mapId: string }> = [];
@@ -1518,6 +1526,8 @@ export class GameRoom extends Room<GameState> {
           obj.scale = o.scale;
           obj.animSpeed = o.animSpeed !== undefined ? o.animSpeed : 1.0;
           obj.mapId = o.mapId || "main";
+          obj.angle = o.angle !== undefined ? o.angle : 0;
+          obj.flipX = o.flipX !== undefined ? o.flipX : false;
           this.state.placedObjects.set(o.id, obj);
         });
       }

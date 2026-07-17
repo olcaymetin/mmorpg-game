@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import type { Room } from "colyseus.js";
 import type { GameState, Player, PlacedObjectState } from "../schema/GameState";
+import { EXTRA_PACK_SPRITESHEETS } from "../../App";
 
 // ─── World & rendering constants ──────────────────────────────────────────────
 export const WORLD_W  = 1600; // 50 columns * 32px
@@ -512,6 +513,12 @@ export class GameScene extends Phaser.Scene {
     for (const a of animals) {
       this.load.spritesheet(a.key, a.path, { frameWidth: a.fw, frameHeight: a.fh });
     }
+
+    // 15. Extra Assets Spritesheets
+    for (const s of EXTRA_PACK_SPRITESHEETS) {
+      const cleanPath = s.path.startsWith("/") ? s.path.substring(1) : s.path;
+      this.load.spritesheet(s.key, cleanPath, { frameWidth: s.fw, frameHeight: s.fh });
+    }
   }
 
   private getLayerForTileIndex(tileIndex: number): "terrain" | "decor" {
@@ -702,6 +709,91 @@ export class GameScene extends Phaser.Scene {
             y: obj.y,
             scale: obj.scale,
             animSpeed: payload.speed
+          });
+        }
+      }
+    });
+
+    this.game.events.on("editor-object-rotation-changed", (payload: { id: string; angle: number; save?: boolean }) => {
+      console.log("[Client GameScene] editor-object-rotation-changed:", payload);
+      const obj = this.placedObjects.find(o => o.id === payload.id);
+      if (obj) {
+        obj.angle = payload.angle;
+        if (obj.imageObj) {
+          obj.imageObj.setAngle(payload.angle);
+        }
+        this.drawSelectionOutline();
+
+        if (payload.save) {
+          const stateObj = this.room.state.placedObjects.get(obj.id);
+          const animSpeed = stateObj ? stateObj.animSpeed : 1.0;
+          const flipX = stateObj ? stateObj.flipX : false;
+          this.room.send("object-place", {
+            id: obj.id,
+            type: obj.type,
+            x: obj.x,
+            y: obj.y,
+            scale: obj.scale,
+            animSpeed: animSpeed,
+            angle: payload.angle,
+            flipX: flipX
+          });
+        }
+      }
+    });
+
+    this.game.events.on("editor-object-flip-changed", (payload: { id: string; flipX: boolean; save?: boolean }) => {
+      console.log("[Client GameScene] editor-object-flip-changed:", payload);
+      const obj = this.placedObjects.find(o => o.id === payload.id);
+      if (obj) {
+        obj.flipX = payload.flipX;
+        if (obj.imageObj) {
+          obj.imageObj.setFlipX(payload.flipX);
+        }
+        this.drawSelectionOutline();
+
+        if (payload.save) {
+          const stateObj = this.room.state.placedObjects.get(obj.id);
+          const animSpeed = stateObj ? stateObj.animSpeed : 1.0;
+          const angle = stateObj ? stateObj.angle : 0;
+          this.room.send("object-place", {
+            id: obj.id,
+            type: obj.type,
+            x: obj.x,
+            y: obj.y,
+            scale: obj.scale,
+            animSpeed: animSpeed,
+            angle: angle,
+            flipX: payload.flipX
+          });
+        }
+      }
+    });
+
+    // Keyboard bindings for Rotate (R) and Flip (F)
+    this.input.keyboard.on("keydown-R", () => {
+      if (this.editorMode && this.selectedObjectId) {
+        const obj = this.placedObjects.find(o => o.id === this.selectedObjectId);
+        if (obj && obj.imageObj) {
+          const nextAngle = (obj.imageObj.angle + 90) % 360;
+          this.game.events.emit("editor-object-rotation-changed", {
+            id: this.selectedObjectId,
+            angle: nextAngle,
+            save: true
+          });
+        }
+      }
+    });
+
+    this.input.keyboard.on("keydown-F", () => {
+      if (this.editorMode && this.selectedObjectId) {
+        const obj = this.placedObjects.find(o => o.id === this.selectedObjectId);
+        if (obj && obj.imageObj) {
+          const nextFlip = !obj.imageObj.flipX;
+          this.game.events.emit("editor-object-flip-changed", {
+            id: this.selectedObjectId,
+            flipX: nextFlip,
+            save: true
           });
         }
       }
@@ -1733,6 +1825,11 @@ export class GameScene extends Phaser.Scene {
     }
     
     img.setScale(scale);
+    const objState = this.room?.state.placedObjects.get(id);
+    if (objState) {
+      img.setAngle(objState.angle || 0);
+      img.setFlipX(objState.flipX || false);
+    }
     if (type === "farm_tile" || type === "farm_tile_hoed" || type === "farm_tile_watered") {
       img.setOrigin(0.5, 0.5);
       img.setDepth(1.5);
@@ -2005,6 +2102,8 @@ export class GameScene extends Phaser.Scene {
             obj.imageObj.x = objState.x;
             obj.imageObj.y = objState.y;
             obj.imageObj.setScale(objState.scale);
+            obj.imageObj.setAngle(objState.angle || 0);
+            obj.imageObj.setFlipX(objState.flipX || false);
             obj.imageObj.setDepth(objState.type === "farm_tile" || objState.type === "farm_tile_hoed" || objState.type === "farm_tile_watered" ? 1.5 : objState.y);
             if (objState.type.startsWith("vfx_") || objState.type.startsWith("mg_")) {
               (obj.imageObj as Phaser.GameObjects.Sprite).anims.timeScale = objState.animSpeed !== undefined ? objState.animSpeed : 1.0;
