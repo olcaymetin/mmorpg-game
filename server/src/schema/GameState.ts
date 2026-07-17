@@ -140,6 +140,8 @@ export class Player extends Schema {
   @type("string")  equippedLeggings: string = "";
   @type("string")  equippedBoots: string = "";
   @type("string")  equippedWeapon: string = "";
+  @type("string")  mountType: string = "none";
+  @type("boolean") isRiding: boolean = false;
 
   // ── Owned Cosmetics (shop purchases) ────────────────────────────────────
   @type({ map: "boolean" }) ownedCosmetics = new MapSchema<boolean>(); // key = "hair_Fawn" | "clothes_Blue" | "beard_Black" | "acc_Wizard" etc.

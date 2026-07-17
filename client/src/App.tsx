@@ -180,13 +180,13 @@ const PACK_TREES = [
   { key: "pack_tree_maple_tree:7", sheetKey: "pack_tree_maple_tree", path: "/assets/pack/objects/trees/Maple_Tree.png", label: "Akçaağaç (Kütük 2)", fw: 56, fh: 96, col: 3, row: 1, sheetW: 224, sheetH: 192, scale: 2.0 },
 
   // Big Old Tree (128x160)
-  { key: "pack_tree_big_old_tree:0", sheetKey: "pack_tree_big_old_tree", path: "/assets/pack/objects/trees/Big_old_Tree.png", label: "Kocaman Yaşlı Ağaç", fw: 128, fh: 160, col: 0, row: 0, sheetW: 128, sheetH: 160, scale: 1.0 },
+  { key: "pack_tree_big_old_tree:0", sheetKey: "pack_tree_big_old_tree", path: "/assets/pack/objects/trees/DeepForest/Big_old_Tree.png", label: "Kocaman Yaşlı Ağaç", fw: 128, fh: 160, col: 0, row: 0, sheetW: 128, sheetH: 160, scale: 1.0 },
 
   // Sliced bushes (48x48, 144x288, 3x6 = 18 frames)
   ...Array.from({ length: 18 }, (_, i) => ({
     key: `pack_tree_bushes:${i}`,
     sheetKey: "pack_tree_bushes",
-    path: "/assets/pack/objects/trees/bushes.png",
+    path: "/assets/pack/objects/trees/DeepForest/bushes.png",
     label: `Çalı #${i + 1}`,
     fw: 48,
     fh: 48,
@@ -201,7 +201,7 @@ const PACK_TREES = [
   ...Array.from({ length: 18 }, (_, i) => ({
     key: `pack_tree_fantasy_mushroom:${i}`,
     sheetKey: "pack_tree_fantasy_mushroom",
-    path: "/assets/pack/objects/trees/Fantasy_Mushroom.png",
+    path: "/assets/pack/objects/trees/DeepForest/Fantasy_Mushroom.png",
     label: `Mantar #${i + 1}`,
     fw: 32,
     fh: 48,
@@ -216,7 +216,7 @@ const PACK_TREES = [
   ...Array.from({ length: 15 }, (_, i) => ({
     key: `pack_tree_root:${i}`,
     sheetKey: "pack_tree_root",
-    path: "/assets/pack/objects/trees/Root.png",
+    path: "/assets/pack/objects/trees/DeepForest/Root.png",
     label: `Kök #${i + 1}`,
     fw: 32,
     fh: 48,
@@ -347,6 +347,83 @@ const PACK_EXTERIOR_PROPS = [
     row: Math.floor(i / 3),
     sheetW: 288,
     sheetH: 192,
+    scale: 1.5,
+  })),
+];
+
+const PACK_PLAYGROUND_PROPS = [
+  // Playground (96x96, 288x192, 6 frames)
+  ...Array.from({ length: 6 }, (_, i) => ({
+    key: `pack_ext_playground:${i}`,
+    sheetKey: "pack_ext_playground",
+    path: "/assets/pack/objects/exterior/Playground.png",
+    label: `Park Teması #${i + 1}`,
+    fw: 96,
+    fh: 96,
+    col: i % 3,
+    row: Math.floor(i / 3),
+    sheetW: 288,
+    sheetH: 192,
+    scale: 1.5,
+  })),
+  // playground_1 (64x48, 256x144, 4x3 = 12 frames)
+  ...Array.from({ length: 12 }, (_, i) => ({
+    key: `pack_ext_playground_1:${i}`,
+    sheetKey: "pack_ext_playground_1",
+    path: "/assets/pack/objects/exterior/playground_1.png",
+    label: `Okul/Park #${i + 1}`,
+    fw: 64,
+    fh: 48,
+    col: i % 4,
+    row: Math.floor(i / 4),
+    sheetW: 256,
+    sheetH: 144,
+    scale: 1.5,
+  })),
+];
+
+const PACK_BEACH_PROPS = [
+  // PropsWater_Summer (32x32, 160x128, 5x4 = 20 frames)
+  ...Array.from({ length: 20 }, (_, i) => ({
+    key: `pack_props_water_summer:${i}`,
+    sheetKey: "pack_props_water_summer",
+    path: "/assets/pack/objects/props/PropsWater_Summer.png",
+    label: `Plaj/Yaz #${i + 1}`,
+    fw: 32,
+    fh: 32,
+    col: i % 5,
+    row: Math.floor(i / 5),
+    sheetW: 160,
+    sheetH: 128,
+    scale: 1.5,
+  })),
+  // Props_Water (32x32, 160x128, 5x4 = 20 frames)
+  ...Array.from({ length: 20 }, (_, i) => ({
+    key: `pack_props_water:${i}`,
+    sheetKey: "pack_props_water",
+    path: "/assets/pack/objects/props/Props_Water.png",
+    label: `Su/Liman #${i + 1}`,
+    fw: 32,
+    fh: 32,
+    col: i % 5,
+    row: Math.floor(i / 5),
+    sheetW: 160,
+    sheetH: 128,
+    scale: 1.5,
+  })),
+  // Slices from Exterior.png for Beach towels/umbrellas/docks/boats etc.
+  // Exterior.png is 512x176. Frame size 32x32.
+  ...Array.from({ length: 80 }, (_, i) => ({
+    key: `pack_ext_exterior_sheet:${i}`,
+    sheetKey: "pack_ext_exterior_sheet",
+    path: "/assets/pack/objects/exterior/Exterior.png",
+    label: `Plaj/Dış #${i + 1}`,
+    fw: 32,
+    fh: 32,
+    col: i % 16,
+    row: Math.floor(i / 16),
+    sheetW: 512,
+    sheetH: 176,
     scale: 1.5,
   })),
 ];
@@ -651,7 +728,7 @@ const App: React.FC = () => {
   const [afkKickReason, setAfkKickReason] = useState("");
 
   const [activeTab, setActiveTab] = useState<"structures" | "decorations" | "effects" | "materials" | "seeds" | "mining" | "ahir">("structures");
-  const [decorCategory, setDecorCategory] = useState<"trees" | "exterior" | "beds" | "chairs" | "tables" | "closets" | "others">("trees");
+  const [decorCategory, setDecorCategory] = useState<"trees" | "exterior" | "beds" | "chairs" | "tables" | "closets" | "others" | "playground" | "beach">("trees");
 
   // Equipment states
   const [isEquipmentOpen, setIsEquipmentOpen] = useState(false);
@@ -661,6 +738,8 @@ const App: React.FC = () => {
   const [equippedLeggings, setEquippedLeggings] = useState("");
   const [equippedBoots, setEquippedBoots] = useState("");
   const [equippedWeapon, setEquippedWeapon] = useState("");
+  const [mountType, setMountType] = useState("none");
+  // isRiding removed
 
   // Selection box start/end for multi-tile selection
   const [selectionStart, setSelectionStart] = useState<{ col: number; row: number } | null>(null);
@@ -862,6 +941,8 @@ const App: React.FC = () => {
         setEquippedLeggings(player.equippedLeggings || "");
         setEquippedBoots(player.equippedBoots || "");
         setEquippedWeapon(player.equippedWeapon || "");
+        setMountType(player.mountType || "none");
+        // isRiding sync removed
 
         setHp(player.hp !== undefined ? player.hp : 100);
         setMaxHp(player.maxHp !== undefined ? player.maxHp : 100);
@@ -941,13 +1022,7 @@ const App: React.FC = () => {
     }
   };
 
-  const handleSelectTile = (tileIndex: number) => {
-    setSelectedTile(tileIndex);
-    setSelectedObject(null);
-    if (game) {
-      game.events.emit("editor-brush-selected", { type: "tile", index: tileIndex });
-    }
-  };
+
 
   const handleSelectEraser = () => {
     setSelectedTile(-1);
@@ -1909,6 +1984,7 @@ const App: React.FC = () => {
                           backgroundImage: `url(${item.path})`,
                           backgroundSize: `${bgSizeW}px ${bgSizeH}px`,
                           backgroundPosition: `${bgPosX}px ${bgPosY}px`,
+                          backgroundRepeat: "no-repeat",
                           imageRendering: "pixelated",
                           margin: "0 auto 4px"
                         }}
@@ -1927,9 +2003,11 @@ const App: React.FC = () => {
                       {[
                         { id: "trees", label: "🌳 Ağaç" },
                         { id: "exterior", label: "🏡 Dış" },
+                        { id: "playground", label: "🎡 Park" },
+                        { id: "beach", label: "🏖️ Plaj" },
                         { id: "beds", label: "🛏️ Yatak" },
                         { id: "chairs", label: "🪑 Sandalye" },
-                        { id: "tables", label: "🛋️ Masa/Koltuk" },
+                        { id: "tables", label: "🛋️ Masa" },
                         { id: "closets", label: "🚪 Dolap" },
                         { id: "others", label: "🧸 Diğer" }
                       ].map(cat => (
@@ -1957,6 +2035,8 @@ const App: React.FC = () => {
                     <div className="object-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "6px" }}>
                       {decorCategory === "trees" && PACK_TREES.map(renderSlicedButton)}
                       {decorCategory === "exterior" && PACK_EXTERIOR_PROPS.map(renderSlicedButton)}
+                      {decorCategory === "playground" && PACK_PLAYGROUND_PROPS.map(renderSlicedButton)}
+                      {decorCategory === "beach" && PACK_BEACH_PROPS.map(renderSlicedButton)}
                       {decorCategory === "beds" && PACK_BEDS.map(renderSlicedButton)}
                       {decorCategory === "chairs" && PACK_CHAIRS.map(renderSlicedButton)}
                       {decorCategory === "tables" && PACK_TABLES_SOFAS.map(renderSlicedButton)}
@@ -2868,7 +2948,7 @@ const App: React.FC = () => {
                           );
                         } else {
                           tooltip = `${itemType} (${tierId.replace(/^\d+\._/, "")})`;
-                          const isTool = ["Axe", "Pickaxe", "Shovel", "Sickle", "Fishing_Rod", "Watering_can"].includes(itemType);
+                          // no-op
                           content = (
                             <img 
                               src={`/assets/pack/icons/RPG_icons/Weapons_and_Armor/${tierId}/${itemType}.png`}
@@ -2909,6 +2989,94 @@ const App: React.FC = () => {
                         </div>
                       );
                     })}
+                  </div>
+                </div>
+
+                {/* Mount / Vehicle Selector */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", background: "rgba(255,255,255,0.02)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                  <div style={{ fontSize: "12px", fontWeight: "bold", color: "#4ade80", borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: "4px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span>🐎 Binekler & Araçlar</span>
+                    {mountType !== "none" && (
+                      <button 
+                        onClick={() => room.send("toggle-mount", { mountType: "none" })}
+                        style={{ fontSize: "8px", background: "rgba(239, 68, 68, 0.2)", border: "1px solid #ef4444", borderRadius: "4px", padding: "2px 6px", color: "#f87171", cursor: "pointer", fontFamily: "'Press Start 2P', monospace" }}
+                      >
+                        İn
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <div>
+                      <div style={{ fontSize: "8px", color: "#94a3b8", marginBottom: "4px" }}>Atlar (Hızlı - %80):</div>
+                      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                        {[
+                          { id: "horse_1", icon: "🐎", label: "Kahve" },
+                          { id: "horse_2", icon: "🦄", label: "Beyaz" },
+                          { id: "horse_3", icon: "🐴", label: "Kızıl" },
+                          { id: "horse_4", icon: "🦓", label: "Siyah" },
+                          { id: "horse_5", icon: "🦌", label: "Alaca" },
+                        ].map(m => (
+                          <button
+                            key={m.id}
+                            onClick={() => room.send("toggle-mount", { mountType: m.id })}
+                            style={{
+                              padding: "4px 8px",
+                              background: mountType === m.id ? "rgba(74, 222, 128, 0.2)" : "rgba(255,255,255,0.04)",
+                              border: mountType === m.id ? "1px solid #4ade80" : "1px solid rgba(255,255,255,0.1)",
+                              borderRadius: "4px",
+                              color: mountType === m.id ? "#4ade80" : "#fff",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              fontFamily: "'Press Start 2P', monospace",
+                              fontSize: "6px"
+                            }}
+                          >
+                            <span>{m.icon}</span>
+                            <span>{m.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div style={{ fontSize: "8px", color: "#94a3b8", marginBottom: "4px" }}>Bisikletler (Orta - %50):</div>
+                      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                        {[
+                          { id: "bicycle_blue", color: "#60a5fa", label: "Mavi" },
+                          { id: "bicycle_red", color: "#f87171", label: "Kızıl" },
+                          { id: "bicycle_green", color: "#4ade80", label: "Yeşil" },
+                          { id: "bicycle_orange", color: "#fbbf24", label: "Turuncu" },
+                          { id: "bicycle_pink", color: "#f472b6", label: "Pembe" },
+                        ].map(m => (
+                          <button
+                            key={m.id}
+                            onClick={() => room.send("toggle-mount", { mountType: m.id })}
+                            style={{
+                              padding: "4px 8px",
+                              background: mountType === m.id ? "rgba(96, 165, 250, 0.2)" : "rgba(255,255,255,0.04)",
+                              border: mountType === m.id ? `1px solid ${m.color}` : "1px solid rgba(255,255,255,0.1)",
+                              borderRadius: "4px",
+                              color: mountType === m.id ? m.color : "#fff",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              fontFamily: "'Press Start 2P', monospace",
+                              fontSize: "6px"
+                            }}
+                          >
+                            <span style={{ color: m.color }}>🚲</span>
+                            <span>{m.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: "7px", color: "#94a3b8", textAlign: "center", marginTop: "4px" }}>
+                    Kısayollar: <strong>H</strong> (At) | <strong>B</strong> (Bisiklet)
                   </div>
                 </div>
 

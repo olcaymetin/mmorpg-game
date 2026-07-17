@@ -206,8 +206,16 @@ export class GameRoom extends Room<GameState> {
         }
 
         // Apply movement
-        const vx = dx * SPEED;
-        const vy = dy * SPEED;
+        let currentSpeed = SPEED;
+        if (player.isRiding) {
+          if (player.mountType && player.mountType.indexOf("horse") !== -1) {
+            currentSpeed = SPEED * 1.8;
+          } else if (player.mountType && player.mountType.indexOf("bicycle") !== -1) {
+            currentSpeed = SPEED * 1.5;
+          }
+        }
+        const vx = dx * currentSpeed;
+        const vy = dy * currentSpeed;
         const mapId = player.currentMap || "main";
         let mapW = WORLD_W;
         let mapH = WORLD_H;
@@ -1213,6 +1221,22 @@ export class GameRoom extends Room<GameState> {
       player.shield = player.maxShield;
 
       console.log(`[Equipment] Player ${player.username || client.sessionId} equipped ${slot} -> ${itemKey}. MaxHP:${player.maxHp} MaxShield:${player.maxShield}`);
+    });
+
+    this.onMessage("toggle-mount", (client: Client, msg: { mountType: string }) => {
+      const player = this.state.players.get(client.sessionId);
+      if (!player) return;
+      (player as any).lastActivityAt = Date.now();
+
+      const newMount = msg.mountType || "none";
+      if (newMount === "none") {
+        player.isRiding = false;
+        player.mountType = "none";
+      } else {
+        player.isRiding = true;
+        player.mountType = newMount;
+      }
+      console.log(`[Mount] Player ${player.username || client.sessionId} updated mount: ${player.mountType} (Riding: ${player.isRiding})`);
     });
   }
 

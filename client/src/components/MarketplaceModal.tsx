@@ -171,8 +171,9 @@ const MarketplaceModal: React.FC<MarketplaceModalProps> = ({
               r="4"
               fill="#c4b5fd"
               className="chart-dot"
-              title={`${h.pricePerUnit} FARM`}
-            />
+            >
+              <title>{`${h.pricePerUnit} FARM`}</title>
+            </circle>
           );
         })}
       </svg>

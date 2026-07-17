@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "./SettingsModal.css";
 
-interface SkillBoost { current: number }
+// no-op
 
 interface SettingsModalProps {
   room: any;

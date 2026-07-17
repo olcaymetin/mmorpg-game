@@ -62,6 +62,8 @@ export class Player extends Schema {
   equippedLeggings!: string;
   equippedBoots!: string;
   equippedWeapon!: string;
+  mountType!: string;
+  isRiding!: boolean;
   ownedCosmetics!: MapSchema<boolean>;
 }
 defineTypes(Player, {
@@ -95,6 +97,8 @@ defineTypes(Player, {
   equippedLeggings: "string",
   equippedBoots: "string",
   equippedWeapon: "string",
+  mountType: "string",
+  isRiding: "boolean",
   ownedCosmetics: { map: "boolean" }
 });
 

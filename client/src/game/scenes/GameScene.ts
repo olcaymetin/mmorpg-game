@@ -27,6 +27,7 @@ interface PlayerEntity {
     clothes?: Phaser.GameObjects.Sprite;
     acc?: Phaser.GameObjects.Sprite;
     tool?: Phaser.GameObjects.Sprite;
+    mount?: Phaser.GameObjects.Sprite;
   };
 }
 
@@ -83,7 +84,7 @@ export class GameScene extends Phaser.Scene {
   private localY = 0; // predicted local player Y
   private lastSentMs = 0;
   private isMoving = false;
-  private static readonly CLIENT_SPEED = 4; // must match server SPEED
+
 
   // Drag Panning & Dragging Objects
   private isDraggingCamera = false;
@@ -309,6 +310,72 @@ export class GameScene extends Phaser.Scene {
       }
     }
 
+    // 6.5. Mounts & Riders Preload
+    // 6.5.1 Mounts (At & Bisiklet)
+    for (let c = 1; c <= 5; c++) {
+      this.load.spritesheet(`pack_ride_horse_mount_${c}_idle`, `assets/pack/char/mount_horse_idle/mount/${c}.png`, { frameWidth: 32, frameHeight: 48 });
+      this.load.spritesheet(`pack_ride_horse_mount_${c}_walk`, `assets/pack/char/mount_horse_walk/mount/${c}.png`, { frameWidth: 32, frameHeight: 48 });
+      this.load.spritesheet(`pack_ride_horse_mount_${c}_run`, `assets/pack/char/mount_horse_run/mount/${c}.png`, { frameWidth: 32, frameHeight: 48 });
+    }
+    const bikeColors = ["Blue", "Green", "Orange", "Pink", "Red"];
+    for (const c of bikeColors) {
+      this.load.spritesheet(`pack_ride_bicycle_mount_${c.toLowerCase()}_idle`, `assets/pack/char/mount_bicycle_idle/mount/${c}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_ride_bicycle_mount_${c.toLowerCase()}_run`, `assets/pack/char/mount_bicycle_run/mount/${c}.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+
+    // 6.5.2 Riders skins
+    for (let t = 1; t <= 4; t++) {
+      this.load.spritesheet(`pack_ride_horse_skin_${t}_idle`, `assets/pack/char/mount_horse_idle/skins/${t}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_ride_horse_skin_${t}_walk`, `assets/pack/char/mount_horse_walk/skins/${t}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_ride_horse_skin_${t}_run`, `assets/pack/char/mount_horse_run/skins/${t}.png`, { frameWidth: 32, frameHeight: 32 });
+
+      this.load.spritesheet(`pack_ride_bicycle_skin_${t}_idle`, `assets/pack/char/mount_bicycle_idle/skins/${t}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_ride_bicycle_skin_${t}_run`, `assets/pack/char/mount_bicycle_run/skins/${t}.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+
+    // 6.5.3 Riders cosmetics
+    for (const s of stylesList) {
+      for (const c of colorsList) {
+        this.load.spritesheet(`pack_ride_horse_hair_${s}_${c}_idle`, `assets/pack/char/mount_horse_idle/hair/${s}/${c}.png`, { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet(`pack_ride_horse_hair_${s}_${c}_walk`, `assets/pack/char/mount_horse_walk/hair/${s}/${c}.png`, { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet(`pack_ride_horse_hair_${s}_${c}_run`, `assets/pack/char/mount_horse_run/hair/${s}/${c}.png`, { frameWidth: 32, frameHeight: 32 });
+
+        this.load.spritesheet(`pack_ride_bicycle_hair_${s}_${c}_idle`, `assets/pack/char/mount_bicycle_idle/hair/${s}/${c}.png`, { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet(`pack_ride_bicycle_hair_${s}_${c}_run`, `assets/pack/char/mount_bicycle_run/hair/${s}/${c}.png`, { frameWidth: 32, frameHeight: 32 });
+      }
+    }
+    for (const c of clothesList) {
+      this.load.spritesheet(`pack_ride_horse_clothes_${c}_idle`, `assets/pack/char/mount_horse_idle/clothes/Farm/${c}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_ride_horse_clothes_${c}_walk`, `assets/pack/char/mount_horse_walk/clothes/Farm/${c}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_ride_horse_clothes_${c}_run`, `assets/pack/char/mount_horse_run/clothes/Farm/${c}.png`, { frameWidth: 32, frameHeight: 32 });
+
+      this.load.spritesheet(`pack_ride_bicycle_clothes_${c}_idle`, `assets/pack/char/mount_bicycle_idle/clothes/Farm/${c}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_ride_bicycle_clothes_${c}_run`, `assets/pack/char/mount_bicycle_run/clothes/Farm/${c}.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+    for (const b of beardsList) {
+      this.load.spritesheet(`pack_ride_horse_beard_${b}_idle`, `assets/pack/char/mount_horse_idle/acc/Beard/${b}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_ride_horse_beard_${b}_walk`, `assets/pack/char/mount_horse_walk/acc/Beard/${b}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_ride_horse_beard_${b}_run`, `assets/pack/char/mount_horse_run/acc/Beard/${b}.png`, { frameWidth: 32, frameHeight: 32 });
+
+      this.load.spritesheet(`pack_ride_bicycle_beard_${b}_idle`, `assets/pack/char/mount_bicycle_idle/acc/Beard/${b}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_ride_bicycle_beard_${b}_run`, `assets/pack/char/mount_bicycle_run/acc/Beard/${b}.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+    for (const a of accsList) {
+      this.load.spritesheet(`pack_ride_horse_acc_${a}_idle`, `assets/pack/char/mount_horse_idle/acc/${a}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_ride_horse_acc_${a}_walk`, `assets/pack/char/mount_horse_walk/acc/${a}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_ride_horse_acc_${a}_run`, `assets/pack/char/mount_horse_run/acc/${a}.png`, { frameWidth: 32, frameHeight: 32 });
+
+      this.load.spritesheet(`pack_ride_bicycle_acc_${a}_idle`, `assets/pack/char/mount_bicycle_idle/acc/${a}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_ride_bicycle_acc_${a}_run`, `assets/pack/char/mount_bicycle_run/acc/${a}.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+    for (const g of gendersList) {
+      for (const ec of eyeColorsList) {
+        this.load.spritesheet(`pack_ride_horse_eyes_${g}_${ec}_idle`, `assets/pack/char/mount_horse_idle/eyes/${g}/${ec}.png`, { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet(`pack_ride_bicycle_eyes_${g}_${ec}_idle`, `assets/pack/char/mount_bicycle_idle/eyes/${g}/${ec}.png`, { frameWidth: 32, frameHeight: 32 });
+      }
+    }
+
+
     // 7. New Tilesets
     this.load.image("tileset_spring", "assets/pack/tilesets/Tileset_Grass_Spring.png");
     this.load.image("tileset_summer", "assets/pack/tilesets/Tileset_Grass_Summer.png");
@@ -324,17 +391,17 @@ export class GameScene extends Phaser.Scene {
       { key: "pack_tree_mahogany_tree", path: "assets/pack/objects/trees/Mahogany_Tree.png", fw: 64, fh: 96 },
       { key: "pack_tree_maple_tree", path: "assets/pack/objects/trees/Maple_Tree.png", fw: 56, fh: 96 },
       { key: "pack_tree_pine_tree", path: "assets/pack/objects/trees/Pine_Tree.png", fw: 64, fh: 96 },
-      { key: "pack_tree_big_old_tree", path: "assets/pack/objects/trees/Big_old_Tree.png", fw: 128, fh: 160 },
-      { key: "pack_tree_bushes", path: "assets/pack/objects/trees/bushes.png", fw: 48, fh: 48 },
-      { key: "pack_tree_fantasy_mushroom", path: "assets/pack/objects/trees/Fantasy_Mushroom.png", fw: 32, fh: 48 },
-      { key: "pack_tree_root", path: "assets/pack/objects/trees/Root.png", fw: 32, fh: 48 },
-      { key: "pack_tree_root_water_1", path: "assets/pack/objects/trees/Root_Water_1.png", fw: 32, fh: 48 },
-      { key: "pack_tree_root_water_2", path: "assets/pack/objects/trees/Root_Water_2.png", fw: 32, fh: 48 },
-      { key: "pack_tree_root_water_3", path: "assets/pack/objects/trees/Root_Water_3.png", fw: 32, fh: 48 },
-      { key: "pack_tree_tree", path: "assets/pack/objects/trees/Tree.png", fw: 32, fh: 48 },
-      { key: "pack_tree_tree_water_1", path: "assets/pack/objects/trees/Tree_Water_1.png", fw: 32, fh: 48 },
-      { key: "pack_tree_tree_water_2", path: "assets/pack/objects/trees/Tree_Water_2.png", fw: 32, fh: 48 },
-      { key: "pack_tree_tree_water_3", path: "assets/pack/objects/trees/Tree_Water_3.png", fw: 32, fh: 48 }
+      { key: "pack_tree_big_old_tree", path: "assets/pack/objects/trees/DeepForest/Big_old_Tree.png", fw: 128, fh: 160 },
+      { key: "pack_tree_bushes", path: "assets/pack/objects/trees/DeepForest/bushes.png", fw: 48, fh: 48 },
+      { key: "pack_tree_fantasy_mushroom", path: "assets/pack/objects/trees/DeepForest/Fantasy_Mushroom.png", fw: 32, fh: 48 },
+      { key: "pack_tree_root", path: "assets/pack/objects/trees/DeepForest/Root.png", fw: 32, fh: 48 },
+      { key: "pack_tree_root_water_1", path: "assets/pack/objects/trees/DeepForest/Root_Water_1.png", fw: 32, fh: 48 },
+      { key: "pack_tree_root_water_2", path: "assets/pack/objects/trees/DeepForest/Root_Water_2.png", fw: 32, fh: 48 },
+      { key: "pack_tree_root_water_3", path: "assets/pack/objects/trees/DeepForest/Root_Water_3.png", fw: 32, fh: 48 },
+      { key: "pack_tree_tree", path: "assets/pack/objects/trees/DeepForest/Tree.png", fw: 32, fh: 48 },
+      { key: "pack_tree_tree_water_1", path: "assets/pack/objects/trees/Mine/Tree_Water_1.png", fw: 32, fh: 48 },
+      { key: "pack_tree_tree_water_2", path: "assets/pack/objects/trees/Mine/Tree_Water_2.png", fw: 32, fh: 48 },
+      { key: "pack_tree_tree_water_3", path: "assets/pack/objects/trees/Mine/Tree_Water_3.png", fw: 32, fh: 48 }
     ];
     for (const s of treeSheets) {
       this.load.spritesheet(s.key, s.path, { frameWidth: s.fw, frameHeight: s.fh });
@@ -351,12 +418,15 @@ export class GameScene extends Phaser.Scene {
       { key: "pack_ext_newsstand", path: "assets/pack/objects/exterior/Newsstand.png", fw: 32, fh: 48 },
       { key: "pack_ext_picnic", path: "assets/pack/objects/exterior/Picnic.png", fw: 96, fh: 48 },
       { key: "pack_ext_playground", path: "assets/pack/objects/exterior/Playground.png", fw: 96, fh: 96 },
-      { key: "pack_ext_playground_1", path: "assets/pack/objects/exterior/playground_1.png", fw: 256, fh: 144 },
+      { key: "pack_ext_playground_1", path: "assets/pack/objects/exterior/playground_1.png", fw: 64, fh: 48 },
       { key: "pack_ext_popcorn_", path: "assets/pack/objects/exterior/Popcorn_.png", fw: 48, fh: 48 },
       { key: "pack_ext_scarescrow", path: "assets/pack/objects/exterior/Scarescrow.png", fw: 32, fh: 32 },
       { key: "pack_ext_snowman", path: "assets/pack/objects/exterior/Snowman.png", fw: 32, fh: 32 },
       { key: "pack_ext_water_fountain", path: "assets/pack/objects/exterior/Water_fountain.png", fw: 64, fh: 64 },
-      { key: "pack_ext_well_", path: "assets/pack/objects/exterior/Well_.png", fw: 64, fh: 96 }
+      { key: "pack_ext_well_", path: "assets/pack/objects/exterior/Well_.png", fw: 64, fh: 96 },
+      { key: "pack_ext_exterior_sheet", path: "assets/pack/objects/exterior/Exterior.png", fw: 32, fh: 32 },
+      { key: "pack_props_water_summer", path: "assets/pack/objects/props/PropsWater_Summer.png", fw: 32, fh: 32 },
+      { key: "pack_props_water", path: "assets/pack/objects/props/Props_Water.png", fw: 32, fh: 32 }
     ];
     for (const s of exteriorSheets) {
       this.load.spritesheet(s.key, s.path, { frameWidth: s.fw, frameHeight: s.fh });
@@ -662,7 +732,7 @@ export class GameScene extends Phaser.Scene {
    */
   private buildCropTextures(): void {
     for (const [cropName, meta] of Object.entries(GameScene.CROP_META)) {
-      const { frameH, plantH } = meta;
+      const { plantH } = meta;
       const cleanKey = `crop_clean_${cropName}`;
       if (this.textures.exists(cleanKey)) continue;
 
@@ -678,8 +748,10 @@ export class GameScene extends Phaser.Scene {
 
       // Register the clean canvas as a new Phaser texture with 7 frames
       const tex = this.textures.addCanvas(cleanKey, canvas);
-      for (let i = 0; i < 7; i++) {
-        tex.add(i, 0, i * 16, 0, 16, plantH);
+      if (tex) {
+        for (let i = 0; i < 7; i++) {
+          tex.add(i, 0, i * 16, 0, 16, plantH);
+        }
       }
     }
   }
@@ -865,6 +937,159 @@ export class GameScene extends Phaser.Scene {
               key: `${eyeKey}_${dir}`,
               frames: this.anims.generateFrameNumbers(eyeKey, { start, end }),
               frameRate: 4,
+              repeat: -1,
+            });
+          });
+        }
+      }
+    }
+
+    // ─── Binek Animasyonları Oluşturucu (Mount Anims Builder) ────────────────────────
+    const buildMountAnims = (keyPrefix: string, type: "horse" | "bicycle") => {
+      if (type === "horse") {
+        // Horse Idle (8 directions, 1 frame per direction)
+        const idleKey = `${keyPrefix}_idle`;
+        if (this.textures.exists(idleKey)) {
+          directionsList.forEach((dir) => {
+            const dirIndex = packDirections.indexOf(dir);
+            this.anims.create({
+              key: `${idleKey}_${dir}`,
+              frames: [{ key: idleKey, frame: dirIndex }],
+              frameRate: 1,
+              repeat: -1,
+            });
+          });
+        }
+        
+        // Horse Walk (8 directions, 2 frames per direction)
+        const walkKey = `${keyPrefix}_walk`;
+        if (this.textures.exists(walkKey)) {
+          directionsList.forEach((dir) => {
+            const dirIndex = packDirections.indexOf(dir);
+            const start = dirIndex * 2;
+            const end = start + 1;
+            this.anims.create({
+              key: `${walkKey}_${dir}`,
+              frames: this.anims.generateFrameNumbers(walkKey, { start, end }),
+              frameRate: 6,
+              repeat: -1,
+            });
+          });
+        }
+
+        // Horse Run (8 directions, 3 frames per direction)
+        const runKey = `${keyPrefix}_run`;
+        if (this.textures.exists(runKey)) {
+          directionsList.forEach((dir) => {
+            const dirIndex = packDirections.indexOf(dir);
+            const start = dirIndex * 3;
+            const end = start + 2;
+            this.anims.create({
+              key: `${runKey}_${dir}`,
+              frames: this.anims.generateFrameNumbers(runKey, { start, end }),
+              frameRate: 10,
+              repeat: -1,
+            });
+          });
+        }
+      } else {
+        // Bicycle Idle (8 directions, 1 frame per direction)
+        const idleKey = `${keyPrefix}_idle`;
+        if (this.textures.exists(idleKey)) {
+          directionsList.forEach((dir) => {
+            const dirIndex = packDirections.indexOf(dir);
+            this.anims.create({
+              key: `${idleKey}_${dir}`,
+              frames: [{ key: idleKey, frame: dirIndex }],
+              frameRate: 1,
+              repeat: -1,
+            });
+          });
+        }
+
+        // Bicycle Run/Ride (8 directions, 2 frames per direction)
+        const runKey = `${keyPrefix}_run`;
+        if (this.textures.exists(runKey)) {
+          directionsList.forEach((dir) => {
+            const dirIndex = packDirections.indexOf(dir);
+            const start = dirIndex * 2;
+            const end = start + 1;
+            this.anims.create({
+              key: `${runKey}_${dir}`,
+              frames: this.anims.generateFrameNumbers(runKey, { start, end }),
+              frameRate: 10,
+              repeat: -1,
+            });
+          });
+        }
+      }
+    };
+
+    // Build binek anims
+    // 1. Mounts
+    for (let c = 1; c <= 5; c++) {
+      buildMountAnims(`pack_ride_horse_mount_${c}`, "horse");
+    }
+    const bikeColorsList = ["blue", "green", "orange", "pink", "red"];
+    for (const c of bikeColorsList) {
+      buildMountAnims(`pack_ride_bicycle_mount_${c}`, "bicycle");
+    }
+
+    // 2. Rider Skins
+    for (let t = 1; t <= 4; t++) {
+      buildMountAnims(`pack_ride_horse_skin_${t}`, "horse");
+      buildMountAnims(`pack_ride_bicycle_skin_${t}`, "bicycle");
+    }
+
+    // 3. Rider Hairs
+    for (const s of styles) {
+      for (const c of colors) {
+        buildMountAnims(`pack_ride_horse_hair_${s}_${c}`, "horse");
+        buildMountAnims(`pack_ride_bicycle_hair_${s}_${c}`, "bicycle");
+      }
+    }
+
+    // 4. Rider Clothes
+    for (const c of cColors) {
+      buildMountAnims(`pack_ride_horse_clothes_${c}`, "horse");
+      buildMountAnims(`pack_ride_bicycle_clothes_${c}`, "bicycle");
+    }
+
+    // 5. Rider Beards
+    for (const b of bColors) {
+      buildMountAnims(`pack_ride_horse_beard_${b}`, "horse");
+      buildMountAnims(`pack_ride_bicycle_beard_${b}`, "bicycle");
+    }
+
+    // 6. Rider Accessories
+    for (const a of accs) {
+      buildMountAnims(`pack_ride_horse_acc_${a}`, "horse");
+      buildMountAnims(`pack_ride_bicycle_acc_${a}`, "bicycle");
+    }
+
+    // 7. Rider Eyes (idle only)
+    for (const g of genders) {
+      for (const ec of eyeColors) {
+        const hEyeKey = `pack_ride_horse_eyes_${g}_${ec}_idle`;
+        if (this.textures.exists(hEyeKey)) {
+          directionsList.forEach((dir) => {
+            const dirIndex = packDirections.indexOf(dir);
+            this.anims.create({
+              key: `${hEyeKey}_${dir}`,
+              frames: [{ key: hEyeKey, frame: dirIndex }],
+              frameRate: 1,
+              repeat: -1,
+            });
+          });
+        }
+        const bEyeKey = `pack_ride_bicycle_eyes_${g}_${ec}_idle`;
+        if (this.textures.exists(bEyeKey)) {
+          directionsList.forEach((dir) => {
+            const dirIndex = packDirections.indexOf(dir);
+            this.anims.create({
+              key: `${bEyeKey}_${dir}`,
+              frames: [{ key: bEyeKey, frame: dirIndex }],
+              frameRate: 1,
               repeat: -1,
             });
           });
@@ -1300,6 +1525,38 @@ export class GameScene extends Phaser.Scene {
       }
 
       this.activeBrushFlipX = !this.activeBrushFlipX;
+    });
+
+    // H Key - Toggle Horse Mount
+    this.input.keyboard!.on("keydown-H", () => {
+      if (document.activeElement && (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA")) {
+        return;
+      }
+      const localPlayer = this.room.state.players.get(this.room.sessionId);
+      if (!localPlayer) return;
+
+      const isCurrentlyRidingHorse = localPlayer.isRiding && localPlayer.mountType && localPlayer.mountType.indexOf("horse") !== -1;
+      if (isCurrentlyRidingHorse) {
+        this.room.send("toggle-mount", { mountType: "none" });
+      } else {
+        this.room.send("toggle-mount", { mountType: "horse_1" });
+      }
+    });
+
+    // B Key - Toggle Bicycle Mount
+    this.input.keyboard!.on("keydown-B", () => {
+      if (document.activeElement && (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA")) {
+        return;
+      }
+      const localPlayer = this.room.state.players.get(this.room.sessionId);
+      if (!localPlayer) return;
+
+      const isCurrentlyRidingBicycle = localPlayer.isRiding && localPlayer.mountType && localPlayer.mountType.indexOf("bicycle") !== -1;
+      if (isCurrentlyRidingBicycle) {
+        this.room.send("toggle-mount", { mountType: "none" });
+      } else {
+        this.room.send("toggle-mount", { mountType: "bicycle_blue" });
+      }
     });
   }
 
@@ -1740,6 +1997,7 @@ export class GameScene extends Phaser.Scene {
       isLayered = true;
       // Stacking order: shadow -> skin -> eyes -> beard -> clothes -> hair -> acc -> tag
       const skinTone = player.skinTone || "1";
+      const mountSpr = this.add.sprite(0, 10, "").setVisible(false);
       const skinSpr = this.add.sprite(0, 10, `pack_skin_${skinTone}_idle`);
       const eyesSpr = this.add.sprite(0, 10, `pack_eyes_${(player.gender || "male") === "male" ? "Male" : "Female"}_${player.eyeColor || "Black"}_idle`);
       const beardSpr = this.add.sprite(0, 10, `pack_beard_${player.beardColor || "Black"}_idle`).setVisible(false);
@@ -1751,9 +2009,10 @@ export class GameScene extends Phaser.Scene {
 
       sprite = skinSpr;
 
-      container.add([shadow, skinSpr, eyesSpr, beardSpr, clothesSpr, hairSpr, accSpr, toolSpr, tag]);
+      container.add([shadow, mountSpr, skinSpr, eyesSpr, beardSpr, clothesSpr, hairSpr, accSpr, toolSpr, tag]);
 
       layersObj = {
+        mount: mountSpr,
         skin: skinSpr,
         eyes: eyesSpr,
         beard: beardSpr,
@@ -1793,12 +2052,56 @@ export class GameScene extends Phaser.Scene {
 
     const layers = entity.layers;
     const isMoving = player.state === "walk";
-    const animType = isMoving ? "walk" : "idle";
     const dir = player.direction || "down";
+
+    const isRiding = player.isRiding && player.mountType && player.mountType !== "none";
+    const mountType = isRiding ? player.mountType : "none";
+    const isHorse = isRiding && mountType.indexOf("horse") !== -1;
+    const isBicycle = isRiding && mountType.indexOf("bicycle") !== -1;
+
+    let keyPrefix = "pack";
+    let animType = isMoving ? "walk" : "idle";
+
+    if (isHorse) {
+      keyPrefix = "pack_ride_horse";
+      animType = isMoving ? "run" : "idle";
+    } else if (isBicycle) {
+      keyPrefix = "pack_ride_bicycle";
+      animType = isMoving ? "run" : "idle";
+    }
+
+    // 0. Mount Layer
+    if (layers.mount) {
+      if (isRiding) {
+        layers.mount.setVisible(true);
+        let mountKey = "";
+        if (isHorse) {
+          const horseNum = mountType.split("_")[1] || "1";
+          mountKey = `pack_ride_horse_mount_${horseNum}_${animType}`;
+          layers.mount.setY(2);
+        } else if (isBicycle) {
+          const bikeColor = mountType.split("_")[1] || "blue";
+          mountKey = `pack_ride_bicycle_mount_${bikeColor}_${animType}`;
+          layers.mount.setY(10);
+        }
+
+        if (mountKey && this.textures.exists(mountKey)) {
+          if (layers.mount.texture.key !== mountKey) {
+            layers.mount.setTexture(mountKey);
+          }
+          const mountAnim = `${mountKey}_${dir}`;
+          if (layers.mount.anims.currentAnim?.key !== mountAnim) {
+            layers.mount.play(mountAnim, true);
+          }
+        }
+      } else {
+        layers.mount.setVisible(false);
+      }
+    }
 
     // 1. Skin Layer
     const skinTone = player.skinTone || "1";
-    const skinKey = `pack_skin_${skinTone}_${animType}`;
+    const skinKey = `${keyPrefix}_skin_${skinTone}_${animType}`;
     if (layers.skin.texture.key !== skinKey) {
       layers.skin.setTexture(skinKey);
     }
@@ -1813,7 +2116,7 @@ export class GameScene extends Phaser.Scene {
         layers.eyes.setVisible(true);
         const g = (player.gender || "male") === "male" ? "Male" : "Female";
         const ec = player.eyeColor || "Black";
-        const eyesKey = `pack_eyes_${g}_${ec}_idle`;
+        const eyesKey = `${keyPrefix}_eyes_${g}_${ec}_idle`;
         if (this.textures.exists(eyesKey)) {
           if (layers.eyes.texture.key !== eyesKey) {
             layers.eyes.setTexture(eyesKey);
@@ -1832,7 +2135,7 @@ export class GameScene extends Phaser.Scene {
     if (layers.hair) {
       const hStyle = player.hairStyle || "Standard";
       const hColor = player.hairColor || "Black";
-      const hairKey = `pack_hair_${hStyle}_${hColor}_${animType}`;
+      const hairKey = `${keyPrefix}_hair_${hStyle}_${hColor}_${animType}`;
       if (this.textures.exists(hairKey)) {
         layers.hair.setVisible(true);
         if (layers.hair.texture.key !== hairKey) {
@@ -1867,7 +2170,7 @@ export class GameScene extends Phaser.Scene {
         else cColor = "Green";
       }
 
-      const clothesKey = cColor ? `pack_clothes_${cColor}_${animType}` : "";
+      const clothesKey = cColor ? `${keyPrefix}_clothes_${cColor}_${animType}` : "";
       if (cColor && this.textures.exists(clothesKey)) {
         layers.clothes.setVisible(true);
         if (layers.clothes.texture.key !== clothesKey) {
@@ -1885,7 +2188,7 @@ export class GameScene extends Phaser.Scene {
     // 5. Beard Layer
     if (layers.beard) {
       const bColor = player.beardColor || "";
-      const beardKey = bColor ? `pack_beard_${bColor}_${animType}` : "";
+      const beardKey = bColor ? `${keyPrefix}_beard_${bColor}_${animType}` : "";
       if (bColor && this.textures.exists(beardKey)) {
         layers.beard.setVisible(true);
         if (layers.beard.texture.key !== beardKey) {
@@ -1918,7 +2221,7 @@ export class GameScene extends Phaser.Scene {
         else if (tier === "9._Fai") accItem = "Chicken";
       }
 
-      const accKey = accItem ? `pack_acc_${accItem}_${animType}` : "";
+      const accKey = accItem ? `${keyPrefix}_acc_${accItem}_${animType}` : "";
       if (accItem && this.textures.exists(accKey)) {
         layers.acc.setVisible(true);
         if (layers.acc.texture.key !== accKey) {
@@ -1934,9 +2237,10 @@ export class GameScene extends Phaser.Scene {
     }
 
     // 7. Tool/Weapon Layer
-    if (layers.tool) {
+    const toolSpr = layers.tool;
+    if (toolSpr) {
       const eqWeapon = player.equippedWeapon || "";
-      if (eqWeapon) {
+      if (eqWeapon && !isRiding) {
         const parts = eqWeapon.split(":");
         const tierName = parts[0]; // e.g. "4._Gold", "1._Wood"
         const toolName = parts[1]; // e.g. "Sword", "Pickaxe"
@@ -1944,21 +2248,21 @@ export class GameScene extends Phaser.Scene {
         
         const applyToolPosition = () => {
           if (dir === "up") {
-            layers.tool.setVisible(false);
+            toolSpr.setVisible(false);
           } else {
-            layers.tool.setVisible(true);
+            toolSpr.setVisible(true);
             if (dir === "left") {
-              layers.tool.setPosition(-8, 12);
-              layers.tool.setAngle(-25);
-              layers.tool.setFlipX(true);
+              toolSpr.setPosition(-8, 12);
+              toolSpr.setAngle(-25);
+              toolSpr.setFlipX(true);
             } else if (dir === "right") {
-              layers.tool.setPosition(8, 12);
-              layers.tool.setAngle(25);
-              layers.tool.setFlipX(false);
+              toolSpr.setPosition(8, 12);
+              toolSpr.setAngle(25);
+              toolSpr.setFlipX(false);
             } else { // down
-              layers.tool.setPosition(-8, 14);
-              layers.tool.setAngle(0);
-              layers.tool.setFlipX(true);
+              toolSpr.setPosition(-8, 14);
+              toolSpr.setAngle(0);
+              toolSpr.setFlipX(true);
             }
           }
         };
@@ -1967,16 +2271,16 @@ export class GameScene extends Phaser.Scene {
           const path = `assets/pack/icons/RPG_icons/Weapons_and_Armor/${tierName}/${toolName}.png`;
           this.load.image(cacheKey, path);
           this.load.once(`filecomplete-image-${cacheKey}`, () => {
-            if (layers.tool) {
+            if (toolSpr) {
               const tex = this.textures.get(cacheKey);
               if (tex) {
                 const H = tex.get('__BASE__').height;
                 if (!tex.has('single')) {
                   tex.add('single', 0, 0, 0, H, H);
                 }
-                layers.tool.setTexture(cacheKey, 'single');
+                toolSpr.setTexture(cacheKey, 'single');
               } else {
-                layers.tool.setTexture(cacheKey);
+                toolSpr.setTexture(cacheKey);
               }
               applyToolPosition();
             }
@@ -1989,18 +2293,18 @@ export class GameScene extends Phaser.Scene {
             if (!tex.has('single')) {
               tex.add('single', 0, 0, 0, H, H);
             }
-            if (layers.tool.texture.key !== cacheKey || layers.tool.frame.name !== 'single') {
-              layers.tool.setTexture(cacheKey, 'single');
+            if (toolSpr.texture.key !== cacheKey || toolSpr.frame.name !== 'single') {
+              toolSpr.setTexture(cacheKey, 'single');
             }
           } else {
-            if (layers.tool.texture.key !== cacheKey) {
-              layers.tool.setTexture(cacheKey);
+            if (toolSpr.texture.key !== cacheKey) {
+              toolSpr.setTexture(cacheKey);
             }
           }
           applyToolPosition();
         }
       } else {
-        layers.tool.setVisible(false);
+        toolSpr.setVisible(false);
       }
     }
   }
@@ -2151,7 +2455,7 @@ export class GameScene extends Phaser.Scene {
     this.decorLayer.setDepth(1); // Fences/decors on top of ground, under players
     
     // Sort players depth
-    this.entities.forEach((entity, sessionId) => {
+    this.entities.forEach((entity) => {
       entity.container.setDepth(entity.container.y);
     });
 

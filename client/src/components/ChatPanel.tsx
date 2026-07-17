@@ -36,13 +36,15 @@ const CHANNELS = [
 
 const EMOJIS = ["😀", "😂", "❤️", "🔥", "👍", "👑", "🌾", "⚔️"];
 
-const ChatPanel: React.FC<ChatPanelProps> = ({ room, myName }) => {
+const ChatPanel: React.FC<ChatPanelProps> = ({ room, myName: _myName }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [channel, setChannel] = useState("global");
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState("");
-  const [dms, setDms] = useState<DM[]>([]);
-  const [dmOpen, setDmOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_dms, setDms] = useState<DM[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [dmOpen, _setDmOpen] = useState(false);
   const [unread, setUnread] = useState(0);
   const [chatWarning, setChatWarning] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
