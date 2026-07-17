@@ -437,7 +437,6 @@ export class GameScene extends Phaser.Scene {
       { key: "pack_int_beds", path: "assets/pack/objects/interior/Beds.png", fw: 32, fh: 64 },
       { key: "pack_int_blacksmith", path: "assets/pack/objects/interior/Blacksmith.png", fw: 64, fh: 48 },
       { key: "pack_int_chairs", path: "assets/pack/objects/interior/Chairs.png", fw: 16, fh: 32 },
-      { key: "pack_int_closet", path: "assets/pack/objects/interior/Closet.png", fw: 32, fh: 48 },
       { key: "pack_int_fireplace", path: "assets/pack/objects/interior/Fireplace.png", fw: 32, fh: 64 },
       { key: "pack_int_cats_furniture", path: "assets/pack/objects/interior/cats_furniture.png", fw: 32, fh: 32 },
       { key: "pack_int_sofa_and_armchair", path: "assets/pack/objects/interior/Sofa_and_armchair.png", fw: 32, fh: 32 },
@@ -448,6 +447,69 @@ export class GameScene extends Phaser.Scene {
     ];
     for (const s of interiorSheets) {
       this.load.spritesheet(s.key, s.path, { frameWidth: s.fw, frameHeight: s.fh });
+    }
+
+    // 10.5 Custom Closet image & custom frames
+    this.load.image("pack_int_closet", "assets/pack/objects/interior/Closet.png");
+
+    // 11. Houses (Single images or custom grids)
+    this.load.image("pack_ext_tiny_house", "assets/pack/objects/exterior/Houses/Tiny House.png");
+    this.load.image("pack_ext_upgrade_house", "assets/pack/objects/exterior/Houses/Upgrade House.png");
+    this.load.image("pack_ext_dog_house", "assets/pack/objects/exterior/Houses/dog house.png");
+    for (let i = 1; i <= 8; i++) {
+      this.load.spritesheet(`pack_ext_house_${i}`, `assets/pack/objects/exterior/Houses/${i}.png`, { frameWidth: 128, frameHeight: 112 });
+    }
+
+    // 12. Workbenches
+    const benches = [
+      { key: "pack_bench_alchemy", path: "assets/pack/objects/workbenches/Alchemy Table.png", fw: 32, fh: 32 },
+      { key: "pack_bench_anvil", path: "assets/pack/objects/workbenches/Anvil.png", fw: 32, fh: 32 },
+      { key: "pack_bench_beehive", path: "assets/pack/objects/workbenches/Beehive.png", fw: 16, fh: 32 },
+      { key: "pack_bench_butter_churn", path: "assets/pack/objects/workbenches/Butter Churn.png", fw: 32, fh: 32 },
+      { key: "pack_bench_cheese_press", path: "assets/pack/objects/workbenches/Cheese Press.png", fw: 32, fh: 64 },
+      { key: "pack_bench_fermentation_barrel", path: "assets/pack/objects/workbenches/fermentation barrel.png", fw: 32, fh: 32 },
+      { key: "pack_bench_furnace", path: "assets/pack/objects/workbenches/Furnace.png", fw: 32, fh: 32 },
+      { key: "pack_bench_jam_maker", path: "assets/pack/objects/workbenches/Jam Maker.png", fw: 32, fh: 64 },
+      { key: "pack_bench_kitchen_pot", path: "assets/pack/objects/workbenches/Kitchen pot.png", fw: 32, fh: 32 },
+      { key: "pack_bench_sawmill", path: "assets/pack/objects/workbenches/Sawmill.png", fw: 16, fh: 16 },
+      { key: "pack_bench_sharpening_station", path: "assets/pack/objects/workbenches/Sharpening Station.png", fw: 16, fh: 16 },
+      { key: "pack_bench_tear", path: "assets/pack/objects/workbenches/Tear.png", fw: 32, fh: 32 },
+      { key: "pack_bench_workbench", path: "assets/pack/objects/workbenches/Workbench.png", fw: 32, fh: 32 }
+    ];
+    for (const b of benches) {
+      this.load.spritesheet(b.key, b.path, { frameWidth: b.fw, frameHeight: b.fh });
+    }
+
+    // 13. Fence & Bridge
+    this.load.spritesheet("pack_ext_bridge_beach", "assets/pack/objects/exterior/FenceAndBridge/Bridge Beach.png", { frameWidth: 128, frameHeight: 224 });
+    this.load.spritesheet("pack_ext_bridge", "assets/pack/objects/exterior/FenceAndBridge/Bridge.png", { frameWidth: 128, frameHeight: 128 });
+    this.load.spritesheet("pack_ext_fence_iron", "assets/pack/objects/exterior/FenceAndBridge/Fence Iron.png", { frameWidth: 48, frameHeight: 96 });
+    this.load.spritesheet("pack_ext_fence_stone", "assets/pack/objects/exterior/FenceAndBridge/Fence Stone.png", { frameWidth: 48, frameHeight: 80 });
+    this.load.spritesheet("pack_ext_fence_wood", "assets/pack/objects/exterior/FenceAndBridge/Fence Wood.png", { frameWidth: 96, frameHeight: 160 });
+    this.load.spritesheet("pack_ext_white_fence", "assets/pack/objects/exterior/FenceAndBridge/White Fence.png", { frameWidth: 80, frameHeight: 80 });
+
+    // 14. Animals & Pets
+    const animals = [
+      { key: "pack_animal_chicken_black", path: "assets/pack/animals/Farm/Chicken/Chicken Black.png", fw: 16, fh: 16 },
+      { key: "pack_animal_chicken_evil", path: "assets/pack/animals/Farm/Chicken/Chicken Evil.png", fw: 16, fh: 16 },
+      { key: "pack_animal_chicken_white", path: "assets/pack/animals/Farm/Chicken/Chicken White.png", fw: 16, fh: 16 },
+      { key: "pack_animal_chicken_baby", path: "assets/pack/animals/Farm/Chicken/Baby Chicken Yellow.png", fw: 16, fh: 16 },
+      { key: "pack_animal_cow_common_f", path: "assets/pack/animals/Farm/Cow/Common Cow/Female Cow Black.png", fw: 32, fh: 32 },
+      { key: "pack_animal_cow_common_m", path: "assets/pack/animals/Farm/Cow/Common Cow/Male Cow Brown.png", fw: 32, fh: 32 },
+      { key: "pack_animal_cow_baby", path: "assets/pack/animals/Farm/Cow/Common Cow/Baby Cow Blonde.png", fw: 32, fh: 32 },
+      { key: "pack_animal_sheep_f", path: "assets/pack/animals/Farm/Sheep/Sheep Female.png", fw: 32, fh: 32 },
+      { key: "pack_animal_sheep_m", path: "assets/pack/animals/Farm/Sheep/Sheep Male.png", fw: 32, fh: 32 },
+      { key: "pack_animal_pig_pink", path: "assets/pack/animals/Farm/Pig/Pig Pink.png", fw: 32, fh: 32 },
+      { key: "pack_animal_pig_mud", path: "assets/pack/animals/Farm/Pig/Pig Mud Pink.png", fw: 32, fh: 32 },
+      { key: "pack_animal_goat_f", path: "assets/pack/animals/Farm/Goat/Goat Female Blonde.png", fw: 32, fh: 32 },
+      { key: "pack_animal_duck_mallad", path: "assets/pack/animals/Farm/Ducks/Duck Mallad.png", fw: 16, fh: 16 },
+      { key: "pack_animal_cat_black", path: "assets/pack/animals/Pets/Cats/1/Black.png", fw: 32, fh: 32 },
+      { key: "pack_animal_cat_ginger", path: "assets/pack/animals/Pets/Cats/1/Ginger.png", fw: 32, fh: 32 },
+      { key: "pack_animal_dog_1", path: "assets/pack/animals/Pets/Dogs/Premade/1/1.png", fw: 32, fh: 32 },
+      { key: "pack_animal_capybara", path: "assets/pack/animals/Forest/Capybara/Brown Capybara.png", fw: 32, fh: 32 }
+    ];
+    for (const a of animals) {
+      this.load.spritesheet(a.key, a.path, { frameWidth: a.fw, frameHeight: a.fh });
     }
   }
 
@@ -1096,6 +1158,20 @@ export class GameScene extends Phaser.Scene {
         }
       }
     }
+
+    // Custom closet frames registration
+    const closetTex = this.textures.get("pack_int_closet");
+    if (closetTex) {
+      for (let r = 0; r < 12; r++) {
+        for (let b = 0; b < 6; b++) {
+          const blockX = b * 112;
+          const y = r * 48;
+          closetTex.add(`frame_c1_${r}_${b}`, 0, blockX, y, 32, 48);
+          closetTex.add(`frame_c2_${r}_${b}`, 0, blockX + 32, y, 32, 48);
+          closetTex.add(`frame_c3_${r}_${b}`, 0, blockX + 64, y, 48, 48);
+        }
+      }
+    }
   }
 
   // ─── Grid Overlay Drawing ──────────────────────────────────────────────────
@@ -1626,8 +1702,10 @@ export class GameScene extends Phaser.Scene {
     } else if (type.includes(":")) {
       const parts = type.split(":");
       const sheetKey = parts[0];
-      const frameIdx = parseInt(parts[1], 10) || 0;
-      img = this.add.sprite(x, y, sheetKey, frameIdx);
+      const frameStr = parts[1];
+      const parsedInt = parseInt(frameStr, 10);
+      const frameVal = isNaN(parsedInt) ? frameStr : parsedInt;
+      img = this.add.sprite(x, y, sheetKey, frameVal);
     } else {
       img = isAnimated ? this.add.sprite(x, y, type) : this.add.image(x, y, type);
     }

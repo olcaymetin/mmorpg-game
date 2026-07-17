@@ -458,20 +458,142 @@ const PACK_CHAIRS = Array.from({ length: 133 }, (_, i) => ({
   scale: 1.5,
 }));
 
-// Sliced interior closets (32x48, 672x576, 252 closets)
-const PACK_CLOSETS = Array.from({ length: 252 }, (_, i) => ({
-  key: `pack_int_closet:${i}`,
-  sheetKey: "pack_int_closet",
-  path: "/assets/pack/objects/interior/Closet.png",
-  label: `Dolap #${i + 1}`,
-  fw: 32,
-  fh: 48,
-  col: i % 21,
-  row: Math.floor(i / 21),
-  sheetW: 672,
-  sheetH: 576,
-  scale: 1.0,
-}));
+// Sliced interior closets (32x48 and 48x48, using precise layout blocks of 112px width containing 3 closets each)
+const buildPackClosets = () => {
+  const list = [];
+  let idx = 1;
+  for (let r = 0; r < 12; r++) {
+    for (let b = 0; b < 6; b++) {
+      const blockX = b * 112;
+      const y = r * 48;
+      // Closet 1 (16px closet centered in 32px frame)
+      list.push({
+        key: `pack_int_closet:frame_c1_${r}_${b}`,
+        sheetKey: "pack_int_closet",
+        path: "/assets/pack/objects/interior/Closet.png",
+        label: `Dolap #${idx++}`,
+        fw: 32,
+        fh: 48,
+        x: blockX,
+        y: y,
+        col: 0, // Fallback fields
+        row: 0,
+        sheetW: 672,
+        sheetH: 576,
+        scale: 1.0,
+      });
+      // Closet 2 (16px closet centered in 32px frame)
+      list.push({
+        key: `pack_int_closet:frame_c2_${r}_${b}`,
+        sheetKey: "pack_int_closet",
+        path: "/assets/pack/objects/interior/Closet.png",
+        label: `Dolap #${idx++}`,
+        fw: 32,
+        fh: 48,
+        x: blockX + 32,
+        y: y,
+        col: 0,
+        row: 0,
+        sheetW: 672,
+        sheetH: 576,
+        scale: 1.0,
+      });
+      // Closet 3 (32px closet centered in 48px frame)
+      list.push({
+        key: `pack_int_closet:frame_c3_${r}_${b}`,
+        sheetKey: "pack_int_closet",
+        path: "/assets/pack/objects/interior/Closet.png",
+        label: `Dolap #${idx++}`,
+        fw: 48,
+        fh: 48,
+        x: blockX + 64,
+        y: y,
+        col: 0,
+        row: 0,
+        sheetW: 672,
+        sheetH: 576,
+        scale: 1.0,
+      });
+    }
+  }
+  return list;
+};
+const PACK_CLOSETS = buildPackClosets();
+
+// Sliced Evler (Houses)
+const PACK_HOUSES = [
+  { key: "pack_ext_tiny_house:0", sheetKey: "pack_ext_tiny_house", path: "/assets/pack/objects/exterior/Houses/Tiny House.png", label: "Küçük Ev", fw: 688, fh: 480, x: 0, y: 0, col: 0, row: 0, sheetW: 688, sheetH: 480, scale: 0.2 },
+  { key: "pack_ext_upgrade_house:0", sheetKey: "pack_ext_upgrade_house", path: "/assets/pack/objects/exterior/Houses/Upgrade House.png", label: "Gelişmiş Ev", fw: 608, fh: 208, x: 0, y: 0, col: 0, row: 0, sheetW: 608, sheetH: 208, scale: 0.25 },
+  { key: "pack_ext_dog_house:0", sheetKey: "pack_ext_dog_house", path: "/assets/pack/objects/exterior/Houses/dog house.png", label: "Köpek Kulübesi", fw: 384, fh: 288, x: 0, y: 0, col: 0, row: 0, sheetW: 384, sheetH: 288, scale: 0.25 },
+  ...Array.from({ length: 8 }, (_, i) => ({
+    key: `pack_ext_house_${i + 1}:0`,
+    sheetKey: `pack_ext_house_${i + 1}`,
+    path: `/assets/pack/objects/exterior/Houses/${i + 1}.png`,
+    label: `Renkli Ev #${i + 1}`,
+    fw: 128,
+    fh: 112,
+    x: 0,
+    y: 0,
+    col: 0,
+    row: 0,
+    sheetW: 128,
+    sheetH: 112,
+    scale: 0.6
+  }))
+];
+
+// Sliced Tezgahlar (Workbenches)
+const PACK_WORKBENCHES = [
+  { key: "pack_bench_alchemy:0", sheetKey: "pack_bench_alchemy", path: "/assets/pack/objects/workbenches/Alchemy Table.png", label: "Simya Masası", fw: 32, fh: 32, col: 0, row: 0, sheetW: 96, sheetH: 32, scale: 1.2 },
+  { key: "pack_bench_anvil:0", sheetKey: "pack_bench_anvil", path: "/assets/pack/objects/workbenches/Anvil.png", label: "Demirci Örsü", fw: 32, fh: 32, col: 0, row: 0, sheetW: 192, sheetH: 192, scale: 1.2 },
+  { key: "pack_bench_beehive:0", sheetKey: "pack_bench_beehive", path: "/assets/pack/objects/workbenches/Beehive.png", label: "Arı Kovanı", fw: 16, fh: 32, col: 0, row: 0, sheetW: 112, sheetH: 32, scale: 1.2 },
+  { key: "pack_bench_butter_churn:0", sheetKey: "pack_bench_butter_churn", path: "/assets/pack/objects/workbenches/Butter Churn.png", label: "Yayık (Tereyağ)", fw: 32, fh: 32, col: 0, row: 0, sheetW: 128, sheetH: 32, scale: 1.2 },
+  { key: "pack_bench_cheese_press:0", sheetKey: "pack_bench_cheese_press", path: "/assets/pack/objects/workbenches/Cheese Press.png", label: "Peynir Presi", fw: 32, fh: 64, col: 0, row: 0, sheetW: 128, sheetH: 64, scale: 1.0 },
+  { key: "pack_bench_fermentation_barrel:0", sheetKey: "pack_bench_fermentation_barrel", path: "/assets/pack/objects/workbenches/fermentation barrel.png", label: "Mayalama Fıçısı", fw: 32, fh: 32, col: 0, row: 0, sheetW: 128, sheetH: 32, scale: 1.2 },
+  { key: "pack_bench_furnace:0", sheetKey: "pack_bench_furnace", path: "/assets/pack/objects/workbenches/Furnace.png", label: "Eritme Fırını", fw: 32, fh: 32, col: 0, row: 0, sheetW: 160, sheetH: 32, scale: 1.2 },
+  { key: "pack_bench_jam_maker:0", sheetKey: "pack_bench_jam_maker", path: "/assets/pack/objects/workbenches/Jam Maker.png", label: "Reçel Yapıcı", fw: 32, fh: 64, col: 0, row: 0, sheetW: 128, sheetH: 64, scale: 1.0 },
+  { key: "pack_bench_kitchen_pot:0", sheetKey: "pack_bench_kitchen_pot", path: "/assets/pack/objects/workbenches/Kitchen pot.png", label: "Yemek Kazanı", fw: 32, fh: 32, col: 0, row: 0, sheetW: 160, sheetH: 32, scale: 1.2 },
+  { key: "pack_bench_sawmill:0", sheetKey: "pack_bench_sawmill", path: "/assets/pack/objects/workbenches/Sawmill.png", label: "Hızar Tezgahı", fw: 16, fh: 16, col: 0, row: 0, sheetW: 32, sheetH: 16, scale: 1.5 },
+  { key: "pack_bench_sharpening_station:0", sheetKey: "pack_bench_sharpening_station", path: "/assets/pack/objects/workbenches/Sharpening Station.png", label: "Bileme Taşı", fw: 16, fh: 16, col: 0, row: 0, sheetW: 32, sheetH: 16, scale: 1.5 },
+  { key: "pack_bench_tear:0", sheetKey: "pack_bench_tear", path: "/assets/pack/objects/workbenches/Tear.png", label: "Dokuma Tezgahı", fw: 32, fh: 32, col: 0, row: 0, sheetW: 256, sheetH: 32, scale: 1.2 },
+  { key: "pack_bench_workbench:0", sheetKey: "pack_bench_workbench", path: "/assets/pack/objects/workbenches/Workbench.png", label: "Çalışma Masası", fw: 32, fh: 32, col: 0, row: 0, sheetW: 32, sheetH: 32, scale: 1.2 }
+];
+
+// Sliced Çitler ve Köprüler (Fence & Bridge)
+const PACK_FENCES_BRIDGES = [
+  { key: "pack_ext_bridge_beach:0", sheetKey: "pack_ext_bridge_beach", path: "/assets/pack/objects/exterior/FenceAndBridge/Bridge Beach.png", label: "Kumsal Köprü", fw: 128, fh: 224, col: 0, row: 0, sheetW: 128, sheetH: 224, scale: 0.5 },
+  { key: "pack_ext_bridge:0", sheetKey: "pack_ext_bridge", path: "/assets/pack/objects/exterior/FenceAndBridge/Bridge.png", label: "Tahta Köprü", fw: 128, fh: 128, col: 0, row: 0, sheetW: 128, sheetH: 128, scale: 0.5 },
+  { key: "pack_ext_fence_iron:0", sheetKey: "pack_ext_fence_iron", path: "/assets/pack/objects/exterior/FenceAndBridge/Fence Iron.png", label: "Demir Çit", fw: 48, fh: 96, col: 0, row: 0, sheetW: 48, sheetH: 96, scale: 0.8 },
+  { key: "pack_ext_fence_stone:0", sheetKey: "pack_ext_fence_stone", path: "/assets/pack/objects/exterior/FenceAndBridge/Fence Stone.png", label: "Taş Çit", fw: 48, fh: 80, col: 0, row: 0, sheetW: 48, sheetH: 80, scale: 0.8 },
+  { key: "pack_ext_fence_wood:0", sheetKey: "pack_ext_fence_wood", path: "/assets/pack/objects/exterior/FenceAndBridge/Fence Wood.png", label: "Tahta Çit", fw: 96, fh: 160, col: 0, row: 0, sheetW: 96, sheetH: 160, scale: 0.8 },
+  { key: "pack_ext_white_fence:0", sheetKey: "pack_ext_white_fence", path: "/assets/pack/objects/exterior/FenceAndBridge/White Fence.png", label: "Beyaz Çit", fw: 80, fh: 80, col: 0, row: 0, sheetW: 80, sheetH: 80, scale: 0.8 }
+];
+
+// Sliced Hayvanlar (Animals)
+const PACK_ANIMALS = [
+  // Chickens
+  { key: "pack_animal_chicken_black:0", sheetKey: "pack_animal_chicken_black", path: "/assets/pack/animals/Farm/Chicken/Chicken Black.png", label: "Kara Tavuk", fw: 16, fh: 16, col: 0, row: 0, sheetW: 64, sheetH: 112, scale: 1.8 },
+  { key: "pack_animal_chicken_evil:0", sheetKey: "pack_animal_chicken_evil", path: "/assets/pack/animals/Farm/Chicken/Chicken Evil.png", label: "Şeytani Tavuk", fw: 16, fh: 16, col: 0, row: 0, sheetW: 64, sheetH: 112, scale: 1.8 },
+  { key: "pack_animal_chicken_white:0", sheetKey: "pack_animal_chicken_white", path: "/assets/pack/animals/Farm/Chicken/Chicken White.png", label: "Ak Tavuk", fw: 16, fh: 16, col: 0, row: 0, sheetW: 64, sheetH: 112, scale: 1.8 },
+  { key: "pack_animal_chicken_baby:0", sheetKey: "pack_animal_chicken_baby", path: "/assets/pack/animals/Farm/Chicken/Baby Chicken Yellow.png", label: "Sarı Civciv", fw: 16, fh: 16, col: 0, row: 0, sheetW: 64, sheetH: 112, scale: 1.5 },
+  // Cows
+  { key: "pack_animal_cow_common_f:0", sheetKey: "pack_animal_cow_common_f", path: "/assets/pack/animals/Farm/Cow/Common Cow/Female Cow Black.png", label: "İnek (Siyah)", fw: 32, fh: 32, col: 0, row: 0, sheetW: 128, sheetH: 288, scale: 1.3 },
+  { key: "pack_animal_cow_common_m:0", sheetKey: "pack_animal_cow_common_m", path: "/assets/pack/animals/Farm/Cow/Common Cow/Male Cow Brown.png", label: "Boğa (Kahve)", fw: 32, fh: 32, col: 0, row: 0, sheetW: 128, sheetH: 288, scale: 1.3 },
+  { key: "pack_animal_cow_baby:0", sheetKey: "pack_animal_cow_baby", path: "/assets/pack/animals/Farm/Cow/Common Cow/Baby Cow Blonde.png", label: "Benekli Buzağı", fw: 32, fh: 32, col: 0, row: 0, sheetW: 128, sheetH: 288, scale: 1.1 },
+  // Sheep & Pig & Goat & Duck
+  { key: "pack_animal_sheep_f:0", sheetKey: "pack_animal_sheep_f", path: "/assets/pack/animals/Farm/Sheep/Sheep Female.png", label: "Koyun", fw: 32, fh: 32, col: 0, row: 0, sheetW: 128, sheetH: 288, scale: 1.3 },
+  { key: "pack_animal_sheep_m:0", sheetKey: "pack_animal_sheep_m", path: "/assets/pack/animals/Farm/Sheep/Sheep Male.png", label: "Koç", fw: 32, fh: 32, col: 0, row: 0, sheetW: 128, sheetH: 288, scale: 1.3 },
+  { key: "pack_animal_pig_pink:0", sheetKey: "pack_animal_pig_pink", path: "/assets/pack/animals/Farm/Pig/Pig Pink.png", label: "Domuz", fw: 32, fh: 32, col: 0, row: 0, sheetW: 128, sheetH: 288, scale: 1.3 },
+  { key: "pack_animal_pig_mud:0", sheetKey: "pack_animal_pig_mud", path: "/assets/pack/animals/Farm/Pig/Pig Mud Pink.png", label: "Çamurlu Domuz", fw: 32, fh: 32, col: 0, row: 0, sheetW: 128, sheetH: 288, scale: 1.3 },
+  { key: "pack_animal_goat_f:0", sheetKey: "pack_animal_goat_f", path: "/assets/pack/animals/Farm/Goat/Goat Female Blonde.png", label: "Keçi", fw: 32, fh: 32, col: 0, row: 0, sheetW: 128, sheetH: 320, scale: 1.3 },
+  { key: "pack_animal_duck_mallad:0", sheetKey: "pack_animal_duck_mallad", path: "/assets/pack/animals/Farm/Ducks/Duck Mallad.png", label: "Ördek", fw: 16, fh: 16, col: 0, row: 0, sheetW: 64, sheetH: 224, scale: 1.8 },
+  // Pets
+  { key: "pack_animal_cat_black:0", sheetKey: "pack_animal_cat_black", path: "/assets/pack/animals/Pets/Cats/1/Black.png", label: "Kedi (Siyah)", fw: 32, fh: 32, col: 0, row: 0, sheetW: 128, sheetH: 416, scale: 1.3 },
+  { key: "pack_animal_cat_ginger:0", sheetKey: "pack_animal_cat_ginger", path: "/assets/pack/animals/Pets/Cats/1/Ginger.png", label: "Kedi (Tekir)", fw: 32, fh: 32, col: 0, row: 0, sheetW: 128, sheetH: 416, scale: 1.3 },
+  { key: "pack_animal_dog_1:0", sheetKey: "pack_animal_dog_1", path: "/assets/pack/animals/Pets/Dogs/Premade/1/1.png", label: "Köpek", fw: 32, fh: 32, col: 0, row: 0, sheetW: 128, sheetH: 384, scale: 1.3 },
+  // Forest
+  { key: "pack_animal_capybara:0", sheetKey: "pack_animal_capybara", path: "/assets/pack/animals/Forest/Capybara/Brown Capybara.png", label: "Kapibara", fw: 32, fh: 32, col: 0, row: 0, sheetW: 128, sheetH: 544, scale: 1.3 }
+];
 
 // Sliced interior tables (32x32, 512x384, 192 tables) & Sofas (32x32, 320x192, 60 sofas)
 const PACK_TABLES_SOFAS = [
@@ -728,7 +850,7 @@ const App: React.FC = () => {
   const [afkKickReason, setAfkKickReason] = useState("");
 
   const [activeTab, setActiveTab] = useState<"structures" | "decorations" | "effects" | "materials" | "seeds" | "mining" | "ahir">("structures");
-  const [decorCategory, setDecorCategory] = useState<"trees" | "exterior" | "beds" | "chairs" | "tables" | "closets" | "others" | "playground" | "beach">("trees");
+  const [decorCategory, setDecorCategory] = useState<"trees" | "exterior" | "beds" | "chairs" | "tables" | "closets" | "others" | "playground" | "beach" | "houses" | "workbenches" | "fences" | "animals">("trees");
 
   // Equipment states
   const [isEquipmentOpen, setIsEquipmentOpen] = useState(false);
@@ -1956,10 +2078,10 @@ const App: React.FC = () => {
               {/* Tab 2: Customization / Decorations */}
               {activeTab === "decorations" && (() => {
                 const renderSlicedButton = (item: any) => {
-                  const col = item.col;
-                  const row = item.row;
                   const fw = item.fw;
                   const fh = item.fh;
+                  const x = item.x !== undefined ? item.x : item.col * fw;
+                  const y = item.y !== undefined ? item.y : item.row * fh;
                   
                   const maxThumbSize = 40;
                   const ratio = Math.min(maxThumbSize / fw, maxThumbSize / fh, 1.0);
@@ -1967,8 +2089,8 @@ const App: React.FC = () => {
                   const displayH = Math.round(fh * ratio);
                   const bgSizeW = Math.round(item.sheetW * ratio);
                   const bgSizeH = Math.round(item.sheetH * ratio);
-                  const bgPosX = -Math.round(col * fw * ratio);
-                  const bgPosY = -Math.round(row * fh * ratio);
+                  const bgPosX = -Math.round(x * ratio);
+                  const bgPosY = -Math.round(y * ratio);
 
                   return (
                     <button
@@ -2005,6 +2127,10 @@ const App: React.FC = () => {
                         { id: "exterior", label: "🏡 Dış" },
                         { id: "playground", label: "🎡 Park" },
                         { id: "beach", label: "🏖️ Plaj" },
+                        { id: "houses", label: "🏠 Ev" },
+                        { id: "workbenches", label: "🛠️ Tezgah" },
+                        { id: "fences", label: "🪵 Çit" },
+                        { id: "animals", label: "🐄 Hayvan" },
                         { id: "beds", label: "🛏️ Yatak" },
                         { id: "chairs", label: "🪑 Sandalye" },
                         { id: "tables", label: "🛋️ Masa" },
@@ -2037,6 +2163,10 @@ const App: React.FC = () => {
                       {decorCategory === "exterior" && PACK_EXTERIOR_PROPS.map(renderSlicedButton)}
                       {decorCategory === "playground" && PACK_PLAYGROUND_PROPS.map(renderSlicedButton)}
                       {decorCategory === "beach" && PACK_BEACH_PROPS.map(renderSlicedButton)}
+                      {decorCategory === "houses" && PACK_HOUSES.map(renderSlicedButton)}
+                      {decorCategory === "workbenches" && PACK_WORKBENCHES.map(renderSlicedButton)}
+                      {decorCategory === "fences" && PACK_FENCES_BRIDGES.map(renderSlicedButton)}
+                      {decorCategory === "animals" && PACK_ANIMALS.map(renderSlicedButton)}
                       {decorCategory === "beds" && PACK_BEDS.map(renderSlicedButton)}
                       {decorCategory === "chairs" && PACK_CHAIRS.map(renderSlicedButton)}
                       {decorCategory === "tables" && PACK_TABLES_SOFAS.map(renderSlicedButton)}
