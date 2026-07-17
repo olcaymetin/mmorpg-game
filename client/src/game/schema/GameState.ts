@@ -57,6 +57,11 @@ export class Player extends Schema {
   clothesColor!: string;
   beardColor!: string;
   accItem!: string;
+  equippedHelmet!: string;
+  equippedChestplate!: string;
+  equippedLeggings!: string;
+  equippedBoots!: string;
+  equippedWeapon!: string;
   ownedCosmetics!: MapSchema<boolean>;
 }
 defineTypes(Player, {
@@ -85,6 +90,11 @@ defineTypes(Player, {
   clothesColor: "string",
   beardColor: "string",
   accItem: "string",
+  equippedHelmet: "string",
+  equippedChestplate: "string",
+  equippedLeggings: "string",
+  equippedBoots: "string",
+  equippedWeapon: "string",
   ownedCosmetics: { map: "boolean" }
 });
 

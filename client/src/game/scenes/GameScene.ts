@@ -1968,14 +1968,34 @@ export class GameScene extends Phaser.Scene {
           this.load.image(cacheKey, path);
           this.load.once(`filecomplete-image-${cacheKey}`, () => {
             if (layers.tool) {
-              layers.tool.setTexture(cacheKey);
+              const tex = this.textures.get(cacheKey);
+              if (tex) {
+                const H = tex.get('__BASE__').height;
+                if (!tex.has('single')) {
+                  tex.add('single', 0, 0, 0, H, H);
+                }
+                layers.tool.setTexture(cacheKey, 'single');
+              } else {
+                layers.tool.setTexture(cacheKey);
+              }
               applyToolPosition();
             }
           });
           this.load.start();
         } else {
-          if (layers.tool.texture.key !== cacheKey) {
-            layers.tool.setTexture(cacheKey);
+          const tex = this.textures.get(cacheKey);
+          if (tex) {
+            const H = tex.get('__BASE__').height;
+            if (!tex.has('single')) {
+              tex.add('single', 0, 0, 0, H, H);
+            }
+            if (layers.tool.texture.key !== cacheKey || layers.tool.frame.name !== 'single') {
+              layers.tool.setTexture(cacheKey, 'single');
+            }
+          } else {
+            if (layers.tool.texture.key !== cacheKey) {
+              layers.tool.setTexture(cacheKey);
+            }
           }
           applyToolPosition();
         }

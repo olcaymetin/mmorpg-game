@@ -2873,7 +2873,7 @@ const App: React.FC = () => {
                             <img 
                               src={`/assets/pack/icons/RPG_icons/Weapons_and_Armor/${tierId}/${itemType}.png`}
                               alt={itemType} 
-                              style={{ width: "24px", height: "24px", imageRendering: "pixelated" }} 
+                              style={{ width: "24px", height: "24px", imageRendering: "pixelated", objectFit: "cover", objectPosition: "left", aspectRatio: "1/1" } as any} 
                             />
                           );
                         }
@@ -3047,7 +3047,7 @@ const App: React.FC = () => {
                                     <img 
                                       src={`/assets/pack/icons/RPG_icons/Weapons_and_Armor/${tier.id}/${item.icon}`}
                                       alt={item.name} 
-                                      style={{ width: "24px", height: "24px", imageRendering: "pixelated", marginBottom: "4px" }} 
+                                      style={{ width: "24px", height: "24px", imageRendering: "pixelated", marginBottom: "4px", objectFit: "cover", objectPosition: "left", aspectRatio: "1/1" } as any} 
                                     />
                                     <div style={{ fontSize: "9px", fontWeight: "bold" }}>{item.label}</div>
                                     <div style={{ fontSize: "7px", color: "#64748b", margin: "2px 0 6px" }}>{statText}</div>
