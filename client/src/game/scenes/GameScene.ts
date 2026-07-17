@@ -78,6 +78,7 @@ export class GameScene extends Phaser.Scene {
   private selectedObjectId: string | null = null;
   private selectionGraphics!: Phaser.GameObjects.Graphics;
   private activePlayTool: string | null = null;
+  private lastPlacedTime = 0;
 
   // ── Client-side prediction ────────────────────────────────────────────────
   private localX = 0; // predicted local player X
@@ -1317,6 +1318,12 @@ export class GameScene extends Phaser.Scene {
 
         if (this.editorMode && !this.clickedGameObject) {
           if (this.currentBrushType === "object") {
+            const now = Date.now();
+            if (now - this.lastPlacedTime < 250) {
+              return;
+            }
+            this.lastPlacedTime = now;
+
             // Place building object on server
             const uniqueId = `obj_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             const defaultScale = this.getDefaultScaleForType(this.currentObjectName);
