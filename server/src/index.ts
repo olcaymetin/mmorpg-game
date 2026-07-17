@@ -1,3 +1,4 @@
+import fs from "fs";
 import express from "express";
 import path from "path";
 import cors from "cors";
@@ -14,7 +15,43 @@ const app = express();
 
 // Allow cross-origin requests from the Vite dev server (port 5173)
 app.use(cors({ origin: "*" }));
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+// Setup static uploads folder
+const uploadsDir = path.join(__dirname, "..", "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
+}
+app.use("/uploads", express.static(uploadsDir));
+
+// Upload API route
+app.post("/api/upload-asset", (req, res) => {
+  try {
+    const { name, base64Data } = req.body;
+    if (!name || !base64Data) {
+      return res.status(400).json({ error: "Missing name or base64Data" });
+    }
+    
+    // Clean base64 prefix
+    const cleanedData = base64Data.replace(/^data:image\/\w+;base64,/, "");
+    const buffer = Buffer.from(cleanedData, 'base64');
+    
+    // Save as unique ID
+    const fileId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const safeName = name.replace(/[^a-zA-Z0-9_-]/g, "_");
+    const filename = `${safeName}_${fileId}.png`;
+    const filepath = path.join(uploadsDir, filename);
+    
+    fs.writeFileSync(filepath, buffer);
+    console.log(`[Upload] Saved custom asset: ${filename}`);
+    
+    res.json({ url: `/uploads/${filename}` });
+  } catch (err: any) {
+    console.error("[Upload] Error saving file:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // Colyseus monitor dashboard — useful for inspecting rooms & clients
 // Visit: http://localhost:2567/colyseus

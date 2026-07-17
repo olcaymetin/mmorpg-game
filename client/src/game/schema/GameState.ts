@@ -102,6 +102,27 @@ defineTypes(Player, {
   ownedCosmetics: { map: "boolean" }
 });
 
+export class CustomAssetState extends Schema {
+  key!: string;
+  path!: string;
+  label!: string;
+  fw!: number;
+  fh!: number;
+  scale!: number;
+  width!: number;
+  height!: number;
+}
+defineTypes(CustomAssetState, {
+  key: "string",
+  path: "string",
+  label: "string",
+  fw: "int32",
+  fh: "int32",
+  scale: "float32",
+  width: "int32",
+  height: "int32"
+});
+
 export class GameState extends Schema {
   players!: MapSchema<Player>;
   mapData!: MapSchema<number>;
@@ -112,6 +133,7 @@ export class GameState extends Schema {
   chatMessages!: ArraySchema<ChatMessage>;
   marketHistory!: ArraySchema<MarketHistory>;
   guilds!: MapSchema<GuildState>;
+  customAssets!: MapSchema<CustomAssetState>;
 }
 defineTypes(GameState, {
   players: { map: Player },
@@ -121,5 +143,6 @@ defineTypes(GameState, {
   marketListings: { map: MarketListing },
   chatMessages: [ ChatMessage ],
   marketHistory: [ MarketHistory ],
-  guilds: { map: GuildState }
+  guilds: { map: GuildState },
+  customAssets: { map: CustomAssetState }
 });

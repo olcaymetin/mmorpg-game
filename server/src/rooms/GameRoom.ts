@@ -1,5 +1,5 @@
 import { Room, Client } from "colyseus";
-import { GameState, Player, PlacedObjectState, CropState, MarketListing, ChatMessage, SkillState, MarketHistory, AchievementState, GuildState } from "../schema/GameState";
+import { GameState, Player, PlacedObjectState, CropState, MarketListing, ChatMessage, SkillState, MarketHistory, AchievementState, GuildState, CustomAssetState } from "../schema/GameState";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -376,6 +376,20 @@ export class GameRoom extends Room<GameState> {
         obj.animSpeed = msg.animSpeed;
       }
       this.state.placedObjects.set(msg.id, obj);
+      this.triggerDebouncedSave();
+    });
+
+    this.onMessage("add-custom-asset", (client: Client, msg: any) => {
+      const asset = new CustomAssetState();
+      asset.key = msg.key;
+      asset.path = msg.path;
+      asset.label = msg.label;
+      asset.fw = msg.fw;
+      asset.fh = msg.fh;
+      asset.scale = msg.scale;
+      asset.width = msg.width !== undefined ? msg.width : 32;
+      asset.height = msg.height !== undefined ? msg.height : 32;
+      this.state.customAssets.set(msg.key, asset);
       this.triggerDebouncedSave();
     });
 
@@ -1457,9 +1471,14 @@ export class GameRoom extends Room<GameState> {
         crops.push({ key: val.key, cropType: val.cropType, stage: val.stage, plantedAt: val.plantedAt, mapId: val.mapId || "main" });
       });
 
-      const payload = { mapData, decorData, placedObjects, crops };
+      const customAssets: Array<{ key: string; path: string; label: string; fw: number; fh: number; scale: number; width: number; height: number }> = [];
+      this.state.customAssets.forEach((val) => {
+        customAssets.push({ key: val.key, path: val.path, label: val.label, fw: val.fw, fh: val.fh, scale: val.scale, width: val.width, height: val.height });
+      });
+
+      const payload = { mapData, decorData, placedObjects, crops, customAssets };
       fs.writeFileSync(SAVE_FILE_PATH, JSON.stringify(payload, null, 2), "utf8");
-      console.log(`[Persistence] Saved successfully. Tiles: ${this.state.mapData.size}, Crops: ${this.state.crops.size}`);
+      console.log(`[Persistence] Saved successfully. Tiles: ${this.state.mapData.size}, Crops: ${this.state.crops.size}, CustomAssets: ${this.state.customAssets.size}`);
     } catch (e) {
       console.error("[Persistence] Failed to write save_data.json", e);
     }
@@ -1515,7 +1534,22 @@ export class GameRoom extends Room<GameState> {
         });
       }
 
-      console.log(`[Persistence] Loaded. Tiles: ${this.state.mapData.size}, Objects: ${this.state.placedObjects.size}, Crops: ${this.state.crops.size}`);
+      if (parsed.customAssets) {
+        parsed.customAssets.forEach((a: any) => {
+          const asset = new CustomAssetState();
+          asset.key = a.key;
+          asset.path = a.path;
+          asset.label = a.label;
+          asset.fw = a.fw;
+          asset.fh = a.fh;
+          asset.scale = a.scale;
+          asset.width = a.width !== undefined ? a.width : 32;
+          asset.height = a.height !== undefined ? a.height : 32;
+          this.state.customAssets.set(a.key, asset);
+        });
+      }
+
+      console.log(`[Persistence] Loaded. Tiles: ${this.state.mapData.size}, Objects: ${this.state.placedObjects.size}, Crops: ${this.state.crops.size}, CustomAssets: ${this.state.customAssets.size}`);
     } catch (e) {
       console.error("[Persistence] Failed to read/parse save_data.json file", e);
     }

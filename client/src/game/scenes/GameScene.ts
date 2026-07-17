@@ -1964,6 +1964,27 @@ export class GameScene extends Phaser.Scene {
       });
     }
 
+    // Custom Assets Sync
+    const customAssets = (this.room.state as any).customAssets;
+    if (customAssets) {
+      customAssets.onAdd((assetState: any, key: string) => {
+        if (!this.textures.exists(key)) {
+          console.log(`[Phaser] Dynamically preloading custom asset: ${key} from path: ${assetState.path}`);
+          this.load.spritesheet(key, assetState.path, { frameWidth: assetState.fw, frameHeight: assetState.fh });
+          this.load.once(`filecomplete-spritesheet-${key}`, () => {
+            console.log(`[Phaser] Dynamically loaded custom asset: ${key}`);
+            // Force re-rendering of any placed objects that use this texture
+            this.placedObjects.forEach(obj => {
+              if (obj.type.startsWith(key + ":")) {
+                this.spawnLocalObject(obj.type, obj.x, obj.y, obj.scale, obj.id);
+              }
+            });
+          });
+          this.load.start();
+        }
+      });
+    }
+
     // 3. Placed Buildings Sync
     placedObjects.onAdd((objState: PlacedObjectState, id: string) => {
       const objMapId = objState.mapId || "main";

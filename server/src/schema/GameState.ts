@@ -147,6 +147,17 @@ export class Player extends Schema {
   @type({ map: "boolean" }) ownedCosmetics = new MapSchema<boolean>(); // key = "hair_Fawn" | "clothes_Blue" | "beard_Black" | "acc_Wizard" etc.
 }
 
+export class CustomAssetState extends Schema {
+  @type("string") key: string = "";
+  @type("string") path: string = "";
+  @type("string") label: string = "";
+  @type("int32")  fw: number = 32;
+  @type("int32")  fh: number = 32;
+  @type("float32") scale: number = 1.0;
+  @type("int32")  width: number = 0;
+  @type("int32")  height: number = 0;
+}
+
 export class GameState extends Schema {
   @type({ map: Player }) players = new MapSchema<Player>();
   @type({ map: "int32" }) mapData = new MapSchema<number>();
@@ -157,4 +168,5 @@ export class GameState extends Schema {
   @type([ChatMessage]) chatMessages = new ArraySchema<ChatMessage>();
   @type([MarketHistory]) marketHistory = new ArraySchema<MarketHistory>();
   @type({ map: GuildState }) guilds = new MapSchema<GuildState>();
+  @type({ map: CustomAssetState }) customAssets = new MapSchema<CustomAssetState>();
 }

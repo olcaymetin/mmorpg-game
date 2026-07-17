@@ -850,7 +850,7 @@ const App: React.FC = () => {
   const [afkKickReason, setAfkKickReason] = useState("");
 
   const [activeTab, setActiveTab] = useState<"structures" | "decorations" | "effects" | "materials" | "seeds" | "mining" | "ahir">("structures");
-  const [decorCategory, setDecorCategory] = useState<"trees" | "exterior" | "beds" | "chairs" | "tables" | "closets" | "others" | "playground" | "beach" | "houses" | "workbenches" | "fences" | "animals">("trees");
+  const [decorCategory, setDecorCategory] = useState<"trees" | "exterior" | "beds" | "chairs" | "tables" | "closets" | "others" | "playground" | "beach" | "houses" | "workbenches" | "fences" | "animals" | "custom">("trees");
 
   // Equipment states
   const [isEquipmentOpen, setIsEquipmentOpen] = useState(false);
@@ -862,6 +862,12 @@ const App: React.FC = () => {
   const [equippedWeapon, setEquippedWeapon] = useState("");
   const [mountType, setMountType] = useState("none");
   // isRiding removed
+  const [customAssetFile, setCustomAssetFile] = useState<File | null>(null);
+  const [customAssetLabel, setCustomAssetLabel] = useState("");
+  const [customAssetFw, setCustomAssetFw] = useState(32);
+  const [customAssetFh, setCustomAssetFh] = useState(32);
+  const [customAssetScale, setCustomAssetScale] = useState(1.0);
+  const [isUploadingAsset, setIsUploadingAsset] = useState(false);
 
   // Selection box start/end for multi-tile selection
   const [selectionStart, setSelectionStart] = useState<{ col: number; row: number } | null>(null);
@@ -1339,6 +1345,82 @@ const App: React.FC = () => {
     }
   };
 
+  const handleUploadCustomAsset = async () => {
+    if (!customAssetFile) {
+      alert("Lütfen bir resim dosyası seçin!");
+      return;
+    }
+    if (!customAssetLabel.trim()) {
+      alert("Lütfen obje için bir isim girin!");
+      return;
+    }
+    
+    setIsUploadingAsset(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64Data = e.target?.result as string;
+        if (!base64Data) {
+          alert("Dosya okunamadı.");
+          setIsUploadingAsset(false);
+          return;
+        }
+        
+        const img = new Image();
+        img.onload = async () => {
+          try {
+            const response = await fetch("/api/upload-asset", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                name: customAssetLabel,
+                base64Data: base64Data
+              })
+            });
+            
+            const resData = await response.json();
+            if (!response.ok || !resData.url) {
+              throw new Error(resData.error || "Yükleme hatası!");
+            }
+            
+            const uniqueKey = `custom_${Date.now()}`;
+            room?.send("add-custom-asset", {
+              key: uniqueKey,
+              path: resData.url,
+              label: customAssetLabel,
+              fw: customAssetFw,
+              fh: customAssetFh,
+              scale: customAssetScale,
+              width: img.width,
+              height: img.height
+            });
+            
+            alert(`🎉 '${customAssetLabel}' başarıyla yüklendi ve oyuna eklendi!`);
+            setCustomAssetFile(null);
+            setCustomAssetLabel("");
+            setIsUploadingAsset(false);
+          } catch (uploadErr: any) {
+            console.error(uploadErr);
+            alert(`⚠️ Yükleme Hatası: ${uploadErr.message}`);
+            setIsUploadingAsset(false);
+          }
+        };
+        img.onerror = () => {
+          alert("Resim yüklenemedi. Formatı bozuk olabilir.");
+          setIsUploadingAsset(false);
+        };
+        img.src = base64Data;
+      };
+      reader.readAsDataURL(customAssetFile);
+    } catch (err: any) {
+      console.error(err);
+      alert(`⚠️ Hata: ${err.message}`);
+      setIsUploadingAsset(false);
+    }
+  };
+
   // ─── Import / Export handlers ───
 
   const handleExportMap = () => {
@@ -1671,6 +1753,76 @@ const App: React.FC = () => {
                   title="Son yaptığınız değişikliklerin tarayıcıdaki otomatik yedeğini geri yükler."
                 >
                   🔄 Yerel Yedekten Yükle
+                </button>
+              </div>
+
+              <div className="section-title" style={{ marginTop: "12px" }}>Özel Obje / Fotoğraf Yükle</div>
+              <div style={{ padding: "8px", background: "rgba(255,255,255,0.03)", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.06)", display: "flex", flexDirection: "column", gap: "6px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "8px", color: "rgba(255,255,255,0.6)", marginBottom: "2px" }}>Görsel Seç (.png, .jpg):</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      setCustomAssetFile(file);
+                      if (file && !customAssetLabel) {
+                        const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+                        setCustomAssetLabel(baseName);
+                      }
+                    }}
+                    style={{ fontSize: "9px", width: "100%", color: "#fff", background: "rgba(0,0,0,0.2)", padding: "4px", borderRadius: "4px", border: "1px solid rgba(255,255,255,0.1)" }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: "8px", color: "rgba(255,255,255,0.6)", marginBottom: "2px" }}>Obje İsmi:</label>
+                  <input
+                    type="text"
+                    placeholder="Örn: BenimMasam"
+                    value={customAssetLabel}
+                    onChange={(e) => setCustomAssetLabel(e.target.value)}
+                    style={{ fontSize: "9px", width: "100%", color: "#fff", background: "rgba(0,0,0,0.2)", padding: "4px", borderRadius: "4px", border: "1px solid rgba(255,255,255,0.1)" }}
+                  />
+                </div>
+                <div style={{ display: "flex", gap: "6px" }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: "block", fontSize: "8px", color: "rgba(255,255,255,0.6)", marginBottom: "2px" }}>Görsel Dilim Genişliği (W):</label>
+                    <input
+                      type="number"
+                      value={customAssetFw}
+                      onChange={(e) => setCustomAssetFw(Math.max(1, parseInt(e.target.value) || 32))}
+                      style={{ fontSize: "9px", width: "100%", color: "#fff", background: "rgba(0,0,0,0.2)", padding: "4px", borderRadius: "4px", border: "1px solid rgba(255,255,255,0.1)" }}
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: "block", fontSize: "8px", color: "rgba(255,255,255,0.6)", marginBottom: "2px" }}>Görsel Dilim Yüksekliği (H):</label>
+                    <input
+                      type="number"
+                      value={customAssetFh}
+                      onChange={(e) => setCustomAssetFh(Math.max(1, parseInt(e.target.value) || 32))}
+                      style={{ fontSize: "9px", width: "100%", color: "#fff", background: "rgba(0,0,0,0.2)", padding: "4px", borderRadius: "4px", border: "1px solid rgba(255,255,255,0.1)" }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: "8px", color: "rgba(255,255,255,0.6)", marginBottom: "2px" }}>Obje Boyutu (Scale): {customAssetScale.toFixed(2)}</label>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="5.0"
+                    step="0.1"
+                    value={customAssetScale}
+                    onChange={(e) => setCustomAssetScale(parseFloat(e.target.value) || 1.0)}
+                    style={{ width: "100%" }}
+                  />
+                </div>
+                <button
+                  className="btn btn--primary"
+                  onClick={handleUploadCustomAsset}
+                  disabled={isUploadingAsset}
+                  style={{ width: "100%", padding: "6px", fontSize: "10px", marginTop: "4px", display: "flex", justifyContent: "center", alignItems: "center" }}
+                >
+                  {isUploadingAsset ? "Yükleniyor..." : "📤 Yükle ve Oyuna Ekle"}
                 </button>
               </div>
 
@@ -2135,7 +2287,8 @@ const App: React.FC = () => {
                         { id: "chairs", label: "🪑 Sandalye" },
                         { id: "tables", label: "🛋️ Masa" },
                         { id: "closets", label: "🚪 Dolap" },
-                        { id: "others", label: "🧸 Diğer" }
+                        { id: "others", label: "🧸 Diğer" },
+                        { id: "custom", label: "📤 Özel" }
                       ].map(cat => (
                         <button
                           key={cat.id}
@@ -2172,6 +2325,42 @@ const App: React.FC = () => {
                       {decorCategory === "tables" && PACK_TABLES_SOFAS.map(renderSlicedButton)}
                       {decorCategory === "closets" && PACK_CLOSETS.map(renderSlicedButton)}
                       {decorCategory === "others" && PACK_INTERIOR_OTHERS.map(renderSlicedButton)}
+                      {decorCategory === "custom" && (() => {
+                        const customList: any[] = [];
+                        if (room?.state.customAssets) {
+                          room.state.customAssets.forEach((asset: any) => {
+                            const cols = Math.floor(asset.width / asset.fw) || 1;
+                            const rows = Math.floor(asset.height / asset.fh) || 1;
+                            const totalFrames = cols * rows;
+                            
+                            for (let i = 0; i < totalFrames; i++) {
+                              customList.push({
+                                key: `${asset.key}:${i}`,
+                                sheetKey: asset.key,
+                                path: asset.path,
+                                label: `${asset.label} (Kare #${i + 1})`,
+                                fw: asset.fw,
+                                fh: asset.fh,
+                                col: i % cols,
+                                row: Math.floor(i / cols),
+                                sheetW: asset.width,
+                                sheetH: asset.height,
+                                scale: asset.scale
+                              });
+                            }
+                          });
+                        }
+                        
+                        if (customList.length === 0) {
+                          return (
+                            <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "10px", textAlign: "center", width: "100%", padding: "20px", gridColumn: "span 3" }}>
+                              Henüz yüklenmiş özel obje yok. Aşağıdaki "Özel Obje Yükle" bölümünden ekleyebilirsiniz.
+                            </div>
+                          );
+                        }
+                        
+                        return customList.map(renderSlicedButton);
+                      })()}
                     </div>
                   </>
                 );
