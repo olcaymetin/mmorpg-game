@@ -1274,49 +1274,52 @@ export class GameScene extends Phaser.Scene {
     const packDirections = ["down", "down_diagonal", "up", "up_diagonal", "right", "right_diagonal", "left", "left_diagonal"];
 
     const buildAnims = (keyPrefix: string) => {
-      // 1. Idle (16 frames, 2 frames per direction)
+      // 1. Idle (16 frames, 4 frames per direction)
       const idleKey = `${keyPrefix}_idle`;
       if (this.textures.exists(idleKey)) {
         directionsList.forEach((dir) => {
           const dirIndex = packDirections.indexOf(dir);
-          const start = dirIndex * 2;
-          const end = start + 1;
+          const realDirIndex = dirIndex / 2;
+          const start = realDirIndex * 4;
+          const end = start + 3;
           this.anims.create({
             key: `${idleKey}_${dir}`,
             frames: this.anims.generateFrameNumbers(idleKey, { start, end }),
-            frameRate: 4,
+            frameRate: 6,
             repeat: -1,
           });
         });
       }
 
-      // 2. Walk (24 frames, 3 frames per direction)
+      // 2. Walk (24 frames, 6 frames per direction)
       const walkKey = `${keyPrefix}_walk`;
       if (this.textures.exists(walkKey)) {
         directionsList.forEach((dir) => {
           const dirIndex = packDirections.indexOf(dir);
-          const start = dirIndex * 3;
-          const end = start + 2;
+          const realDirIndex = dirIndex / 2;
+          const start = realDirIndex * 6;
+          const end = start + 5;
           this.anims.create({
             key: `${walkKey}_${dir}`,
             frames: this.anims.generateFrameNumbers(walkKey, { start, end }),
-            frameRate: 8,
+            frameRate: 10,
             repeat: -1,
           });
         });
       }
 
-      // 3. Run (32 frames, 4 frames per direction)
+      // 3. Run (32 frames, 8 frames per direction)
       const runKey = `${keyPrefix}_run`;
       if (this.textures.exists(runKey)) {
         directionsList.forEach((dir) => {
           const dirIndex = packDirections.indexOf(dir);
-          const start = dirIndex * 4;
-          const end = start + 3;
+          const realDirIndex = dirIndex / 2;
+          const start = realDirIndex * 8;
+          const end = start + 7;
           this.anims.create({
             key: `${runKey}_${dir}`,
             frames: this.anims.generateFrameNumbers(runKey, { start, end }),
-            frameRate: 10,
+            frameRate: 12,
             repeat: -1,
           });
         });
@@ -1521,68 +1524,64 @@ export class GameScene extends Phaser.Scene {
     const actionDirs = ["down", "right", "up", "left"];
     const packDirs = ["down", "down_diagonal", "up", "up_diagonal", "right", "right_diagonal", "left", "left_diagonal"];
     const actionAnims = [
-      // Damage (16 frames = 2 per direction)
-      { prefix: "pack_skin", suffix: "_damage", dirSuffix: "", totalFrames: 16, dirCount: 8, frameRate: 12, repeat: 0 },
-      // Death (20 frames = 2.5 per direction)
-      { prefix: "pack_skin", suffix: "_death", dirSuffix: "", totalFrames: 20, dirCount: 8, frameRate: 10, repeat: 0 },
-      // Fishing Cast (15 frames)
-      { prefix: "pack_skin", suffix: "_fishing_cast", dirSuffix: "", totalFrames: 15, dirCount: 1, frameRate: 10, repeat: 0 },
-      // Fishing Wait (40 frames)
-      { prefix: "pack_skin", suffix: "_fishing_wait", dirSuffix: "", totalFrames: 40, dirCount: 1, frameRate: 6, repeat: -1 },
-      // Fishing Bite (10 frames)
-      { prefix: "pack_skin", suffix: "_fishing_bite", dirSuffix: "", totalFrames: 10, dirCount: 1, frameRate: 12, repeat: 0 },
-      // Fishing Reel (20 frames)
-      { prefix: "pack_skin", suffix: "_fishing_reel", dirSuffix: "", totalFrames: 20, dirCount: 1, frameRate: 10, repeat: 0 },
-      // Fishing Catch (15 frames)
-      { prefix: "pack_skin", suffix: "_fishing_catch", dirSuffix: "", totalFrames: 15, dirCount: 1, frameRate: 10, repeat: 0 },
-      // Carrying Idle (16 frames)
-      { prefix: "pack_skin", suffix: "_carry_idle", dirSuffix: "", totalFrames: 16, dirCount: 1, frameRate: 6, repeat: -1 },
-      // Carrying Walk (24 frames)
-      { prefix: "pack_skin", suffix: "_carry_walk", dirSuffix: "", totalFrames: 24, dirCount: 1, frameRate: 10, repeat: -1 },
-      // Carrying Run (32 frames)
-      { prefix: "pack_skin", suffix: "_carry_run", dirSuffix: "", totalFrames: 32, dirCount: 1, frameRate: 12, repeat: -1 },
-      // Sit (16 frames)
-      { prefix: "pack_skin", suffix: "_sit", dirSuffix: "", totalFrames: 16, dirCount: 1, frameRate: 6, repeat: -1 },
-      // Sleep (20 frames)
-      { prefix: "pack_skin", suffix: "_sleep", dirSuffix: "", totalFrames: 20, dirCount: 1, frameRate: 6, repeat: -1 },
-      // Petting (15 frames)
-      { prefix: "pack_skin", suffix: "_petting", dirSuffix: "", totalFrames: 15, dirCount: 1, frameRate: 10, repeat: 0 },
-      // Climbing (20 frames)
-      { prefix: "pack_skin", suffix: "_climbing", dirSuffix: "", totalFrames: 20, dirCount: 1, frameRate: 10, repeat: -1 },
-      // Flute (20 frames)
-      { prefix: "pack_skin", suffix: "_flute", dirSuffix: "", totalFrames: 20, dirCount: 1, frameRate: 8, repeat: -1 },
-      // Mage, Umbrella, Swim are now handled by the new buildActionAnims loop below
-      // (old prefix/suffix format entries removed to avoid duplication)
-      // Mage (24 frames, 4 directions, 6 frames per direction)
+      // Damage (16 frames = 4 per direction)
+      { suffix: "_damage", totalFrames: 16, dirCount: 4, frameRate: 12, repeat: 0 },
+      // Death (16 frames = 4 per direction)
+      { suffix: "_death", totalFrames: 16, dirCount: 4, frameRate: 10, repeat: 0 },
+      // Fishing Cast (60 frames = 15 per direction)
+      { suffix: "_fishing_cast", totalFrames: 60, dirCount: 4, frameRate: 10, repeat: 0 },
+      // Fishing Wait (16 frames = 4 per direction)
+      { suffix: "_fishing_wait", totalFrames: 16, dirCount: 4, frameRate: 6, repeat: -1 },
+      // Fishing Bite (32 frames = 8 per direction)
+      { suffix: "_fishing_bite", totalFrames: 32, dirCount: 4, frameRate: 12, repeat: 0 },
+      // Fishing Reel (16 frames = 4 per direction)
+      { suffix: "_fishing_reel", totalFrames: 16, dirCount: 4, frameRate: 10, repeat: 0 },
+      // Fishing Catch (16 frames = 4 per direction)
+      { suffix: "_fishing_catch", totalFrames: 16, dirCount: 4, frameRate: 10, repeat: 0 },
+      // Carrying Idle (16 frames = 4 per direction)
+      { suffix: "_carry_idle", totalFrames: 16, dirCount: 4, frameRate: 6, repeat: -1 },
+      // Carrying Walk (24 frames = 6 per direction)
+      { suffix: "_carry_walk", totalFrames: 24, dirCount: 4, frameRate: 8, repeat: -1 },
+      // Carrying Run (32 frames = 8 per direction)
+      { suffix: "_carry_run", totalFrames: 32, dirCount: 4, frameRate: 10, repeat: -1 },
+      // Sit (4 frames = 1 per direction)
+      { suffix: "_sit", totalFrames: 4, dirCount: 4, frameRate: 1, repeat: -1 },
+      // Sleep (6 frames = 1 direction)
+      { suffix: "_sleep", totalFrames: 6, dirCount: 1, frameRate: 4, repeat: -1 },
+      // Petting (12 frames = 3 per direction)
+      { suffix: "_petting", totalFrames: 12, dirCount: 4, frameRate: 10, repeat: 0 },
+      // Climbing (5 frames = 1 direction)
+      { suffix: "_climbing", totalFrames: 5, dirCount: 1, frameRate: 10, repeat: -1 },
+      // Flute (18 frames = 1 direction)
+      { suffix: "_flute", totalFrames: 18, dirCount: 1, frameRate: 8, repeat: -1 },
+      // Mage (24 frames = 6 per direction)
       { suffix: "_mage", totalFrames: 24, dirCount: 4, frameRate: 12, repeat: 0 },
-      // Umbrella (16 frames)
-      { suffix: "_umbrella", totalFrames: 16, dirCount: 1, frameRate: 6, repeat: -1 },
-      // Swim Idle (16 frames)
-      { suffix: "_swim_idle", totalFrames: 16, dirCount: 1, frameRate: 6, repeat: -1 },
-      // Swim Outwater (20 frames)
-      { suffix: "_swim_outwater", totalFrames: 20, dirCount: 1, frameRate: 10, repeat: 0 },
-      // Swim Submerged (15 frames)
-      { suffix: "_swim_submerged", totalFrames: 15, dirCount: 1, frameRate: 8, repeat: -1 },
-      // Swim Swim (24 frames)
-      { suffix: "_swim_swim", totalFrames: 24, dirCount: 1, frameRate: 10, repeat: -1 },
+      // Swim Idle (16 frames = 4 per direction)
+      { suffix: "_swim_idle", totalFrames: 16, dirCount: 4, frameRate: 6, repeat: -1 },
+      // Swim Outwater (12 frames = 3 per direction)
+      { suffix: "_swim_outwater", totalFrames: 12, dirCount: 4, frameRate: 10, repeat: 0 },
+      // Swim Submerged (12 frames = 3 per direction)
+      { suffix: "_swim_submerged", totalFrames: 12, dirCount: 4, frameRate: 8, repeat: -1 },
+      // Swim Swim (16 frames = 4 per direction)
+      { suffix: "_swim_swim", totalFrames: 16, dirCount: 4, frameRate: 10, repeat: -1 },
       // Broomstick (16 frames, 8 directions, 2 frames per direction)
       { suffix: "_broomstick", totalFrames: 16, dirCount: 8, frameRate: 8, repeat: -1 },
-      // Sword Attack (40 frames, 8 directions, 5 frames per direction)
-      { suffix: "_sword_attack", totalFrames: 40, dirCount: 8, frameRate: 14, repeat: 0 },
-      // Bow Attack (28 frames, 4 directions, 7 frames per direction)
+      // Sword Attack (40 frames = 10 per direction)
+      { suffix: "_sword_attack", totalFrames: 40, dirCount: 4, frameRate: 14, repeat: 0 },
+      // Bow Attack (28 frames = 7 per direction)
       { suffix: "_bow_attack", totalFrames: 28, dirCount: 4, frameRate: 12, repeat: 0 },
-      // Pickaxe Attack (20 frames)
-      { suffix: "_pickaxe_attack", totalFrames: 20, dirCount: 1, frameRate: 14, repeat: 0 },
-      // Hoe Attack (20 frames)
-      { suffix: "_hoe_attack", totalFrames: 20, dirCount: 1, frameRate: 14, repeat: 0 },
-      // Shovel Attack (20 frames)
-      { suffix: "_shovel_attack", totalFrames: 20, dirCount: 1, frameRate: 14, repeat: 0 },
-      // Axe Attack (20 frames)
-      { suffix: "_axe_attack", totalFrames: 20, dirCount: 1, frameRate: 14, repeat: 0 },
-      // Scythe Attack (24 frames)
-      { suffix: "_scythe_attack", totalFrames: 24, dirCount: 1, frameRate: 14, repeat: 0 },
-      // Watering (25 frames)
-      { suffix: "_watering", totalFrames: 25, dirCount: 1, frameRate: 12, repeat: 0 },
+      // Pickaxe Attack (24 frames = 6 per direction)
+      { suffix: "_pickaxe_attack", totalFrames: 24, dirCount: 4, frameRate: 14, repeat: 0 },
+      // Hoe Attack (24 frames = 6 per direction)
+      { suffix: "_hoe_attack", totalFrames: 24, dirCount: 4, frameRate: 14, repeat: 0 },
+      // Shovel Attack (20 frames = 5 per direction)
+      { suffix: "_shovel_attack", totalFrames: 20, dirCount: 4, frameRate: 14, repeat: 0 },
+      // Axe Attack (24 frames = 6 per direction)
+      { suffix: "_axe_attack", totalFrames: 24, dirCount: 4, frameRate: 14, repeat: 0 },
+      // Scythe Attack (24 frames = 6 per direction)
+      { suffix: "_scythe_attack", totalFrames: 24, dirCount: 4, frameRate: 14, repeat: 0 },
+      // Watering (32 frames = 8 per direction)
+      { suffix: "_watering", totalFrames: 32, dirCount: 4, frameRate: 12, repeat: 0 },
     ];
 
     const buildActionAnims = (keyPrefix: string, suffix: string, totalFrames: number, dirCount: number, frameRate: number, repeat: number) => {
