@@ -18,6 +18,7 @@ export class PlacedObjectState extends Schema {
   @type("string")  mapId: string = "main";
   @type("float32") angle: number = 0;
   @type("boolean") flipX: boolean = false;
+  @type("boolean") blocked: boolean = false;  // Geçilmez (collision) özelliği
 }
 
 export class SkillState extends Schema {

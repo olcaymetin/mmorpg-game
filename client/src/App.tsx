@@ -894,7 +894,7 @@ const App: React.FC = () => {
   const [selectedObjectName, setSelectedObjectName] = useState("marketplace");
 
   // Selected object properties (for scaling/deletion)
-  const [selectedObject, setSelectedObject] = useState<{ id: string; type: string; scale: number; animSpeed?: number } | null>(null);
+  const [selectedObject, setSelectedObject] = useState<{ id: string; type: string; scale: number; animSpeed?: number; blocked?: boolean } | null>(null);
 
   // Local player's inventory, gold, and seeds
   const [inventory, setInventory] = useState<Record<string, number>>({});
@@ -1355,6 +1355,13 @@ const App: React.FC = () => {
       setSelectedObject({ ...selectedObject, animSpeed: newSpeed });
       game.events.emit("editor-object-speed-changed", { id: selectedObject.id, speed: newSpeed, save: false });
     }
+  };
+
+  const handleObjectBlockedToggle = () => {
+    if (!selectedObject || !game) return;
+    const newBlocked = !(selectedObject.blocked ?? false);
+    setSelectedObject({ ...selectedObject, blocked: newBlocked });
+    game.events.emit("editor-object-blocked-changed", { id: selectedObject.id, blocked: newBlocked });
   };
 
   const handleObjectSpeedRelease = () => {
@@ -2192,6 +2199,33 @@ const App: React.FC = () => {
                       ↔️ Yatay Çevir
                     </button>
                   </div>
+
+                  {/* Geçilmez (Collision) Toggle */}
+                  <button
+                    className="btn"
+                    style={{
+                      width: "100%",
+                      marginBottom: "8px",
+                      background: selectedObject.blocked
+                        ? "linear-gradient(135deg, #e74c3c, #c0392b)"
+                        : "linear-gradient(135deg, #2c3e50, #34495e)",
+                      border: selectedObject.blocked ? "2px solid #ff6b6b" : "2px solid rgba(255,255,255,0.1)",
+                      color: "white",
+                      borderRadius: "8px",
+                      padding: "8px 12px",
+                      fontSize: "11px",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "6px",
+                      transition: "all 0.2s ease",
+                    }}
+                    onClick={handleObjectBlockedToggle}
+                    title="Bu nesnenin üstünde yürünmez. Tekrar tıklayarak kaldırabilirsiniz."
+                  >
+                    {selectedObject.blocked ? "🚫 Geçilmez (Açık)" : "🚧 Geçilmez Yap"}
+                  </button>
 
                   <button className="btn btn--danger" onClick={handleObjectDelete}>
                     🗑️ Objeyi Haritadan Sil

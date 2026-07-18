@@ -98,6 +98,58 @@ function isWalkableOnBottomIsland(x: number, y: number, state: GameState): boole
   return true; // Not water, walkable
 }
 
+// ─── Geçilmez (blocked) Nesne Kontrolü — Tüm Haritalar ──────────────────────
+// Herhangi bir haritada "blocked" flag'i olan nesnelerin bounding box'ı
+// hareket engeli olarak kullanılır.
+function isBlockedByObject(x: number, y: number, mapId: string, state: GameState): boolean {
+  let blocked = false;
+  state.placedObjects.forEach((obj) => {
+    if (!obj.blocked) return;
+    if ((obj.mapId || "main") !== mapId) return;
+
+    // Nesnenin görsel boyutunu scale ile tahmin et.
+    // Tip bazlı varsayılan boyutlar (16x16 base tile × scale)
+    let baseW = 32;
+    let baseH = 32;
+
+    // Büyük yapılar için özel boyutlar
+    if (obj.type === "bank" || obj.type === "blacksmith" || obj.type === "shop" ||
+        obj.type === "gem_trader" || obj.type === "farmer_npc" || obj.type === "marketplace") {
+      baseW = 96; baseH = 96;
+    } else if (obj.type === "nft_house" || obj.type === "games") {
+      baseW = 128; baseH = 128;
+    } else if (obj.type.startsWith("silo")) {
+      baseW = 64; baseH = 64;
+    } else if (obj.type.startsWith("pack_ext_bridge_beach")) {
+      baseW = 128; baseH = 224;
+    } else if (obj.type.startsWith("pack_ext_bridge")) {
+      baseW = 128; baseH = 128;
+    } else if (obj.type.startsWith("pack_dock_tahta_iskele")) {
+      baseW = 208; baseH = 144;
+    } else if (obj.type.startsWith("pack_dock_iskele") || obj.type.startsWith("pack_iskele_legacy")) {
+      baseW = 144; baseH = 64;
+    } else if (obj.type.startsWith("pack_")) {
+      baseW = 32; baseH = 32;
+    }
+
+    const scale = obj.scale || 1.0;
+    const w = baseW * scale;
+    const h = baseH * scale;
+
+    // origin 0.5, 0.5 (zemin objeler) veya 0.5, 0.8 (diğerleri) — sunucuda basit bbox yeterli
+    const left   = obj.x - w / 2;
+    const right  = obj.x + w / 2;
+    const top    = obj.y - h / 2;
+    const bottom = obj.y + h / 2;
+
+    // Oyuncu boyutu: 16x16 — merkezden kontrol et
+    if (x >= left && x <= right && y >= top && y <= bottom) {
+      blocked = true;
+    }
+  });
+  return blocked;
+}
+
 const SAVE_FILE_PATH = fs.existsSync("/data")
   ? "/data/save_data.json"
   : path.join(__dirname, "..", "..", "save_data.json");
@@ -320,6 +372,20 @@ export class GameRoom extends Room<GameState> {
           player.x = newX;
           player.y = newY;
         }
+
+        // Geçilmez (blocked) nesneler için genel collision — tüm haritalar
+        if (isBlockedByObject(player.x, player.y, mapId, this.state)) {
+          // Kayan collision: X eksenini dene
+          if (!isBlockedByObject(player.x, player.y - vy, mapId, this.state)) {
+            player.y = player.y - vy; // geri al Y
+          } else if (!isBlockedByObject(player.x - vx, player.y, mapId, this.state)) {
+            player.x = player.x - vx; // geri al X
+          } else {
+            // Tamamen blokla — önceki konuma dön
+            player.x = player.x - vx;
+            player.y = player.y - vy;
+          }
+        }
       } else {
         // If movement stops, return to idle
         if (player.state === "walk") {
@@ -511,6 +577,17 @@ export class GameRoom extends Room<GameState> {
       if (obj) {
         obj.x = msg.x;
         obj.y = msg.y;
+        this.triggerDebouncedSave();
+      }
+    });
+
+    /**
+     * "object-set-blocked" handler - toggle collision/impassable on a placed object
+     */
+    this.onMessage("object-set-blocked", (client: Client, msg: { id: string; blocked: boolean }) => {
+      const obj = this.state.placedObjects.get(msg.id);
+      if (obj) {
+        obj.blocked = msg.blocked;
         this.triggerDebouncedSave();
       }
     });

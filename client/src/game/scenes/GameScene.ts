@@ -41,6 +41,7 @@ interface PlacedObject {
   scale: number;
   angle?: number;
   flipX?: boolean;
+  blocked?: boolean;
   imageObj?: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
 }
 
@@ -793,6 +794,26 @@ export class GameScene extends Phaser.Scene {
     return false; // Not a water tile.
   }
 
+  // Geçilmez (blocked) nesnelerin bounding box kontrolü — client prediction için
+  private isBlockedByLocalObject(worldX: number, worldY: number): boolean {
+    for (const obj of this.placedObjects) {
+      if (!obj.blocked) continue;
+      if (obj.imageObj) {
+        const bounds = obj.imageObj.getBounds();
+        // Oyuncu 16x16 — merkezden kontrol
+        if (
+          worldX >= bounds.x &&
+          worldX <= bounds.x + bounds.width &&
+          worldY >= bounds.y &&
+          worldY <= bounds.y + bounds.height
+        ) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   private getDefaultScaleForType(type: string): number {
     if (type === "farm_tile" || type === "farm_tile_hoed" || type === "farm_tile_watered") {
       return 0.07655;
@@ -1032,6 +1053,21 @@ export class GameScene extends Phaser.Scene {
             flipX: payload.flipX
           });
         }
+      }
+    });
+
+    // Geçilmez (blocked) toggle handler
+    this.game.events.on("editor-object-blocked-changed", (payload: { id: string; blocked: boolean }) => {
+      const obj = this.placedObjects.find(o => o.id === payload.id);
+      if (obj) {
+        obj.blocked = payload.blocked;
+        // Görsel: blocked ise hafif kırmızı tint, değilse normal
+        if (obj.imageObj) {
+          obj.imageObj.setTint(payload.blocked ? 0xff8888 : 0xffffff);
+        }
+        this.drawSelectionOutline();
+        // Sunucuya gönder
+        this.room.send("object-set-blocked", { id: obj.id, blocked: payload.blocked });
       }
     });
 
@@ -2394,12 +2430,19 @@ export class GameScene extends Phaser.Scene {
 
     this.input.setDraggable(img);
 
+    const stateObjForBlocked = this.room?.state.placedObjects.get(id);
+    const isBlocked = stateObjForBlocked ? (stateObjForBlocked.blocked ?? false) : false;
+    if (isBlocked) {
+      img.setTint(0xff8888); // Kırmızımsı tint — geçilmez göstergesi
+    }
+
     const obj: PlacedObject = {
       id,
       type,
       x,
       y,
       scale,
+      blocked: isBlocked,
       imageObj: img,
     };
 
@@ -3352,6 +3395,20 @@ export class GameScene extends Phaser.Scene {
         } else {
           this.localX = newX;
           this.localY = newY;
+        }
+
+        // Geçilmez (blocked) nesneler için client-side collision — tüm haritalar
+        if (this.isBlockedByLocalObject(this.localX, this.localY)) {
+          // Kayan collision: X eksenini dene
+          if (!this.isBlockedByLocalObject(this.localX, this.localY - dy * spd)) {
+            this.localY = this.localY - dy * spd;
+          } else if (!this.isBlockedByLocalObject(this.localX - dx * spd, this.localY)) {
+            this.localX = this.localX - dx * spd;
+          } else {
+            // Tamamen blokla — geri dön
+            this.localX = this.localX - dx * spd;
+            this.localY = this.localY - dy * spd;
+          }
         }
       }
       
