@@ -3673,7 +3673,7 @@ const App: React.FC = () => {
             {hotbar.map((itemKey, idx) => {
               const details = itemKey ? getHotbarItemDetails(itemKey) : null;
               const isEquipped = details?.type === "equipment" && equippedWeapon === itemKey;
-              const isSeedActive = details?.type === "seed" && selectedInventorySeed === itemKey.split(":")[1];
+              const isSeedActive = details?.type === "seed" && itemKey && selectedInventorySeed === itemKey.split(":")[1];
               const isActive = isEquipped || isSeedActive;
 
               return (
@@ -3772,7 +3772,7 @@ const App: React.FC = () => {
                             borderRadius: "3px",
                           }}
                         >
-                          {details.type === "consumable" ? (inventory[itemKey] || 0) : (seeds[itemKey.split(":")[1]] || 0)}
+                          {details.type === "consumable" ? (inventory[itemKey!] || 0) : (seeds[itemKey!.split(":")[1]] || 0)}
                         </span>
                       )}
                     </>
