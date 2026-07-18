@@ -1950,16 +1950,51 @@ export class GameScene extends Phaser.Scene {
               const distance = Phaser.Math.Distance.Between(px, py, clickedFishObj.x, clickedFishObj.y);
               
               if (distance <= 256) { // must be near the fish spot
-                let fishDir = "down";
-                const dx = clickedFishObj.x - px;
-                const dy = clickedFishObj.y - py;
-                if (Math.abs(dx) > Math.abs(dy)) {
-                  fishDir = dx > 0 ? "right" : "left";
-                } else {
-                  fishDir = dy > 0 ? "down" : "up";
+                // Define 4 candidate positions around the fish spot (48px / 3 tiles away)
+                const candidates = [
+                  { x: clickedFishObj.x - 48, y: clickedFishObj.y, dir: "right" },
+                  { x: clickedFishObj.x + 48, y: clickedFishObj.y, dir: "left" },
+                  { x: clickedFishObj.x, y: clickedFishObj.y - 48, dir: "down" },
+                  { x: clickedFishObj.x, y: clickedFishObj.y + 48, dir: "up" }
+                ];
+                
+                // Filter to find candidate positions that are ON LAND (not water)
+                const landCandidates = candidates.filter(c => {
+                  const tx = Math.floor(c.x / 16);
+                  const ty = Math.floor(c.y / 16);
+                  const terrainTile = this.map.getTileAt(tx, ty, true, this.layer);
+                  const decorTile = this.map.getTileAt(tx, ty, true, this.decorLayer);
+                  const terrainGid = terrainTile ? (terrainTile.index & 0xFFFF) : -1;
+                  const decorGid = decorTile ? (decorTile.index & 0xFFFF) : -1;
+                  const isWater = GameScene.WATER_TILE_GIDS.has(terrainGid) || GameScene.WATER_TILE_GIDS.has(decorGid) || terrainGid === -1;
+                  return !isWater; // Must be land
+                });
+                
+                // If no land candidates found, fallback to all candidates
+                const validCandidates = landCandidates.length > 0 ? landCandidates : candidates;
+                
+                // Find the candidate closest to the player's current position
+                let bestCandidate = validCandidates[0];
+                let minDist = Phaser.Math.Distance.Between(px, py, bestCandidate.x, bestCandidate.y);
+                
+                for (let i = 1; i < validCandidates.length; i++) {
+                  const dist = Phaser.Math.Distance.Between(px, py, validCandidates[i].x, validCandidates[i].y);
+                  if (dist < minDist) {
+                    minDist = dist;
+                    bestCandidate = validCandidates[i];
+                  }
                 }
                 
-                this.room.send("move", { dx: 0, dy: 0, dir: fishDir });
+                // Snap player position to the best candidate position (making the animation line align perfectly)
+                this.localX = bestCandidate.x;
+                this.localY = bestCandidate.y;
+                localPlayer.container.setPosition(bestCandidate.x, bestCandidate.y);
+                
+                // Inform server of movement and correct direction
+                this.room.send("player-teleport", { mapId: this.currentMapId, x: bestCandidate.x, y: bestCandidate.y });
+                this.room.send("move", { dx: 0, dy: 0, dir: bestCandidate.dir });
+                
+                // Start the fishing sequence
                 this.startFishingSequence();
                 return;
               }
