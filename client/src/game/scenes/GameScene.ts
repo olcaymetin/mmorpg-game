@@ -3379,9 +3379,9 @@ export class GameScene extends Phaser.Scene {
                 const py = localPlayer.container.y;
                 const dir = localPlayerState.direction || "down";
                 
-                // Convert world pixels to 16px tile coordinates (scale is 2, so 32px per tile)
-                const baseTileX = Math.floor(px / 32);
-                const baseTileY = Math.floor(py / 32);
+                // Convert world pixels to 16px tile coordinates
+                const baseTileX = Math.floor(px / 16);
+                const baseTileY = Math.floor(py / 16);
                 
                 let isWaterFound = false;
                 
