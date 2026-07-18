@@ -13,7 +13,8 @@
     "@colyseus/schema": "^2.0.28",
     "colyseus": "^0.15.18",
     "cors": "^2.8.5",
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "mmorpg-game": "file:.."
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

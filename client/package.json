@@ -11,6 +11,7 @@
   "dependencies": {
     "@colyseus/schema": "^2.0.28",
     "colyseus.js": "^0.15.9",
+    "mmorpg-game": "file:..",
     "phaser": "^3.60.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

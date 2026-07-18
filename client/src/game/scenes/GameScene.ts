@@ -420,58 +420,7 @@ export class GameScene extends Phaser.Scene {
       this.load.spritesheet(`pack_skin_${t}_death`, `${charBase}/action/death.png`, { frameWidth: 32, frameHeight: 32 });
     }
 
-    // Fishing - Cast (15 frames)
-    for (let t = 1; t <= 4; t++) {
-      this.load.spritesheet(`pack_skin_${t}_fishing_cast`, `${charBase}/action/fishing_cast.png`, { frameWidth: 32, frameHeight: 32 });
-    }
-    // Fishing - Wait (40 frames)
-    for (let t = 1; t <= 4; t++) {
-      this.load.spritesheet(`pack_skin_${t}_fishing_wait`, `${charBase}/action/fishing_wait.png`, { frameWidth: 32, frameHeight: 32 });
-    }
-    // Fishing - Bite (10 frames)
-    for (let t = 1; t <= 4; t++) {
-      this.load.spritesheet(`pack_skin_${t}_fishing_bite`, `${charBase}/action/fishing_bite.png`, { frameWidth: 32, frameHeight: 32 });
-    }
-    // Fishing - Reel (20 frames)
-    for (let t = 1; t <= 4; t++) {
-      this.load.spritesheet(`pack_skin_${t}_fishing_reel`, `${charBase}/action/fishing_reel.png`, { frameWidth: 32, frameHeight: 32 });
-    }
-    // Fishing - Catch (15 frames)
-    for (let t = 1; t <= 4; t++) {
-      this.load.spritesheet(`pack_skin_${t}_fishing_catch`, `${charBase}/action/fishing_catch.png`, { frameWidth: 32, frameHeight: 32 });
-    }
-
-    // Carrying - Idle, Walk, Run
-    for (let t = 1; t <= 4; t++) {
-      this.load.spritesheet(`pack_skin_${t}_carry_idle`, `${charBase}/action/carry_idle.png`, { frameWidth: 32, frameHeight: 32 });
-      this.load.spritesheet(`pack_skin_${t}_carry_walk`, `${charBase}/action/carry_walk.png`, { frameWidth: 32, frameHeight: 32 });
-      this.load.spritesheet(`pack_skin_${t}_carry_run`, `${charBase}/action/carry_run.png`, { frameWidth: 32, frameHeight: 32 });
-    }
-
-    // Setting (Sit)
-    for (let t = 1; t <= 4; t++) {
-      this.load.spritesheet(`pack_skin_${t}_sit`, `${charBase}/action/sit.png`, { frameWidth: 32, frameHeight: 32 });
-    }
-
-    // Sleep
-    for (let t = 1; t <= 4; t++) {
-      this.load.spritesheet(`pack_skin_${t}_sleep`, `${charBase}/action/sleep.png`, { frameWidth: 32, frameHeight: 32 });
-    }
-
-    // Petting
-    for (let t = 1; t <= 4; t++) {
-      this.load.spritesheet(`pack_skin_${t}_petting`, `${charBase}/action/petting.png`, { frameWidth: 32, frameHeight: 32 });
-    }
-
-    // Climbing
-    for (let t = 1; t <= 4; t++) {
-      this.load.spritesheet(`pack_skin_${t}_climbing`, `${charBase}/action/climbing.png`, { frameWidth: 32, frameHeight: 32 });
-    }
-
-    // Flute
-    for (let t = 1; t <= 4; t++) {
-      this.load.spritesheet(`pack_skin_${t}_flute`, `${charBase}/action/flute.png`, { frameWidth: 32, frameHeight: 32 });
-    }
+    // New action preloads are now managed dynamically via the sharedActions loop below
 
     // ─── Action Animations Preload (Skins, Eyes, Hair, Clothes, Weapons) ───
     const actionNames = ["sword_attack", "bow_attack", "mage", "broomstick", "damage", "death"];
@@ -529,14 +478,34 @@ export class GameScene extends Phaser.Scene {
       this.load.spritesheet(`pack_ride_broomstick_mount_${c}_broomstick`, `assets/pack/char/action/broomstick/Broomstick/${c}.png`, { frameWidth: 32, frameHeight: 32 });
     }
 
-    // Shared action folders loading (Farming & Tools)
+    // Shared action folders loading (Farming, Tools, Fishing, Carrying, Sleep, Sit, etc.)
     const sharedActions = [
       { act: "pickaxe_attack", folder: "pickaxe_hoe_net" },
       { act: "hoe_attack", folder: "pickaxe_hoe_net" },
       { act: "axe_attack", folder: "axe_scythe" },
       { act: "scythe_attack", folder: "axe_scythe" },
       { act: "shovel_attack", folder: "shovel" },
-      { act: "watering", folder: "watering" }
+      { act: "watering", folder: "watering" },
+      { act: "fishing_cast", folder: "fishing_cast" },
+      { act: "fishing_wait", folder: "fishing_wait" },
+      { act: "fishing_bite", folder: "fishing_bite" },
+      { act: "fishing_reel", folder: "fishing_reel" },
+      { act: "fishing_catch", folder: "fishing_catch" },
+      { act: "carry_idle", folder: "carry_idle" },
+      { act: "carry_walk", folder: "carry_walk" },
+      { act: "carry_run", folder: "carry_run" },
+      { act: "sit", folder: "sit" },
+      { act: "sleep", folder: "sleep" },
+      { act: "petting", folder: "petting" },
+      { act: "climbing", folder: "climbing" },
+      { act: "flute", folder: "flute" },
+      { act: "umbrella_idle", folder: "umbrella_idle" },
+      { act: "umbrella_walk", folder: "umbrella_walk" },
+      { act: "umbrella_run", folder: "umbrella_run" },
+      { act: "swim_idle", folder: "swim_idle" },
+      { act: "swim_outwater", folder: "swim_outwater" },
+      { act: "swim_submerged", folder: "swim_submerged" },
+      { act: "swim_swim", folder: "swim_swim" }
     ];
 
     sharedActions.forEach(item => {
