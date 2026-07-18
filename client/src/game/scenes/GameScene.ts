@@ -1951,7 +1951,7 @@ export class GameScene extends Phaser.Scene {
               const py = localPlayer.container.y;
               const distance = Phaser.Math.Distance.Between(px, py, clickedFishObj.x, clickedFishObj.y);
               
-              if (distance > 100) {
+              if (distance > 40) {
                 // Show floating error message and return
                 this.showFloatingText("Balık tutmak için spota daha çok yaklaşmalısın! 🚶‍♂️", px, py - 40, "#ff5555");
                 return;
