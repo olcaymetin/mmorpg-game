@@ -3465,12 +3465,28 @@ export class GameScene extends Phaser.Scene {
       { key: "mg_gift_fish_6", end: 3 },
     ];
 
-    anims.forEach(a => {
+    const fishAnims = anims.filter(a => a.key.startsWith("mg_gift_fish_"));
+    const otherAnims = anims.filter(a => !a.key.startsWith("mg_gift_fish_"));
+
+    otherAnims.forEach(a => {
       if (!this.anims.exists(`${a.key}_anim`)) {
         this.anims.create({
           key: `${a.key}_anim`,
           frames: this.anims.generateFrameNumbers(a.key, { start: 0, end: a.end }),
           frameRate: 10,
+          repeat: -1,
+        });
+      }
+    });
+
+    // Balık Spotları: daha yavaş, doğal yüzme animasyonu (3fps varsayılan)
+    // Kullanıcı editörde balık spotunu seçip "Animasyon Hızı" slider'ı ile ayarlayabilir
+    fishAnims.forEach(a => {
+      if (!this.anims.exists(`${a.key}_anim`)) {
+        this.anims.create({
+          key: `${a.key}_anim`,
+          frames: this.anims.generateFrameNumbers(a.key, { start: 0, end: a.end }),
+          frameRate: 3,   // yavaş, doğal görünüm — slider ile 0.1x→5x çarpanla ayarlanabilir
           repeat: -1,
         });
       }

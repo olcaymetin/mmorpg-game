@@ -2117,23 +2117,33 @@ const App: React.FC = () => {
                     />
                   </div>
 
-                  {/* Animation Speed Slider (Visible only for animated objects like VFX/gifts) */}
+                  {/* Animation Speed Slider (Visible only for animated objects like VFX/gifts/fish) */}
                   {(selectedObject.type.startsWith("vfx_") || selectedObject.type.startsWith("mg_")) && (
                     <div className="slider-group" style={{ marginTop: "10px" }}>
                       <label htmlFor="speed-slider">
-                        Animasyon Hızı: <b>{Math.round((selectedObject.animSpeed !== undefined ? selectedObject.animSpeed : 1.0) * 100)}%</b>
+                        {selectedObject.type.startsWith("mg_gift_fish_")
+                          ? <>🐟 Yüzme Hızı: <b>{Math.round((selectedObject.animSpeed !== undefined ? selectedObject.animSpeed : 1.0) * 3 * 10) / 10} fps</b></>
+                          : <>Animasyon Hızı: <b>{Math.round((selectedObject.animSpeed !== undefined ? selectedObject.animSpeed : 1.0) * 100)}%</b></>
+                        }
                       </label>
                       <input
                         id="speed-slider"
                         type="range"
                         min="0.1"
-                        max="5.0"
+                        max={selectedObject.type.startsWith("mg_gift_fish_") ? "10.0" : "5.0"}
                         step="0.1"
                         value={selectedObject.animSpeed !== undefined ? selectedObject.animSpeed : 1.0}
                         onChange={handleObjectSpeedChange}
                         onMouseUp={handleObjectSpeedRelease}
                         onTouchEnd={handleObjectSpeedRelease}
                       />
+                      {selectedObject.type.startsWith("mg_gift_fish_") && (
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "8px", opacity: 0.6, marginTop: "2px" }}>
+                          <span>Yavaş</span>
+                          <span>Varsayılan (3fps)</span>
+                          <span>Hızlı</span>
+                        </div>
+                      )}
                     </div>
                   )}
 
