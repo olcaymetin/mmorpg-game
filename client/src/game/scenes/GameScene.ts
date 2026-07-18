@@ -1846,7 +1846,16 @@ export class GameScene extends Phaser.Scene {
             const defaultScale = this.getDefaultScaleForType(this.currentObjectName);
             let posX = pointer.worldX;
             let posY = pointer.worldY;
-            if (this.currentObjectName === "farm_tile" || this.currentObjectName === "farm_tile_hoed" || this.currentObjectName === "farm_tile_watered") {
+            const isGridSnappingName = 
+              this.currentObjectName === "farm_tile" || 
+              this.currentObjectName === "farm_tile_hoed" || 
+              this.currentObjectName === "farm_tile_watered" ||
+              this.currentObjectName.startsWith("pack_fences_tilemap") ||
+              this.currentObjectName.startsWith("pack_ext_fence_") ||
+              this.currentObjectName.startsWith("pack_ext_white_fence") ||
+              this.currentObjectName.startsWith("pack_ext_bridge");
+            
+            if (isGridSnappingName) {
               posX = Math.floor(pointer.worldX / 16) * 16 + 8;
               posY = Math.floor(pointer.worldY / 16) * 16 + 8;
             }
@@ -2047,8 +2056,16 @@ export class GameScene extends Phaser.Scene {
       if (!this.editorMode) return;
       let posX = dragX;
       let posY = dragY;
-      const type = gameObject.getData("type");
-      if (type === "farm_tile" || type === "farm_tile_hoed" || type === "farm_tile_watered") {
+      const isGridSnapping = 
+        type === "farm_tile" || 
+        type === "farm_tile_hoed" || 
+        type === "farm_tile_watered" ||
+        type.startsWith("pack_fences_tilemap") ||
+        type.startsWith("pack_ext_fence_") ||
+        type.startsWith("pack_ext_white_fence") ||
+        type.startsWith("pack_ext_bridge");
+      
+      if (isGridSnapping) {
         posX = Math.floor(dragX / 16) * 16 + 8;
         posY = Math.floor(dragY / 16) * 16 + 8;
       }

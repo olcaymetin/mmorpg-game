@@ -2063,6 +2063,7 @@ const App: React.FC = () => {
                         selectedObject.type === "farm_tile" ||
                         selectedObject.type === "farm_tile_hoed" ||
                         selectedObject.type === "farm_tile_watered" ||
+                        selectedObject.type.startsWith("pack_") ||
                         selectedObject.type.startsWith("ahir_") ||
                         selectedObject.type.startsWith("decor_grass_") ||
                         selectedObject.type.startsWith("decor_gorsel_") ||
@@ -2079,6 +2080,7 @@ const App: React.FC = () => {
                         selectedObject.type === "farm_tile" ||
                         selectedObject.type === "farm_tile_hoed" ||
                         selectedObject.type === "farm_tile_watered" ||
+                        selectedObject.type.startsWith("pack_") ||
                         selectedObject.type.startsWith("ahir_") ||
                         selectedObject.type.startsWith("decor_grass_") ||
                         selectedObject.type.startsWith("decor_gorsel_") ||
@@ -2095,6 +2097,7 @@ const App: React.FC = () => {
                         selectedObject.type === "farm_tile" ||
                         selectedObject.type === "farm_tile_hoed" ||
                         selectedObject.type === "farm_tile_watered" ||
+                        selectedObject.type.startsWith("pack_") ||
                         selectedObject.type.startsWith("ahir_") ||
                         selectedObject.type.startsWith("decor_grass_") ||
                         selectedObject.type.startsWith("decor_gorsel_") ||
