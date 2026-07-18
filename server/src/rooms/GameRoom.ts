@@ -115,6 +115,8 @@ function isMovementBlockedByLine(
   mapId: string, state: GameState
 ): boolean {
   let blocked = false;
+  const oy = oldY + 34;
+  const ny = newY + 34;
   state.placedObjects.forEach((obj) => {
     if (obj.type !== "collision_line") return;
     if ((obj.mapId || "main") !== mapId) return;
@@ -124,7 +126,7 @@ function isMovementBlockedByLine(
     const x2 = obj.scale; // x2 stored in scale
     const y2 = obj.angle; // y2 stored in angle
 
-    if (lineIntersect(oldX, oldY, newX, newY, x1, y1, x2, y2)) {
+    if (lineIntersect(oldX, oy, newX, ny, x1, y1, x2, y2)) {
       blocked = true;
     }
   });

@@ -870,6 +870,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   private isBlockedByLocalLine(oldX: number, oldY: number, newX: number, newY: number): boolean {
+    const oy = oldY + 34;
+    const ny = newY + 34;
     for (const obj of this.placedObjects) {
       if (obj.type !== "collision_line") continue;
       
@@ -878,7 +880,7 @@ export class GameScene extends Phaser.Scene {
       const x2 = obj.scale; // x2
       const y2 = obj.angle ?? 0; // y2
       
-      if (this.lineIntersect(oldX, oldY, newX, newY, x1, y1, x2, y2)) {
+      if (this.lineIntersect(oldX, oy, newX, ny, x1, y1, x2, y2)) {
         return true;
       }
     }
