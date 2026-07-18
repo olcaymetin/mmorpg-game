@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import type { Room } from "colyseus.js";
 import type { GameState, Player, PlacedObjectState } from "../schema/GameState";
 import { EXTRA_PACK_SPRITESHEETS } from "../../App";
+import { NPC, spawnNPCs } from "./NPCSystem";
 
 // ─── World & rendering constants ──────────────────────────────────────────────
 export const WORLD_W  = 1600; // 50 columns * 32px
@@ -50,6 +51,9 @@ export class GameScene extends Phaser.Scene {
 
   // ── Entities (one per player) ──────────────────────────────────────────────
   private entities = new Map<string, PlayerEntity>();
+
+  // ── NPCs ─────────────────────────────────────────────────────────────────
+  private npcs: NPC[] = [];
 
   // ── Input ──────────────────────────────────────────────────────────────────
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -376,6 +380,130 @@ export class GameScene extends Phaser.Scene {
         this.load.spritesheet(`pack_ride_bicycle_eyes_${g}_${ec}_idle`, `assets/pack/char/mount_bicycle_idle/eyes/${g}/${ec}.png`, { frameWidth: 32, frameHeight: 32 });
       }
     }
+
+    // ─── 6.6. New Action Animations (Damage, Death, Fishing, Carrying, etc.) ───
+
+    // Damage (16 frames, 2 per direction)
+    for (let t = 1; t <= 4; t++) {
+      this.load.spritesheet(`pack_skin_${t}_damage`, `${charBase}/action/damage.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+
+    // Death (20 frames, 2 per direction)
+    for (let t = 1; t <= 4; t++) {
+      this.load.spritesheet(`pack_skin_${t}_death`, `${charBase}/action/death.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+
+    // Fishing - Cast (15 frames)
+    for (let t = 1; t <= 4; t++) {
+      this.load.spritesheet(`pack_skin_${t}_fishing_cast`, `${charBase}/action/fishing_cast.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+    // Fishing - Wait (40 frames)
+    for (let t = 1; t <= 4; t++) {
+      this.load.spritesheet(`pack_skin_${t}_fishing_wait`, `${charBase}/action/fishing_wait.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+    // Fishing - Bite (10 frames)
+    for (let t = 1; t <= 4; t++) {
+      this.load.spritesheet(`pack_skin_${t}_fishing_bite`, `${charBase}/action/fishing_bite.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+    // Fishing - Reel (20 frames)
+    for (let t = 1; t <= 4; t++) {
+      this.load.spritesheet(`pack_skin_${t}_fishing_reel`, `${charBase}/action/fishing_reel.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+    // Fishing - Catch (15 frames)
+    for (let t = 1; t <= 4; t++) {
+      this.load.spritesheet(`pack_skin_${t}_fishing_catch`, `${charBase}/action/fishing_catch.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+
+    // Carrying - Idle, Walk, Run
+    for (let t = 1; t <= 4; t++) {
+      this.load.spritesheet(`pack_skin_${t}_carry_idle`, `${charBase}/action/carry_idle.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_skin_${t}_carry_walk`, `${charBase}/action/carry_walk.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_skin_${t}_carry_run`, `${charBase}/action/carry_run.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+
+    // Setting (Sit)
+    for (let t = 1; t <= 4; t++) {
+      this.load.spritesheet(`pack_skin_${t}_sit`, `${charBase}/action/sit.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+
+    // Sleep
+    for (let t = 1; t <= 4; t++) {
+      this.load.spritesheet(`pack_skin_${t}_sleep`, `${charBase}/action/sleep.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+
+    // Petting
+    for (let t = 1; t <= 4; t++) {
+      this.load.spritesheet(`pack_skin_${t}_petting`, `${charBase}/action/petting.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+
+    // Climbing
+    for (let t = 1; t <= 4; t++) {
+      this.load.spritesheet(`pack_skin_${t}_climbing`, `${charBase}/action/climbing.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+
+    // Flute
+    for (let t = 1; t <= 4; t++) {
+      this.load.spritesheet(`pack_skin_${t}_flute`, `${charBase}/action/flute.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+
+    // Mage
+    for (let t = 1; t <= 4; t++) {
+      this.load.spritesheet(`pack_skin_${t}_mage`, `${charBase}/action/mage.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+
+    // Umbrella
+    for (let t = 1; t <= 4; t++) {
+      this.load.spritesheet(`pack_skin_${t}_umbrella`, `${charBase}/action/umbrella.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+
+    // Swim - Idle, Outwater, Submerged, Swim
+    for (let t = 1; t <= 4; t++) {
+      this.load.spritesheet(`pack_skin_${t}_swim_idle`, `${charBase}/action/swim_idle.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_skin_${t}_swim_outwater`, `${charBase}/action/swim_outwater.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_skin_${t}_swim_submerged`, `${charBase}/action/swim_submerged.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_skin_${t}_swim_swim`, `${charBase}/action/swim_swim.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+
+    // Broomstick (flying mount)
+    for (let t = 1; t <= 4; t++) {
+      this.load.spritesheet(`pack_skin_${t}_broomstick`, `${charBase}/action/broomstick.png`, { frameWidth: 32, frameHeight: 48 });
+    }
+
+    // Tool Animations (attack swings)
+    for (let t = 1; t <= 4; t++) {
+      this.load.spritesheet(`pack_skin_${t}_sword_attack`, `${charBase}/action/sword_attack.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_skin_${t}_bow_attack`, `${charBase}/action/bow_attack.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_skin_${t}_pickaxe_attack`, `${charBase}/action/pickaxe_attack.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_skin_${t}_hoe_attack`, `${charBase}/action/hoe_attack.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_skin_${t}_shovel_attack`, `${charBase}/action/shovel_attack.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_skin_${t}_axe_attack`, `${charBase}/action/axe_attack.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_skin_${t}_scythe_attack`, `${charBase}/action/scythe_attack.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_skin_${t}_watering`, `${charBase}/action/watering.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+
+    // ─── 6.7. Horse Extended Animations (Lower, Eating) ───
+    for (let c = 1; c <= 5; c++) {
+      this.load.spritesheet(`pack_ride_horse_mount_${c}_lower`, `assets/pack/char/mount_horse_lower/lower/${c}.png`, { frameWidth: 32, frameHeight: 48 });
+      this.load.spritesheet(`pack_ride_horse_mount_${c}_eating`, `assets/pack/char/mount_horse_eating/eating/${c}.png`, { frameWidth: 32, frameHeight: 48 });
+    }
+
+    // ─── 6.8. Bear Enemy ───
+    this.load.spritesheet("bear_idle", `${charBase}/enemy/bear_idle.png`, { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet("bear_walk", `${charBase}/enemy/bear_walk.png`, { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet("bear_run", `${charBase}/enemy/bear_run.png`, { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet("bear_attack", `${charBase}/enemy/bear_attack.png`, { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet("bear_hit", `${charBase}/enemy/bear_hit.png`, { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet("bear_dead", `${charBase}/enemy/bear_dead.png`, { frameWidth: 32, frameHeight: 32 });
+
+    // ─── 6.9. NPC Spritesheets ───
+    this.load.spritesheet("npc_banker", `${charBase}/npc/banker.png`, { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet("npc_blacksmith", `${charBase}/npc/blacksmith.png`, { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet("npc_pirate", `${charBase}/npc/pirate.png`, { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet("npc_mermaid", `${charBase}/npc/mermaid.png`, { frameWidth: 32, frameHeight: 32 });
+
+    // ─── 6.10. Projectile Effects ───
+    this.load.image("proj_arrow", `${charBase}/projectiles/arrow.png`);
+    this.load.image("proj_magic", `${charBase}/projectiles/magic.png`);
 
 
     // 7. New Tilesets
@@ -840,6 +968,9 @@ export class GameScene extends Phaser.Scene {
       this.cameras.main.setZoom(initialMinZoom);
     }
 
+    // 12. Spawn NPCs
+    this.npcs = spawnNPCs(this);
+
     this.input.on("wheel", (
       _pointer: Phaser.Input.Pointer,
       _gameObjects: Phaser.GameObjects.GameObject[],
@@ -1252,6 +1383,177 @@ export class GameScene extends Phaser.Scene {
       }
     }
 
+    // ─── 8. Action Animations ────────────────────────────────────────────────
+    const actionDirs = ["down", "right", "up", "left"];
+    const packDirs = ["down", "down_right", "right", "up_right", "up", "up_left", "left", "down_left"];
+    const actionAnims = [
+      // Damage (16 frames = 2 per direction)
+      { prefix: "pack_skin", suffix: "_damage", dirSuffix: "", totalFrames: 16, dirCount: 8, frameRate: 12, repeat: 0 },
+      // Death (20 frames = 2.5 per direction)
+      { prefix: "pack_skin", suffix: "_death", dirSuffix: "", totalFrames: 20, dirCount: 8, frameRate: 10, repeat: 0 },
+      // Fishing Cast (15 frames)
+      { prefix: "pack_skin", suffix: "_fishing_cast", dirSuffix: "", totalFrames: 15, dirCount: 1, frameRate: 10, repeat: 0 },
+      // Fishing Wait (40 frames)
+      { prefix: "pack_skin", suffix: "_fishing_wait", dirSuffix: "", totalFrames: 40, dirCount: 1, frameRate: 6, repeat: -1 },
+      // Fishing Bite (10 frames)
+      { prefix: "pack_skin", suffix: "_fishing_bite", dirSuffix: "", totalFrames: 10, dirCount: 1, frameRate: 12, repeat: 0 },
+      // Fishing Reel (20 frames)
+      { prefix: "pack_skin", suffix: "_fishing_reel", dirSuffix: "", totalFrames: 20, dirCount: 1, frameRate: 10, repeat: 0 },
+      // Fishing Catch (15 frames)
+      { prefix: "pack_skin", suffix: "_fishing_catch", dirSuffix: "", totalFrames: 15, dirCount: 1, frameRate: 10, repeat: 0 },
+      // Carrying Idle (16 frames)
+      { prefix: "pack_skin", suffix: "_carry_idle", dirSuffix: "", totalFrames: 16, dirCount: 1, frameRate: 6, repeat: -1 },
+      // Carrying Walk (24 frames)
+      { prefix: "pack_skin", suffix: "_carry_walk", dirSuffix: "", totalFrames: 24, dirCount: 1, frameRate: 10, repeat: -1 },
+      // Carrying Run (32 frames)
+      { prefix: "pack_skin", suffix: "_carry_run", dirSuffix: "", totalFrames: 32, dirCount: 1, frameRate: 12, repeat: -1 },
+      // Sit (16 frames)
+      { prefix: "pack_skin", suffix: "_sit", dirSuffix: "", totalFrames: 16, dirCount: 1, frameRate: 6, repeat: -1 },
+      // Sleep (20 frames)
+      { prefix: "pack_skin", suffix: "_sleep", dirSuffix: "", totalFrames: 20, dirCount: 1, frameRate: 6, repeat: -1 },
+      // Petting (15 frames)
+      { prefix: "pack_skin", suffix: "_petting", dirSuffix: "", totalFrames: 15, dirCount: 1, frameRate: 10, repeat: 0 },
+      // Climbing (20 frames)
+      { prefix: "pack_skin", suffix: "_climbing", dirSuffix: "", totalFrames: 20, dirCount: 1, frameRate: 10, repeat: -1 },
+      // Flute (20 frames)
+      { prefix: "pack_skin", suffix: "_flute", dirSuffix: "", totalFrames: 20, dirCount: 1, frameRate: 8, repeat: -1 },
+      // Mage (20 frames)
+      { prefix: "pack_skin", suffix: "_mage", dirSuffix: "", totalFrames: 20, dirCount: 1, frameRate: 10, repeat: -1 },
+      // Umbrella (16 frames)
+      { prefix: "pack_skin", suffix: "_umbrella", dirSuffix: "", totalFrames: 16, dirCount: 1, frameRate: 6, repeat: -1 },
+      // Swim Idle (16 frames)
+      { prefix: "pack_skin", suffix: "_swim_idle", dirSuffix: "", totalFrames: 16, dirCount: 1, frameRate: 6, repeat: -1 },
+      // Swim Outwater (20 frames)
+      { prefix: "pack_skin", suffix: "_swim_outwater", dirSuffix: "", totalFrames: 20, dirCount: 1, frameRate: 10, repeat: 0 },
+      // Swim Submerged (15 frames)
+      { prefix: "pack_skin", suffix: "_swim_submerged", dirSuffix: "", totalFrames: 15, dirCount: 1, frameRate: 8, repeat: -1 },
+      // Swim Swim (24 frames)
+      { prefix: "pack_skin", suffix: "_swim_swim", dirSuffix: "", totalFrames: 24, dirCount: 1, frameRate: 10, repeat: -1 },
+      // Broomstick (20 frames)
+      { prefix: "pack_skin", suffix: "_broomstick", dirSuffix: "", totalFrames: 20, dirCount: 1, frameRate: 10, repeat: -1 },
+      // Sword Attack (15 frames)
+      { prefix: "pack_skin", suffix: "_sword_attack", dirSuffix: "", totalFrames: 15, dirCount: 1, frameRate: 14, repeat: 0 },
+      // Bow Attack (25 frames)
+      { prefix: "pack_skin", suffix: "_bow_attack", dirSuffix: "", totalFrames: 25, dirCount: 1, frameRate: 12, repeat: 0 },
+      // Pickaxe Attack (20 frames)
+      { prefix: "pack_skin", suffix: "_pickaxe_attack", dirSuffix: "", totalFrames: 20, dirCount: 1, frameRate: 14, repeat: 0 },
+      // Hoe Attack (20 frames)
+      { prefix: "pack_skin", suffix: "_hoe_attack", dirSuffix: "", totalFrames: 20, dirCount: 1, frameRate: 14, repeat: 0 },
+      // Shovel Attack (20 frames)
+      { prefix: "pack_skin", suffix: "_shovel_attack", dirSuffix: "", totalFrames: 20, dirCount: 1, frameRate: 14, repeat: 0 },
+      // Axe Attack (20 frames)
+      { prefix: "pack_skin", suffix: "_axe_attack", dirSuffix: "", totalFrames: 20, dirCount: 1, frameRate: 14, repeat: 0 },
+      // Scythe Attack (24 frames)
+      { prefix: "pack_skin", suffix: "_scythe_attack", dirSuffix: "", totalFrames: 24, dirCount: 1, frameRate: 14, repeat: 0 },
+      // Watering (25 frames)
+      { prefix: "pack_skin", suffix: "_watering", dirSuffix: "", totalFrames: 25, dirCount: 1, frameRate: 12, repeat: 0 },
+    ];
+
+    for (const anim of actionAnims) {
+      for (let t = 1; t <= 4; t++) {
+        const skinKey = `${anim.prefix}_${t}${anim.suffix}`;
+        if (this.textures.exists(skinKey)) {
+          if (anim.dirCount === 1) {
+            // No directional variant — single animation
+            const animKey = `${skinKey}_anim`;
+            if (!this.anims.exists(animKey)) {
+              this.anims.create({
+                key: animKey,
+                frames: this.anims.generateFrameNumbers(skinKey, { start: 0, end: anim.totalFrames - 1 }),
+                frameRate: anim.frameRate,
+                repeat: anim.repeat,
+              });
+            }
+          } else {
+            // Directional variant
+            actionDirs.forEach((dir) => {
+              const dirIndex = packDirs.indexOf(dir);
+              const framesPerDir = anim.totalFrames / anim.dirCount;
+              const start = dirIndex * Math.floor(framesPerDir);
+              const end = start + Math.ceil(framesPerDir) - 1;
+              const animKey = `${skinKey}_${dir}`;
+              if (!this.anims.exists(animKey)) {
+                this.anims.create({
+                  key: animKey,
+                  frames: this.anims.generateFrameNumbers(skinKey, { start, end }),
+                  frameRate: anim.frameRate,
+                  repeat: anim.repeat,
+                });
+              }
+            });
+          }
+        }
+      }
+    }
+
+    // ─── 9. Horse Extended Animations (Lower, Eating) ────────────────────────
+    const horseLowerEat = ["lower", "eating"];
+    for (const action of horseLowerEat) {
+      for (let c = 1; c <= 5; c++) {
+        const mountKey = `pack_ride_horse_mount_${c}_${action}`;
+        if (this.textures.exists(mountKey)) {
+          actionDirs.forEach((dir) => {
+            const dirIndex = packDirs.indexOf(dir);
+            const animKey = `${mountKey}_${dir}`;
+            if (!this.anims.exists(animKey)) {
+              this.anims.create({
+                key: animKey,
+                frames: [{ key: mountKey, frame: dirIndex }],
+                frameRate: 1,
+                repeat: -1,
+              });
+            }
+          });
+        }
+      }
+    }
+
+    // ─── 10. Bear Enemy Animations ───────────────────────────────────────────
+    const bearAnims = [
+      { key: "bear", suffix: "idle", count: 16, rate: 6 },
+      { key: "bear", suffix: "walk", count: 24, rate: 10 },
+      { key: "bear", suffix: "run", count: 32, rate: 14 },
+      { key: "bear", suffix: "attack", count: 15, rate: 12 },
+      { key: "bear", suffix: "hit", count: 10, rate: 14 },
+      { key: "bear", suffix: "dead", count: 15, rate: 8 },
+    ];
+    for (const ba of bearAnims) {
+      const sheetKey = `bear_${ba.suffix}`;
+      if (this.textures.exists(sheetKey)) {
+        this.anims.create({
+          key: `${sheetKey}_anim`,
+          frames: this.anims.generateFrameNumbers(sheetKey, { start: 0, end: ba.count - 1 }),
+          frameRate: ba.rate,
+          repeat: ba.suffix === "dead" ? 0 : -1,
+        });
+      }
+    }
+
+    // ─── 11. NPC Animations ──────────────────────────────────────────────────
+    const npcAnims = [
+      { key: "npc_banker", suffix: "idle", count: 16, rate: 6 },
+      { key: "npc_banker", suffix: "walk", count: 24, rate: 10 },
+      { key: "npc_banker", suffix: "run", count: 32, rate: 14 },
+      { key: "npc_blacksmith", suffix: "idle", count: 16, rate: 6 },
+      { key: "npc_blacksmith", suffix: "walk", count: 24, rate: 10 },
+      { key: "npc_blacksmith", suffix: "pickaxe", count: 20, rate: 12 },
+      { key: "npc_pirate", suffix: "idle", count: 16, rate: 6 },
+      { key: "npc_pirate", suffix: "walk", count: 24, rate: 10 },
+      { key: "npc_mermaid", suffix: "idle", count: 16, rate: 6 },
+      { key: "npc_mermaid", suffix: "swim", count: 24, rate: 10 },
+    ];
+    for (const na of npcAnims) {
+      const sheetKey = na.key;
+      if (this.textures.exists(sheetKey)) {
+        this.anims.create({
+          key: `${na.key}_${na.suffix}`,
+          frames: this.anims.generateFrameNumbers(sheetKey, { start: 0, end: na.count - 1 }),
+          frameRate: na.rate,
+          repeat: -1,
+        });
+      }
+    }
+
     // Custom closet frames registration
     const closetTex = this.textures.get("pack_int_closet");
     if (closetTex) {
@@ -1533,6 +1835,15 @@ export class GameScene extends Phaser.Scene {
         if (pointer.button === 0 && type === "player") {
           const sid = gameObject.getData("sessionId");
           this.game.events.emit("open-player-profile", { sessionId: sid });
+        }
+        // NPC Click Handlers
+        if (pointer.button === 0 && type === "npc") {
+          const npcKey = gameObject.getData("npcKey");
+          if (npcKey === "banker") {
+            this.game.events.emit("open-farmer-shop");
+          } else if (npcKey === "blacksmith") {
+            this.game.events.emit("open-marketplace");
+          }
         }
 
         // Farm Tile Interactions in Play Mode
@@ -2670,6 +2981,11 @@ export class GameScene extends Phaser.Scene {
   // ─── Game loop ────────────────────────────────────────────────────────────
 
   update(time: number, delta: number): void {
+    // ── 0. NPC AI Update ──
+    for (const npc of this.npcs) {
+      npc.update(time);
+    }
+
     // ── 1. depth Y-Sorting ──
     this.layer.setDepth(0); // Ground is always at the bottom
     this.decorLayer.setDepth(1); // Fences/decors on top of ground, under players
