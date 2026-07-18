@@ -940,6 +940,12 @@ const App: React.FC = () => {
   const [equippedBoots, setEquippedBoots] = useState("");
   const [equippedWeapon, setEquippedWeapon] = useState("");
   const [mountType, setMountType] = useState("none");
+
+  // Hotbar state (8 slots, saved in localStorage)
+  const [hotbar, setHotbar] = useState<(string | null)[]>(() => {
+    const saved = localStorage.getItem("mmorpg_hotbar");
+    return saved ? JSON.parse(saved) : [null, null, null, null, null, null, null, null];
+  });
   // isRiding removed
   const [customAssetFile, setCustomAssetFile] = useState<File | null>(null);
   const [customAssetLabel, setCustomAssetLabel] = useState("");
@@ -966,6 +972,92 @@ const App: React.FC = () => {
   // ── Login ───────────────────────────────────────────────────────────────────
   const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem("login_type"));
   const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem("login_type") === "admin");
+
+  // Helper for Hotbar item rendering details
+  const getHotbarItemDetails = (itemKey: string) => {
+    if (itemKey === "Water") {
+      return { label: "Su", iconUrl: null, emoji: "💧", type: "consumable" };
+    }
+    if (itemKey === "Bread") {
+      return { label: "Ekmek", iconUrl: null, emoji: "🍞", type: "consumable" };
+    }
+    if (itemKey.startsWith("seed:")) {
+      const cropName = itemKey.split(":")[1];
+      const bagIndex = cropSeedBagIndices[cropName] || 0;
+      return { label: `${cropLabels[cropName] || cropName} Toh.`, iconUrl: "/assets/seed_bags_32x32.png", bagIndex, type: "seed" };
+    }
+    if (itemKey.startsWith("crop:")) {
+      const cropName = itemKey.split(":")[1];
+      return { label: cropLabels[cropName] || cropName, iconUrl: "/assets/pickup_items.png", cropName, type: "crop" };
+    }
+    const parts = itemKey.split(":");
+    const tierId = parts[0];
+    const name = parts[1];
+    
+    const weapon = EQUIP_WEAPONS.find(w => w.name === name);
+    const tool = EQUIP_TOOLS.find(t => t.name === name);
+    const label = weapon?.label || tool?.label || name;
+    const icon = weapon?.icon || tool?.icon || "";
+    
+    return {
+      label,
+      iconUrl: `/assets/pack/icons/RPG_icons/Weapons_and_Armor/${tierId}/${icon}`,
+      type: "equipment"
+    };
+  };
+
+  const handleHotbarDrop = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    const itemKey = e.dataTransfer.getData("text/plain");
+    if (itemKey) {
+      const newHotbar = [...hotbar];
+      newHotbar[index] = itemKey;
+      setHotbar(newHotbar);
+      localStorage.setItem("mmorpg_hotbar", JSON.stringify(newHotbar));
+    }
+  };
+
+  const clearHotbarSlot = (index: number) => {
+    const newHotbar = [...hotbar];
+    newHotbar[index] = null;
+    setHotbar(newHotbar);
+    localStorage.setItem("mmorpg_hotbar", JSON.stringify(newHotbar));
+  };
+
+  const activateHotbarSlot = (index: number) => {
+    const itemKey = hotbar[index];
+    if (!itemKey) return;
+    
+    if (itemKey === "Water" || itemKey === "Bread") {
+      if ((inventory[itemKey] || 0) > 0) {
+        room?.send("use-item", { itemName: itemKey });
+      }
+    } else if (itemKey.startsWith("seed:")) {
+      const cropName = itemKey.split(":")[1];
+      if ((seeds[cropName] || 0) > 0) {
+        handleSelectInventorySeed(cropName);
+      }
+    } else if (itemKey.startsWith("crop:")) {
+      // Crops cannot be equipped/used, do nothing
+    } else {
+      const isCurrentlyEquipped = equippedWeapon === itemKey;
+      room?.send("equip-item", { slot: "weapon", itemKey: isCurrentlyEquipped ? "" : itemKey });
+    }
+  };
+
+  // Keyboard 1-8 event listeners
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isTyping = document.activeElement && (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA");
+      if (isTyping) return;
+      if (e.key >= "1" && e.key <= "8") {
+        const index = parseInt(e.key) - 1;
+        activateHotbarSlot(index);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [hotbar, room, inventory, seeds, equippedWeapon]);
 
   // ── New currency: gem & coin (FARM) ─────────────────────────────────────────
   const [gem, setGem] = useState(0);
@@ -3262,8 +3354,13 @@ const App: React.FC = () => {
                 Object.entries(inventory).map(([cropName, qty]) => {
                   if (qty <= 0 || cropName === "Water" || cropName === "Bread") return null;
                   const label = cropLabels[cropName] || cropName;
-                  return (
-                    <div key={cropName} className="inventory-item">
+                    return (
+                      <div 
+                        key={cropName} 
+                        className="inventory-item"
+                        draggable={true}
+                        onDragStart={(e) => e.dataTransfer.setData("text/plain", "crop:" + cropName)}
+                      >
                       <div
                         className="inventory-thumb"
                         style={{
@@ -3290,14 +3387,16 @@ const App: React.FC = () => {
                   const label = cropLabels[cropName] || cropName;
                   const bagIndex = cropSeedBagIndices[cropName] || 0;
                   const isSelected = selectedInventorySeed === cropName;
-                  return (
-                    <div
-                      key={cropName}
-                      className={`inventory-item ${isSelected ? "inventory-item--selected" : ""}`}
-                      style={{ cursor: "pointer" }}
-                      onClick={() => handleSelectInventorySeed(cropName)}
-                      title="Ekmek için seç / iptal et"
-                    >
+                    return (
+                      <div
+                        key={cropName}
+                        className={`inventory-item ${isSelected ? "inventory-item--selected" : ""}`}
+                        style={{ cursor: "pointer" }}
+                        onClick={() => handleSelectInventorySeed(cropName)}
+                        draggable={true}
+                        onDragStart={(e) => e.dataTransfer.setData("text/plain", "seed:" + cropName)}
+                        title="Ekmek için seç / iptal et"
+                      >
                       <div
                         className="inventory-thumb"
                         style={{
@@ -3322,7 +3421,12 @@ const App: React.FC = () => {
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "6px", width: "100%" }}>
                   {(inventory["Water"] || 0) > 0 && (
-                    <div className="inventory-item" style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+                    <div 
+                      className="inventory-item" 
+                      style={{ display: "flex", justifyContent: "space-between", width: "100%" }}
+                      draggable={true}
+                      onDragStart={(e) => e.dataTransfer.setData("text/plain", "Water")}
+                    >
                       <span style={{ fontSize: "20px" }}>💧</span>
                       <div className="inventory-details" style={{ flex: 1, marginLeft: "10px" }}>
                         <span className="inventory-name">Temiz Su</span>
@@ -3347,7 +3451,12 @@ const App: React.FC = () => {
                   )}
 
                   {(inventory["Bread"] || 0) > 0 && (
-                    <div className="inventory-item" style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+                    <div 
+                      className="inventory-item" 
+                      style={{ display: "flex", justifyContent: "space-between", width: "100%" }}
+                      draggable={true}
+                      onDragStart={(e) => e.dataTransfer.setData("text/plain", "Bread")}
+                    >
                       <span style={{ fontSize: "20px" }}>🍞</span>
                       <div className="inventory-details" style={{ flex: 1, marginLeft: "10px" }}>
                         <span className="inventory-name">Ekmek</span>
@@ -3446,6 +3555,147 @@ const App: React.FC = () => {
       {/* ── Friends List Panel ──────────────────────────────────────────── */}
       {room && sessionId && !editMode && (
         <FriendsPanel room={room} players={allPlayers} mySessionId={sessionId} />
+      )}
+
+      {/* ── Hotbar (Kısayol Çubuğu) ── */}
+      {room && sessionId && !editMode && (
+        <div 
+          className="game-hotbar" 
+          style={{
+            position: "absolute",
+            bottom: "16px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            zIndex: 1000,
+            pointerEvents: "auto",
+          }}
+        >
+          <div 
+            style={{
+              display: "flex",
+              gap: "6px",
+              padding: "8px 12px",
+              background: "rgba(25, 15, 10, 0.95)",
+              border: "3px solid #855a30",
+              borderRadius: "12px",
+              boxShadow: "0 8px 24px rgba(0,0,0,0.6), inset 0 0 10px rgba(0,0,0,0.8)",
+            }}
+          >
+            {hotbar.map((itemKey, idx) => {
+              const details = itemKey ? getHotbarItemDetails(itemKey) : null;
+              const isEquipped = details?.type === "equipment" && equippedWeapon === itemKey;
+              const isSeedActive = details?.type === "seed" && selectedInventorySeed === itemKey.split(":")[1];
+              const isActive = isEquipped || isSeedActive;
+
+              return (
+                <div
+                  key={idx}
+                  onClick={() => activateHotbarSlot(idx)}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    clearHotbarSlot(idx);
+                  }}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => handleHotbarDrop(e, idx)}
+                  style={{
+                    width: "44px",
+                    height: "44px",
+                    background: isActive ? "rgba(74, 222, 128, 0.15)" : "rgba(0,0,0,0.4)",
+                    border: isActive ? "2px solid #4ade80" : "2px solid #5c3c1d",
+                    borderRadius: "8px",
+                    position: "relative",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    transition: "all 0.1s ease",
+                    boxShadow: "inset 0 2px 5px rgba(0,0,0,0.5)",
+                  }}
+                  title={details ? `${details.label} (Kullanmak için sol tık veya ${idx+1} tuşu. Kaldırmak için sağ tık.)` : "Öğe sürükleyin"}
+                >
+                  <span 
+                    style={{
+                      position: "absolute",
+                      top: "2px",
+                      left: "3px",
+                      fontSize: "8px",
+                      fontWeight: "bold",
+                      color: "#94a3b8",
+                      textShadow: "1px 1px 1px #000",
+                    }}
+                  >
+                    {idx + 1}
+                  </span>
+                  
+                  {details && (
+                    <>
+                      {details.iconUrl ? (
+                        details.type === "seed" && details.bagIndex !== undefined ? (
+                          <div 
+                            style={{
+                              width: "28px",
+                              height: "28px",
+                              backgroundImage: `url(${details.iconUrl})`,
+                              backgroundSize: "476px 28px",
+                              backgroundPosition: `-${details.bagIndex * 28}px 0px`,
+                              imageRendering: "pixelated",
+                            }}
+                          />
+                        ) : details.type === "crop" && details.cropName ? (
+                          <div 
+                            style={{
+                              width: "24px",
+                              height: "24px",
+                              backgroundImage: `url(${details.iconUrl})`,
+                              backgroundSize: "336px 240px",
+                              backgroundPosition: `-${(cropCoordinates[details.cropName]?.col || 0) * 24}px -${(cropCoordinates[details.cropName]?.row || 0) * 24}px`,
+                              imageRendering: "pixelated",
+                            }}
+                          />
+                        ) : (
+                          <img 
+                            src={details.iconUrl} 
+                            alt={details.label} 
+                            style={{
+                              width: "28px",
+                              height: "28px",
+                              imageRendering: "pixelated",
+                              objectFit: "contain",
+                            }}
+                          />
+                        )
+                      ) : (
+                        <span style={{ fontSize: "20px" }}>{details.emoji}</span>
+                      )}
+                      
+                      {details.type !== "equipment" && (
+                        <span
+                          style={{
+                            position: "absolute",
+                            bottom: "2px",
+                            right: "3px",
+                            fontSize: "8px",
+                            fontWeight: "bold",
+                            color: "#fff",
+                            textShadow: "1px 1px 1px #000",
+                            background: "rgba(0,0,0,0.6)",
+                            padding: "1px 3px",
+                            borderRadius: "3px",
+                          }}
+                        >
+                          {details.type === "consumable" ? (inventory[itemKey] || 0) : (seeds[itemKey.split(":")[1]] || 0)}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       )}
 
       {/* ── Character HUD Stats ─────────────────────────────────────────── */}
@@ -3847,7 +4097,12 @@ const App: React.FC = () => {
                                 }
 
                                 return (
-                                  <div key={item.name} style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "8px", background: "rgba(255,255,255,0.02)", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                                  <div 
+                                    key={item.name} 
+                                    style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "8px", background: "rgba(255,255,255,0.02)", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.05)" }}
+                                    draggable={true}
+                                    onDragStart={(e) => e.dataTransfer.setData("text/plain", itemKey)}
+                                  >
                                     <img 
                                       src={`/assets/pack/icons/RPG_icons/Weapons_and_Armor/${tier.id}/${item.icon}`}
                                       alt={item.name} 

@@ -768,6 +768,65 @@ export class GameScene extends Phaser.Scene {
     return false; // Not a water tile.
   }
 
+  startFishingSequence() {
+    if (!this.room) return;
+
+    // 1. Send casting state
+    this.room.send("action", { type: "fishing_cast" });
+
+    // 2. Play Cast animation for 2 seconds
+    this.time.addEvent({
+      delay: 2000,
+      callback: () => {
+        const localPlayerState = this.room?.state.players.get(this.localId);
+        if (!localPlayerState || localPlayerState.state !== "fishing_cast") return;
+        
+        this.room.send("action", { type: "fishing_wait" });
+
+        this.time.addEvent({
+          delay: 25000,
+          callback: () => {
+            const current = this.room?.state.players.get(this.localId);
+            if (!current || current.state !== "fishing_wait") return;
+
+            this.room.send("action", { type: "fishing_bite" });
+
+            this.time.addEvent({
+              delay: 1500,
+              callback: () => {
+                const cur = this.room?.state.players.get(this.localId);
+                if (!cur || cur.state !== "fishing_bite") return;
+
+                this.room.send("action", { type: "fishing_reel" });
+
+                this.time.addEvent({
+                  delay: 1000,
+                  callback: () => {
+                    const c = this.room?.state.players.get(this.localId);
+                    if (!c || c.state !== "fishing_reel") return;
+
+                    this.room.send("action", { type: "fishing_catch" });
+
+                    this.time.addEvent({
+                      delay: 500,
+                      callback: () => {
+                        const final = this.room?.state.players.get(this.localId);
+                        if (!final || final.state !== "fishing_catch") return;
+
+                        this.room.send("fish-cast");
+                        this.room.send("action", { type: "idle" });
+                      }
+                    });
+                  }
+                });
+              }
+            });
+          }
+        });
+      }
+    });
+  }
+
   // Geçilmez (blocked) nesnelerin bounding box kontrolü — client prediction için
   private isBlockedByLocalObject(worldX: number, worldY: number): boolean {
     for (const obj of this.placedObjects) {
@@ -1862,6 +1921,44 @@ export class GameScene extends Phaser.Scene {
         const tileY = Math.floor(pointer.worldY / 16);
         const tileKey = `${this.currentMapId}:${tileX},${tileY}`;
         const crop = this.room?.state.crops.get(tileKey);
+
+        const localPlayerState = this.room?.state.players.get(this.localId);
+        const eqWeapon = localPlayerState?.equippedWeapon || "";
+        const parts = eqWeapon.split(":");
+        const toolName = parts[1] || "";
+        const isFishing = localPlayerState?.state?.startsWith("fishing_");
+
+        if (!this.editorMode && toolName === "Fishing_Rod" && !isFishing) {
+          const terrainTile = this.map.getTileAt(tileX, tileY, true, this.layer);
+          const decorTile = this.map.getTileAt(tileX, tileY, true, this.decorLayer);
+          const terrainGid = terrainTile ? (terrainTile.index & 0xFFFF) : -1;
+          const decorGid = decorTile ? (decorTile.index & 0xFFFF) : -1;
+
+          const isWater = GameScene.WATER_TILE_GIDS.has(terrainGid) || GameScene.WATER_TILE_GIDS.has(decorGid) || terrainGid === -1;
+          if (isWater) {
+            const localPlayer = this.entities.get(this.localId);
+            if (localPlayer) {
+              const px = localPlayer.container.x;
+              const py = localPlayer.container.y;
+              const distance = Phaser.Math.Distance.Between(px, py, pointer.worldX, pointer.worldY);
+              
+              if (distance <= 160) { // must be near water
+                let fishDir = "down";
+                const dx = pointer.worldX - px;
+                const dy = pointer.worldY - py;
+                if (Math.abs(dx) > Math.abs(dy)) {
+                  fishDir = dx > 0 ? "right" : "left";
+                } else {
+                  fishDir = dy > 0 ? "down" : "up";
+                }
+                
+                this.room.send("move", { dx: 0, dy: 0, dir: fishDir });
+                this.startFishingSequence();
+                return;
+              }
+            }
+          }
+        }
 
         if (crop && crop.stage >= 6) {
           // Harvest if fully grown (works in both play and edit modes!)
@@ -3296,8 +3393,16 @@ export class GameScene extends Phaser.Scene {
     const up    = this.cursors.up.isDown    || this.keyW.isDown  || this.virtualUp;
     const down  = this.cursors.down.isDown  || this.keyS.isDown  || this.virtualDown;
 
-    const dx = right ? 1 : left ? -1 : 0;
-    const dy = down  ? 1 : up   ? -1 : 0;
+    const localPlayerState = this.room?.state.players.get(this.localId);
+    const isFishing = localPlayerState?.state?.startsWith("fishing_");
+
+    let dx = right ? 1 : left ? -1 : 0;
+    let dy = down  ? 1 : up   ? -1 : 0;
+
+    if (isFishing) {
+      dx = 0;
+      dy = 0;
+    }
 
     const isNowMoving = dx !== 0 || dy !== 0;
 
