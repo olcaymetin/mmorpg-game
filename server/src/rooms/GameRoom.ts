@@ -30,20 +30,21 @@ const HALF = 16;
 // Harita: 38x30 tile × 32px = 1216×960 px
 // Sadece kumsal ve iskele alanında yürünebilir, su tile'ları engel.
 //
-// YÜRÜNEMEYEN (Su) alanlar dışındaki bölgeler:
-//   1. Kumsal şeridi: Tüm haritanın altındaki ~6 tile (y >= 768)
-//   2. İskele dikey kolu: ortada ~6 tile geniş köprü (x: 512–704, y: 0–768)
-//   3. İskele yatay kolu (T'nin üst çubuğu): (x: 128–1088, y: 0–352)
+// Görsele göre gerçekçi koordinatlar:
+//   1. Kumsal şeridi: haritanın altındaki ~2 tile (y >= 880)  
+//   2. İskele yatay kolu (T'nin üstü): x: 256-736, y: 352-480
+//   3. İskele dikey kolu: x: 448-576, y: 480-880
+//   Toleranslar geniş tutulmuştur (oyuncu sınırlarda takılmasın)
 //
 function isWalkableOnBottomIsland(x: number, y: number): boolean {
-  // 1. Kumsal şeridi (alt alan) - su yok
-  if (y >= 768) return true;
+  // 1. Kumsal şeridi (alt alan)
+  if (y >= 864) return true;
 
-  // 2. İskele dikey kolu (ortadaki tahta rıhtım)
-  if (x >= 512 && x <= 704 && y >= 352 && y <= 768) return true;
+  // 2. İskele yatay kolu (T'nin yatay çubuğu)
+  if (x >= 224 && x <= 768 && y >= 320 && y <= 512) return true;
 
-  // 3. İskele yatay kolu (T'nin üstü)
-  if (x >= 128 && x <= 1088 && y >= 160 && y <= 352) return true;
+  // 3. İskele dikey kolu (T'nin sapı - kumsala bağlanan kol)
+  if (x >= 416 && x <= 608 && y >= 480 && y <= 880) return true;
 
   // Bunların dışındaki her yer su
   return false;

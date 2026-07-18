@@ -2065,14 +2065,15 @@ export class GameScene extends Phaser.Scene {
       if (!this.editorMode) return;
       let posX = dragX;
       let posY = dragY;
+      const type = gameObject.getData("type") as string;
       const isGridSnapping = 
         type === "farm_tile" || 
         type === "farm_tile_hoed" || 
         type === "farm_tile_watered" ||
-        type.startsWith("pack_fences_tilemap") ||
-        type.startsWith("pack_ext_fence_") ||
-        type.startsWith("pack_ext_white_fence") ||
-        type.startsWith("pack_ext_bridge");
+        (type && type.startsWith("pack_fences_tilemap")) ||
+        (type && type.startsWith("pack_ext_fence_")) ||
+        (type && type.startsWith("pack_ext_white_fence")) ||
+        (type && type.startsWith("pack_ext_bridge"));
       
       if (isGridSnapping) {
         posX = Math.floor(dragX / 16) * 16 + 8;
@@ -2309,6 +2310,17 @@ export class GameScene extends Phaser.Scene {
     if (type === "farm_tile" || type === "farm_tile_hoed" || type === "farm_tile_watered") {
       img.setOrigin(0.5, 0.5);
       img.setDepth(1.5);
+    } else if (
+      type.startsWith("pack_ext_bridge") ||
+      type.startsWith("pack_ext_fence_") ||
+      type.startsWith("pack_ext_white_fence") ||
+      type.startsWith("pack_fences_tilemap") ||
+      type.startsWith("pack_ext_dock") ||
+      type.startsWith("pack_int_floor")
+    ) {
+      // Floor-level objects: always render BELOW the player character
+      img.setOrigin(0.5, 0.5);
+      img.setDepth(1);
     } else {
       img.setOrigin(0.5, 0.8);
       img.setDepth(y);
