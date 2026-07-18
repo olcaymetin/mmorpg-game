@@ -551,6 +551,9 @@ export class GameRoom extends Room<GameState> {
         obj.id = msg.id;
         obj.type = msg.type;
         obj.mapId = player?.currentMap || "main";
+        if (msg.type === "collision_blocker") {
+          obj.blocked = true;
+        }
       }
       obj.x = msg.x;
       obj.y = msg.y;

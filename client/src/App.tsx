@@ -1954,9 +1954,22 @@ const App: React.FC = () => {
                 <button
                   className={`btn btn--eraser ${selectedTile === -1 ? "btn--active" : ""}`}
                   onClick={handleSelectEraser}
-                  style={{ flex: 1 }}
+                  style={{ flex: 1, fontSize: "10px" }}
                 >
                   🧹 Silgi (Eraser)
+                </button>
+                <button
+                  className={`btn ${selectedTile === -2 && selectedObjectName === "collision_blocker" ? "btn--active" : ""}`}
+                  onClick={() => handleSelectObjectBrush("collision_blocker")}
+                  style={{
+                    flex: 1,
+                    fontSize: "10px",
+                    backgroundColor: (selectedTile === -2 && selectedObjectName === "collision_blocker") ? "#e74c3c" : "",
+                    color: (selectedTile === -2 && selectedObjectName === "collision_blocker") ? "#fff" : ""
+                  }}
+                  title="Karakterlerin geçemeyeceği görünmez engeller çizer."
+                >
+                  🚫 Engel Çizici
                 </button>
                 <button
                   className={`btn ${paintOnTop ? "btn--active" : ""}`}
@@ -1965,7 +1978,7 @@ const App: React.FC = () => {
                     setPaintOnTop(nextVal);
                     if (game) game.events.emit("editor-paint-on-top-changed", nextVal);
                   }}
-                  style={{ flex: 1, fontSize: "10px", backgroundColor: paintOnTop ? "#55ff22" : "", color: paintOnTop ? "#000" : "" }}
+                  style={{ flex: 1, fontSize: "9px", backgroundColor: paintOnTop ? "#55ff22" : "", color: paintOnTop ? "#000" : "" }}
                   title="Açık olduğunda, çizdiğiniz zeminler altındaki zeminleri silmeden üst üste biner."
                 >
                   Layering: {paintOnTop ? "Açık 🟢" : "Kapalı 🔴"}

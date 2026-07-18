@@ -844,6 +844,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   private getDefaultScaleForType(type: string): number {
+    if (type === "collision_blocker") {
+      return 1.0;
+    }
     if (type === "farm_tile" || type === "farm_tile_hoed" || type === "farm_tile_watered") {
       return 0.07655;
     }
@@ -968,6 +971,14 @@ export class GameScene extends Phaser.Scene {
     this.game.events.on("editor-mode-changed", (enabled: boolean) => {
       this.editorMode = enabled;
       this.selectionGraphics.clear();
+      
+      // Update visibility of all collision_blockers
+      this.placedObjects.forEach(obj => {
+        if (obj.type === "collision_blocker" && obj.imageObj) {
+          obj.imageObj.setVisible(enabled);
+        }
+      });
+
       if (!enabled) {
         this.deselectObject();
         const player = this.entities.get(this.localId);
@@ -1890,7 +1901,29 @@ export class GameScene extends Phaser.Scene {
             const encodedIndex = this.currentTileIndex + (this.activeBrushRotationStep << 16) + (this.activeBrushFlipX ? 1 << 18 : 0) + (this.activeBrushFlipY ? 1 << 19 : 0);
             this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: encodedIndex, layer });
           }
+        } else if (this.currentBrushType === "object" && this.currentObjectName === "collision_blocker") {
+          const posX = tileX * 32 + 16;
+          const posY = tileY * 32 + 16;
+          const exists = this.placedObjects.some(obj => obj.type === "collision_blocker" && obj.x === posX && obj.y === posY);
+          if (!exists) {
+            const uniqueId = `obj_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            this.room.send("object-place", {
+              id: uniqueId,
+              type: "collision_blocker",
+              x: posX,
+              y: posY,
+              scale: 1.0
+            });
+          }
         } else if (this.currentBrushType === "eraser" && !this.clickedGameObject) {
+          // Delete any collision blocker on this tile
+          const targetX = tileX * 32 + 16;
+          const targetY = tileY * 32 + 16;
+          const blockerToDelete = this.placedObjects.find(obj => obj.type === "collision_blocker" && obj.x === targetX && obj.y === targetY);
+          if (blockerToDelete) {
+            this.room.send("object-delete", { id: blockerToDelete.id });
+          }
+
           if (this.paintOnTop) {
             // Layering mode: peel one layer at a time (decor first, then terrain)
             const decorTile = this.map.getTileAt(tileX, tileY, true, this.decorLayer);
@@ -2036,7 +2069,7 @@ export class GameScene extends Phaser.Scene {
             const defaultScale = this.getDefaultScaleForType(this.currentObjectName);
             let posX = pointer.worldX;
             let posY = pointer.worldY;
-            // Sadece tarla tile'ları ızgaraya hizalanır
+            // Snaps farm_tiles to 16px grid, collision_blockers to 32px grid
             if (
               this.currentObjectName === "farm_tile" || 
               this.currentObjectName === "farm_tile_hoed" || 
@@ -2044,6 +2077,12 @@ export class GameScene extends Phaser.Scene {
             ) {
               posX = Math.floor(pointer.worldX / 16) * 16 + 8;
               posY = Math.floor(pointer.worldY / 16) * 16 + 8;
+            } else if (this.currentObjectName === "collision_blocker") {
+              posX = Math.floor(pointer.worldX / 32) * 32 + 16;
+              posY = Math.floor(pointer.worldY / 32) * 32 + 16;
+              // Prevent duplicate blockers on click
+              const exists = this.placedObjects.some(obj => obj.type === "collision_blocker" && obj.x === posX && obj.y === posY);
+              if (exists) return;
             }
             this.room.send("object-place", {
               id: uniqueId,
@@ -2434,7 +2473,15 @@ export class GameScene extends Phaser.Scene {
 
     const isAnimated = type.startsWith("vfx_") || type.startsWith("mg_");
     let img: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
-    if (type.startsWith("decor_gorsel_")) {
+    if (type === "collision_blocker") {
+      // Create a translucent red rectangle (32x32) for visual feedback in editor mode
+      const rect = this.add.rectangle(x, y, 32, 32, 0xff0000, 0.45);
+      rect.setStrokeStyle(1.5, 0xff0000, 0.85);
+      rect.setOrigin(0.5, 0.5);
+      rect.setDepth(99999); // Draw on top
+      rect.setVisible(this.editorMode);
+      img = rect as any;
+    } else if (type.startsWith("decor_gorsel_")) {
       const frameStr = type.substring("decor_gorsel_".length);
       const frameIdx = parseInt(frameStr, 10) || 0;
       img = this.add.image(x, y, "decor_sheet_gorsel", frameIdx);
