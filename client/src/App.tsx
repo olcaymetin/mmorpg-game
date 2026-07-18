@@ -2532,7 +2532,40 @@ const App: React.FC = () => {
                       </>
                     )}
                     {decorCategory === "dock" && renderExtraCategory("dock")}
-                    {decorCategory === "gift_fish" && renderExtraCategory("gift_fish")}
+                    {decorCategory === "gift_fish" && (
+                      <>
+                        {[1,2,3,4,5,6].map(i => {
+                          const key = `mg_gift_fish_${i}`;
+                          const path = `/assets/pack/objects/exterior/gift_balik/best_fish_point_${i}.png`;
+                          // Show first frame (16x16) as the thumbnail, full 4-frame animation plays in-game
+                          return (
+                            <button
+                              key={key}
+                              className={`obj-btn ${selectedTile === -2 && selectedObjectName === key ? "obj-btn--active" : ""}`}
+                              onClick={() => handleSelectObjectBrush(key)}
+                              style={{ padding: "6px 2px", display: "flex", flexDirection: "column", alignItems: "center" }}
+                            >
+                              <div style={{
+                                width: "32px",
+                                height: "32px",
+                                backgroundImage: `url(${path})`,
+                                backgroundSize: "64px 16px",
+                                backgroundPosition: "0px 0px",
+                                backgroundRepeat: "no-repeat",
+                                imageRendering: "pixelated",
+                                margin: "0 auto 4px",
+                                transform: "scale(2)",
+                                transformOrigin: "top left",
+                                marginBottom: "18px"
+                              }} />
+                              <span style={{ fontSize: "8px", textAlign: "center", display: "block", width: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                🐟 Balık Spotu {i}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </>
+                    )}
                     {decorCategory === "custom" && (() => {
                         const customList: any[] = [];
                         if (room?.state.customAssets) {

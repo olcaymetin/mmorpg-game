@@ -258,6 +258,15 @@ export class GameScene extends Phaser.Scene {
     this.load.spritesheet("mg_crate_2", "assets/material_gift/Wooden_Crate_2_16x16.png", { frameWidth: 32, frameHeight: 48 });
     this.load.spritesheet("mg_wooden_gate", "assets/material_gift/Wooden_Gate_16x16.png", { frameWidth: 32, frameHeight: 32 });
 
+    // Hediye Balıklar - Animasyonlu Balık Spotu GIF'leri
+    for (let i = 1; i <= 6; i++) {
+      this.load.spritesheet(
+        `mg_gift_fish_${i}`,
+        `assets/pack/objects/exterior/gift_balik/best_fish_point_${i}.png`,
+        { frameWidth: 16, frameHeight: 16 }
+      );
+    }
+
     // Load crop growth stage images as plain images — frames are defined manually
     // in create() to exclude the 16px stage-number strip at the bottom.
     for (const cropName of Object.keys(GameScene.CROP_META)) {
