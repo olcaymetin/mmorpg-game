@@ -1936,7 +1936,7 @@ export class GameScene extends Phaser.Scene {
               const py = localPlayer.container.y;
               const distance = Phaser.Math.Distance.Between(px, py, pointer.worldX, pointer.worldY);
               
-              if (distance <= 160) { // must be near water
+              if (distance <= 256) { // must be near water (expanded to 8 tiles)
                 let fishDir = "down";
                 const dx = pointer.worldX - px;
                 const dy = pointer.worldY - py;
@@ -3370,7 +3370,40 @@ export class GameScene extends Phaser.Scene {
           else if (toolName === "Sickle") attackState = "scythe_attack";
           else if (toolName === "Hoe") attackState = "hoe_attack";
           else if (toolName === "Watering_can") attackState = "watering";
-          else if (toolName === "Fishing_Rod") attackState = "fishing_cast";
+          else if (toolName === "Fishing_Rod") {
+            const isFishing = (localPlayerState?.state?.startsWith("fishing_")) || this.isFishingTimelineActive;
+            if (!isFishing) {
+              const localPlayer = this.entities.get(this.localId);
+              if (localPlayer) {
+                const px = localPlayer.container.x;
+                const py = localPlayer.container.y;
+                const dir = localPlayerState.direction || "down";
+                
+                let targetX = px;
+                let targetY = py;
+                if (dir === "left") targetX -= 32;
+                else if (dir === "right") targetX += 32;
+                else if (dir === "up") targetY -= 32;
+                else if (dir === "down") targetY += 32;
+                
+                const tileX = Math.floor(targetX / 16);
+                const tileY = Math.floor(targetY / 16);
+                
+                const terrainTile = this.map.getTileAt(tileX, tileY, true, this.layer);
+                const decorTile = this.map.getTileAt(tileX, tileY, true, this.decorLayer);
+                const terrainGid = terrainTile ? (terrainTile.index & 0xFFFF) : -1;
+                const decorGid = decorTile ? (decorTile.index & 0xFFFF) : -1;
+
+                const isWater = GameScene.WATER_TILE_GIDS.has(terrainGid) || GameScene.WATER_TILE_GIDS.has(decorGid) || terrainGid === -1;
+                if (isWater) {
+                  this.startFishingSequence();
+                } else {
+                  console.log("[Fishing] Must face water to fish!");
+                }
+              }
+            }
+            return;
+          }
           
           const currentAction = localPlayerState.state;
           const isAlreadyAttacking = currentAction === "sword_attack" || currentAction === "bow_attack" || currentAction === "mage" ||
