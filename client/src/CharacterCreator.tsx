@@ -63,7 +63,7 @@ const SKIN_TONES = ["1", "2", "3", "4"] as const;
 const HAIR_STYLES = ["Standard", "Fawn", "Iridessa", "Josh", "Lyria", "Sebastian", "Silvermist"] as const;
 const HAIR_COLORS = ["Black", "Blonde", "Brown", "Ginger"] as const;
 const EYE_COLORS = ["Black", "Blue", "Brown", "Green"] as const;
-const CLOTHES_COLORS = ["", "Blue", "Green", "Pink", "Purple", "Red"] as const;
+const CLOTHES_COLORS = ["Blue", "Green", "Pink", "Purple", "Red"] as const;
 
 export default function CharacterCreator({ onConfirm }: Props) {
   const [opts, setOpts] = useState<CharOptions>({
@@ -72,7 +72,7 @@ export default function CharacterCreator({ onConfirm }: Props) {
     hairStyle: "Standard",
     hairColor: "Black",
     eyeColor: "Black",
-    clothesColor: "",
+    clothesColor: "Blue",
   });
 
   const layers = getPortraitLayers(opts);
@@ -444,9 +444,9 @@ export default function CharacterCreator({ onConfirm }: Props) {
               <div style={sectionTitleStyle}>👕 Kıyafet (Başlangıç)</div>
               <div style={optionsRowStyle}>
                 {CLOTHES_COLORS.map((c) => (
-                  <div key={c || "naked"} style={optionWrapperStyle} onClick={() => set("clothesColor", c)}>
+                  <div key={c} style={optionWrapperStyle} onClick={() => set("clothesColor", c)}>
                     <div style={clothesSw(c, opts.clothesColor === c)} />
-                    <span style={labelSpanStyle(opts.clothesColor === c)}>{c === "" ? "Çıplak" : c === "Blue" ? "Mavi" : c === "Green" ? "Yeşil" : c === "Pink" ? "Pembe" : c === "Purple" ? "Mor" : "Kırmızı"}</span>
+                    <span style={labelSpanStyle(opts.clothesColor === c)}>{c === "Blue" ? "Mavi" : c === "Green" ? "Yeşil" : c === "Pink" ? "Pembe" : c === "Purple" ? "Mor" : "Kırmızı"}</span>
                   </div>
                 ))}
               </div>

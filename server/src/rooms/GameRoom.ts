@@ -245,9 +245,21 @@ export class GameRoom extends Room<GameState> {
       const player = this.state.players.get(client.sessionId);
       if (!player) return;
 
-      player.state = msg.type;
+      const actionState = msg.type;
+      player.state = actionState;
       if (msg.direction) {
         player.direction = msg.direction;
+      }
+
+      // Auto-reset attack states to idle after a safe timeout (client normally resets via animationcomplete)
+      const attackStates = ["sword_attack", "bow_attack", "mage", "pickaxe_attack", "hoe_attack",
+                            "axe_attack", "scythe_attack", "shovel_attack", "damage", "death"];
+      if (attackStates.includes(actionState)) {
+        this.clock.setTimeout(() => {
+          if (player.state === actionState) {
+            player.state = "idle";
+          }
+        }, 2000); // 2 second max safety timeout
       }
     });
 
@@ -446,6 +458,10 @@ export class GameRoom extends Room<GameState> {
 
       if (msg.tool === "hoe" && obj.type === "farm_tile") {
         obj.type = "farm_tile_hoed";
+        player.state = "hoe_attack";
+        this.clock.setTimeout(() => {
+          if (player.state === "hoe_attack") player.state = "idle";
+        }, 600);
         console.log(`[Tool] Object ${msg.id} hoed successfully.`);
       } else if (msg.tool === "watering_can" && obj.type === "farm_tile_hoed") {
         const mapId = player.currentMap || "main";
@@ -454,6 +470,10 @@ export class GameRoom extends Room<GameState> {
         const key = `${mapId}:${tx},${ty}`;
         if (this.state.crops.has(key)) {
           obj.type = "farm_tile_watered";
+          player.state = "watering";
+          this.clock.setTimeout(() => {
+            if (player.state === "watering") player.state = "idle";
+          }, 600);
           console.log(`[Tool] Object ${msg.id} watered successfully.`);
         }
       }
@@ -1284,7 +1304,7 @@ export class GameRoom extends Room<GameState> {
     player.hairStyle = "Standard";
     player.hairColor = "Black";
     player.eyeColor = "Black";
-    player.clothesColor = ""; // naked until dressed
+    player.clothesColor = "Blue"; // starter clothes color
     player.beardColor = "";
     player.accItem = "";
     // Keep legacy skin field for backwards compat (will be ignored once client uses layered render)

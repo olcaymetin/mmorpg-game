@@ -13,7 +13,6 @@ export class NPC {
   private acc?: Phaser.GameObjects.Sprite;
   private shadow: Phaser.GameObjects.Graphics;
 
-  private scene: Phaser.Scene;
   private currentDir = "down";
   private isWalking = false;
   private opts: any;
@@ -35,7 +34,6 @@ export class NPC {
       npcKey: string;
     }
   ) {
-    this.scene = scene;
     this.opts = opts;
 
     this.container = scene.add.container(x, y);

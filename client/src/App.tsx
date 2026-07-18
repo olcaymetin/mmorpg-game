@@ -3598,9 +3598,41 @@ const App: React.FC = () => {
                         ))}
                       </div>
                     </div>
+
+                    <div>
+                      <div style={{ fontSize: "8px", color: "#94a3b8", marginBottom: "4px" }}>Büyülü Süpürgeler (Uçan - %100):</div>
+                      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                        {[
+                          { id: "broomstick_1", color: "#fbbf24", label: "Ahşap" },
+                          { id: "broomstick_2", color: "#60a5fa", label: "Mavi" },
+                          { id: "broomstick_3", color: "#4ade80", label: "Yeşil" },
+                        ].map(m => (
+                          <button
+                            key={m.id}
+                            onClick={() => room.send("toggle-mount", { mountType: m.id })}
+                            style={{
+                              padding: "4px 8px",
+                              background: mountType === m.id ? "rgba(251, 191, 36, 0.2)" : "rgba(255,255,255,0.04)",
+                              border: mountType === m.id ? `1px solid ${m.color}` : "1px solid rgba(255,255,255,0.1)",
+                              borderRadius: "4px",
+                              color: mountType === m.id ? m.color : "#fff",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              fontFamily: "'Press Start 2P', monospace",
+                              fontSize: "6px"
+                            }}
+                          >
+                            <span style={{ color: m.color }}>🧹</span>
+                            <span>{m.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                   <div style={{ fontSize: "7px", color: "#94a3b8", textAlign: "center", marginTop: "4px" }}>
-                    Kısayollar: <strong>H</strong> (At) | <strong>B</strong> (Bisiklet)
+                    Kısayollar: <strong>H</strong> (At) | <strong>B</strong> (Bisiklet) | <strong>G</strong> (Süpürge)
                   </div>
                 </div>
 

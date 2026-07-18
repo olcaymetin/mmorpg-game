@@ -39,6 +39,8 @@ interface PlacedObject {
   x: number;
   y: number;
   scale: number;
+  angle?: number;
+  flipX?: boolean;
   imageObj?: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
 }
 
@@ -61,6 +63,7 @@ export class GameScene extends Phaser.Scene {
   private keyA!: Phaser.Input.Keyboard.Key;
   private keyS!: Phaser.Input.Keyboard.Key;
   private keyD!: Phaser.Input.Keyboard.Key;
+  private keySpace!: Phaser.Input.Keyboard.Key;
 
   // ── Tilemap & Object Editor ────────────────────────────────────────────────
   private map!: Phaser.Tilemaps.Tilemap;
@@ -284,7 +287,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     // 3. Clothes
-    const clothesList = ["Blue", "Green", "Pink", "Purple", "Red"];
+    const clothesList = ["Blue", "Green", "Pink", "Purple", "Red", "White"];
     for (const c of clothesList) {
       this.load.spritesheet(`pack_clothes_${c}_idle`, `${charBase}/idle/clothes/Farm/${c}.png`, { frameWidth: 32, frameHeight: 32 });
       this.load.spritesheet(`pack_clothes_${c}_walk`, `${charBase}/walk/clothes/Farm/${c}.png`, { frameWidth: 32, frameHeight: 32 });
@@ -448,39 +451,108 @@ export class GameScene extends Phaser.Scene {
       this.load.spritesheet(`pack_skin_${t}_flute`, `${charBase}/action/flute.png`, { frameWidth: 32, frameHeight: 32 });
     }
 
-    // Mage
+    // ─── Action Animations Preload (Skins, Eyes, Hair, Clothes, Weapons) ───
+    const actionNames = ["sword_attack", "bow_attack", "mage", "broomstick", "damage", "death"];
+
+    // Skins (Tones 1..4)
     for (let t = 1; t <= 4; t++) {
-      this.load.spritesheet(`pack_skin_${t}_mage`, `${charBase}/action/mage.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_skin_${t}_sword_attack`, `assets/pack/char/action/sword_attack/Skins/${t}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_skin_${t}_bow_attack`, `assets/pack/char/action/bow_attack/Skins/${t}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_skin_${t}_mage`, `assets/pack/char/action/mage/Skins/${t}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_skin_${t}_broomstick`, `assets/pack/char/action/broomstick/Skins/${t}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_skin_${t}_damage`, `assets/pack/char/action/damage/Skins/${t}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_skin_${t}_death`, `assets/pack/char/action/death/Skins/${t}.png`, { frameWidth: 32, frameHeight: 32 });
     }
 
-    // Umbrella
-    for (let t = 1; t <= 4; t++) {
-      this.load.spritesheet(`pack_skin_${t}_umbrella`, `${charBase}/action/umbrella.png`, { frameWidth: 32, frameHeight: 32 });
+    // Eyes
+    for (const g of gendersList) {
+      for (const ec of eyeColorsList) {
+        actionNames.forEach(act => {
+          this.load.spritesheet(`pack_eyes_${g}_${ec}_${act}`, `assets/pack/char/action/${act}/Eyes/${g}/${ec}.png`, { frameWidth: 32, frameHeight: 32 });
+        });
+      }
     }
 
-    // Swim - Idle, Outwater, Submerged, Swim
-    for (let t = 1; t <= 4; t++) {
-      this.load.spritesheet(`pack_skin_${t}_swim_idle`, `${charBase}/action/swim_idle.png`, { frameWidth: 32, frameHeight: 32 });
-      this.load.spritesheet(`pack_skin_${t}_swim_outwater`, `${charBase}/action/swim_outwater.png`, { frameWidth: 32, frameHeight: 32 });
-      this.load.spritesheet(`pack_skin_${t}_swim_submerged`, `${charBase}/action/swim_submerged.png`, { frameWidth: 32, frameHeight: 32 });
-      this.load.spritesheet(`pack_skin_${t}_swim_swim`, `${charBase}/action/swim_swim.png`, { frameWidth: 32, frameHeight: 32 });
+    // Hair
+    for (const s of stylesList) {
+      for (const c of colorsList) {
+        actionNames.forEach(act => {
+          this.load.spritesheet(`pack_hair_${s}_${c}_${act}`, `assets/pack/char/action/${act}/Hair's/${s}/${c}.png`, { frameWidth: 32, frameHeight: 32 });
+        });
+      }
     }
 
-    // Broomstick (flying mount)
-    for (let t = 1; t <= 4; t++) {
-      this.load.spritesheet(`pack_skin_${t}_broomstick`, `${charBase}/action/broomstick.png`, { frameWidth: 32, frameHeight: 48 });
+    // Clothes
+    for (const c of clothesList) {
+      actionNames.forEach(act => {
+        this.load.spritesheet(`pack_clothes_${c}_${act}`, `assets/pack/char/action/${act}/Clothers/Farm/${c}.png`, { frameWidth: 32, frameHeight: 32 });
+      });
     }
 
-    // Tool Animations (attack swings)
-    for (let t = 1; t <= 4; t++) {
-      this.load.spritesheet(`pack_skin_${t}_sword_attack`, `${charBase}/action/sword_attack.png`, { frameWidth: 32, frameHeight: 32 });
-      this.load.spritesheet(`pack_skin_${t}_bow_attack`, `${charBase}/action/bow_attack.png`, { frameWidth: 32, frameHeight: 32 });
-      this.load.spritesheet(`pack_skin_${t}_pickaxe_attack`, `${charBase}/action/pickaxe_attack.png`, { frameWidth: 32, frameHeight: 32 });
-      this.load.spritesheet(`pack_skin_${t}_hoe_attack`, `${charBase}/action/hoe_attack.png`, { frameWidth: 32, frameHeight: 32 });
-      this.load.spritesheet(`pack_skin_${t}_shovel_attack`, `${charBase}/action/shovel_attack.png`, { frameWidth: 32, frameHeight: 32 });
-      this.load.spritesheet(`pack_skin_${t}_axe_attack`, `${charBase}/action/axe_attack.png`, { frameWidth: 32, frameHeight: 32 });
-      this.load.spritesheet(`pack_skin_${t}_scythe_attack`, `${charBase}/action/scythe_attack.png`, { frameWidth: 32, frameHeight: 32 });
-      this.load.spritesheet(`pack_skin_${t}_watering`, `${charBase}/action/watering.png`, { frameWidth: 32, frameHeight: 32 });
+    // Accessories for action animations
+    for (const a of accsList) {
+      actionNames.forEach(act => {
+        this.load.spritesheet(`pack_acc_${a}_${act}`, `assets/pack/char/action/${act}/Acc/${a}.png`, { frameWidth: 32, frameHeight: 32 });
+      });
+    }
+
+    // Weapons (Sword & Bow)
+    for (let tier = 1; tier <= 10; tier++) {
+      this.load.spritesheet(`pack_weapon_Sword_${tier}_sword_attack`, `assets/pack/char/action/sword_attack/Weapons/Sword/${tier}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_weapon_Bow_${tier}_bow_attack`, `assets/pack/char/action/bow_attack/Weapons/Bow and Arrow/${tier}.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+
+    // Broomstick Mounts
+    for (let c = 1; c <= 3; c++) {
+      this.load.spritesheet(`pack_ride_broomstick_mount_${c}_broomstick`, `assets/pack/char/action/broomstick/Broomstick/${c}.png`, { frameWidth: 32, frameHeight: 32 });
+    }
+
+    // Shared action folders loading (Farming & Tools)
+    const sharedActions = [
+      { act: "pickaxe_attack", folder: "pickaxe_hoe_net" },
+      { act: "hoe_attack", folder: "pickaxe_hoe_net" },
+      { act: "axe_attack", folder: "axe_scythe" },
+      { act: "scythe_attack", folder: "axe_scythe" },
+      { act: "shovel_attack", folder: "shovel" },
+      { act: "watering", folder: "watering" }
+    ];
+
+    sharedActions.forEach(item => {
+      // Skins
+      for (let t = 1; t <= 4; t++) {
+        this.load.spritesheet(`pack_skin_${t}_${item.act}`, `assets/pack/char/action/${item.folder}/Skins/${t}.png`, { frameWidth: 32, frameHeight: 32 });
+      }
+      // Eyes
+      for (const g of gendersList) {
+        for (const ec of eyeColorsList) {
+          this.load.spritesheet(`pack_eyes_${g}_${ec}_${item.act}`, `assets/pack/char/action/${item.folder}/Eyes/${g}/${ec}.png`, { frameWidth: 32, frameHeight: 32 });
+        }
+      }
+      // Hair
+      for (const s of stylesList) {
+        for (const c of colorsList) {
+          this.load.spritesheet(`pack_hair_${s}_${c}_${item.act}`, `assets/pack/char/action/${item.folder}/Hair's/${s}/${c}.png`, { frameWidth: 32, frameHeight: 32 });
+        }
+      }
+      // Clothes
+      for (const c of clothesList) {
+        this.load.spritesheet(`pack_clothes_${c}_${item.act}`, `assets/pack/char/action/${item.folder}/Clothers/Farm/${c}.png`, { frameWidth: 32, frameHeight: 32 });
+      }
+
+      // Accessories
+      for (const a of accsList) {
+        this.load.spritesheet(`pack_acc_${a}_${item.act}`, `assets/pack/char/action/${item.folder}/Acc/${a}.png`, { frameWidth: 32, frameHeight: 32 });
+      }
+    });
+
+    // Load weapon layers for tool attacks
+    for (let tier = 1; tier <= 10; tier++) {
+      this.load.spritesheet(`pack_weapon_Pickaxe_${tier}_pickaxe_attack`, `assets/pack/char/action/pickaxe_hoe_net/Weapons/Pickaxe/${tier}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_weapon_Hoe_${tier}_hoe_attack`, `assets/pack/char/action/pickaxe_hoe_net/Weapons/Hoe/${tier}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_weapon_Axe_${tier}_axe_attack`, `assets/pack/char/action/axe_scythe/Weapons/Axe/${tier}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_weapon_Sickle_${tier}_scythe_attack`, `assets/pack/char/action/axe_scythe/Weapons/Sickle/${tier}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_weapon_Shovel_${tier}_shovel_attack`, `assets/pack/char/action/shovel/Weapons/Shovel/${tier}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_weapon_Watering_${tier}_watering`, `assets/pack/char/action/watering/Weapons/Watering/${tier}.png`, { frameWidth: 32, frameHeight: 32 });
     }
 
     // ─── 6.7. Horse Extended Animations (Lower, Eating) ───
@@ -732,6 +804,7 @@ export class GameScene extends Phaser.Scene {
     this.keyA = kb.addKey(Phaser.Input.Keyboard.KeyCodes.A);
     this.keyS = kb.addKey(Phaser.Input.Keyboard.KeyCodes.S);
     this.keyD = kb.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+    this.keySpace = kb.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
     // 7. Bind Colyseus state callbacks
     this.bindStateSync();
@@ -901,7 +974,7 @@ export class GameScene extends Phaser.Scene {
     });
 
     // Keyboard bindings for Rotate (R) and Flip (F)
-    this.input.keyboard.on("keydown-R", () => {
+    this.input.keyboard!.on("keydown-R", () => {
       if (this.editorMode && this.selectedObjectId) {
         const obj = this.placedObjects.find(o => o.id === this.selectedObjectId);
         if (obj && obj.imageObj) {
@@ -915,7 +988,7 @@ export class GameScene extends Phaser.Scene {
       }
     });
 
-    this.input.keyboard.on("keydown-F", () => {
+    this.input.keyboard!.on("keydown-F", () => {
       if (this.editorMode && this.selectedObjectId) {
         const obj = this.placedObjects.find(o => o.id === this.selectedObjectId);
         if (obj && obj.imageObj) {
@@ -1406,74 +1479,135 @@ export class GameScene extends Phaser.Scene {
       { prefix: "pack_skin", suffix: "_climbing", dirSuffix: "", totalFrames: 20, dirCount: 1, frameRate: 10, repeat: -1 },
       // Flute (20 frames)
       { prefix: "pack_skin", suffix: "_flute", dirSuffix: "", totalFrames: 20, dirCount: 1, frameRate: 8, repeat: -1 },
-      // Mage (20 frames)
-      { prefix: "pack_skin", suffix: "_mage", dirSuffix: "", totalFrames: 20, dirCount: 1, frameRate: 10, repeat: -1 },
+      // Mage, Umbrella, Swim are now handled by the new buildActionAnims loop below
+      // (old prefix/suffix format entries removed to avoid duplication)
+      // Mage (24 frames, 4 directions, 6 frames per direction)
+      { suffix: "_mage", totalFrames: 24, dirCount: 4, frameRate: 12, repeat: 0 },
       // Umbrella (16 frames)
-      { prefix: "pack_skin", suffix: "_umbrella", dirSuffix: "", totalFrames: 16, dirCount: 1, frameRate: 6, repeat: -1 },
+      { suffix: "_umbrella", totalFrames: 16, dirCount: 1, frameRate: 6, repeat: -1 },
       // Swim Idle (16 frames)
-      { prefix: "pack_skin", suffix: "_swim_idle", dirSuffix: "", totalFrames: 16, dirCount: 1, frameRate: 6, repeat: -1 },
+      { suffix: "_swim_idle", totalFrames: 16, dirCount: 1, frameRate: 6, repeat: -1 },
       // Swim Outwater (20 frames)
-      { prefix: "pack_skin", suffix: "_swim_outwater", dirSuffix: "", totalFrames: 20, dirCount: 1, frameRate: 10, repeat: 0 },
+      { suffix: "_swim_outwater", totalFrames: 20, dirCount: 1, frameRate: 10, repeat: 0 },
       // Swim Submerged (15 frames)
-      { prefix: "pack_skin", suffix: "_swim_submerged", dirSuffix: "", totalFrames: 15, dirCount: 1, frameRate: 8, repeat: -1 },
+      { suffix: "_swim_submerged", totalFrames: 15, dirCount: 1, frameRate: 8, repeat: -1 },
       // Swim Swim (24 frames)
-      { prefix: "pack_skin", suffix: "_swim_swim", dirSuffix: "", totalFrames: 24, dirCount: 1, frameRate: 10, repeat: -1 },
-      // Broomstick (20 frames)
-      { prefix: "pack_skin", suffix: "_broomstick", dirSuffix: "", totalFrames: 20, dirCount: 1, frameRate: 10, repeat: -1 },
-      // Sword Attack (15 frames)
-      { prefix: "pack_skin", suffix: "_sword_attack", dirSuffix: "", totalFrames: 15, dirCount: 1, frameRate: 14, repeat: 0 },
-      // Bow Attack (25 frames)
-      { prefix: "pack_skin", suffix: "_bow_attack", dirSuffix: "", totalFrames: 25, dirCount: 1, frameRate: 12, repeat: 0 },
+      { suffix: "_swim_swim", totalFrames: 24, dirCount: 1, frameRate: 10, repeat: -1 },
+      // Broomstick (16 frames, 8 directions, 2 frames per direction)
+      { suffix: "_broomstick", totalFrames: 16, dirCount: 8, frameRate: 8, repeat: -1 },
+      // Sword Attack (40 frames, 8 directions, 5 frames per direction)
+      { suffix: "_sword_attack", totalFrames: 40, dirCount: 8, frameRate: 14, repeat: 0 },
+      // Bow Attack (28 frames, 4 directions, 7 frames per direction)
+      { suffix: "_bow_attack", totalFrames: 28, dirCount: 4, frameRate: 12, repeat: 0 },
       // Pickaxe Attack (20 frames)
-      { prefix: "pack_skin", suffix: "_pickaxe_attack", dirSuffix: "", totalFrames: 20, dirCount: 1, frameRate: 14, repeat: 0 },
+      { suffix: "_pickaxe_attack", totalFrames: 20, dirCount: 1, frameRate: 14, repeat: 0 },
       // Hoe Attack (20 frames)
-      { prefix: "pack_skin", suffix: "_hoe_attack", dirSuffix: "", totalFrames: 20, dirCount: 1, frameRate: 14, repeat: 0 },
+      { suffix: "_hoe_attack", totalFrames: 20, dirCount: 1, frameRate: 14, repeat: 0 },
       // Shovel Attack (20 frames)
-      { prefix: "pack_skin", suffix: "_shovel_attack", dirSuffix: "", totalFrames: 20, dirCount: 1, frameRate: 14, repeat: 0 },
+      { suffix: "_shovel_attack", totalFrames: 20, dirCount: 1, frameRate: 14, repeat: 0 },
       // Axe Attack (20 frames)
-      { prefix: "pack_skin", suffix: "_axe_attack", dirSuffix: "", totalFrames: 20, dirCount: 1, frameRate: 14, repeat: 0 },
+      { suffix: "_axe_attack", totalFrames: 20, dirCount: 1, frameRate: 14, repeat: 0 },
       // Scythe Attack (24 frames)
-      { prefix: "pack_skin", suffix: "_scythe_attack", dirSuffix: "", totalFrames: 24, dirCount: 1, frameRate: 14, repeat: 0 },
+      { suffix: "_scythe_attack", totalFrames: 24, dirCount: 1, frameRate: 14, repeat: 0 },
       // Watering (25 frames)
-      { prefix: "pack_skin", suffix: "_watering", dirSuffix: "", totalFrames: 25, dirCount: 1, frameRate: 12, repeat: 0 },
+      { suffix: "_watering", totalFrames: 25, dirCount: 1, frameRate: 12, repeat: 0 },
     ];
 
-    for (const anim of actionAnims) {
-      for (let t = 1; t <= 4; t++) {
-        const skinKey = `${anim.prefix}_${t}${anim.suffix}`;
-        if (this.textures.exists(skinKey)) {
-          if (anim.dirCount === 1) {
-            // No directional variant — single animation
-            const animKey = `${skinKey}_anim`;
-            if (!this.anims.exists(animKey)) {
-              this.anims.create({
-                key: animKey,
-                frames: this.anims.generateFrameNumbers(skinKey, { start: 0, end: anim.totalFrames - 1 }),
-                frameRate: anim.frameRate,
-                repeat: anim.repeat,
-              });
-            }
+    const buildActionAnims = (keyPrefix: string, suffix: string, totalFrames: number, dirCount: number, frameRate: number, repeat: number) => {
+      const fullKey = `${keyPrefix}${suffix}`;
+      if (!this.textures.exists(fullKey)) return;
+
+      if (dirCount === 1) {
+        // Single animation (no directions)
+        const animKey = `${fullKey}_anim`;
+        if (!this.anims.exists(animKey)) {
+          this.anims.create({
+            key: animKey,
+            frames: this.anims.generateFrameNumbers(fullKey, { start: 0, end: totalFrames - 1 }),
+            frameRate: frameRate,
+            repeat: repeat,
+          });
+        }
+      } else {
+        // Directional variant (4 or 8 directions)
+        const dirs = ["down", "right", "up", "left"];
+        dirs.forEach((dir) => {
+          let dirIndex = 0;
+          if (dirCount === 4) {
+            // Mage/Archer order: 0: down, 1: up, 2: right, 3: left
+            const mageDirs = ["down", "up", "right", "left"];
+            dirIndex = mageDirs.indexOf(dir);
           } else {
-            // Directional variant
-            actionDirs.forEach((dir) => {
-              const dirIndex = packDirs.indexOf(dir);
-              const framesPerDir = anim.totalFrames / anim.dirCount;
-              const start = dirIndex * Math.floor(framesPerDir);
-              const end = start + Math.ceil(framesPerDir) - 1;
-              const animKey = `${skinKey}_${dir}`;
-              if (!this.anims.exists(animKey)) {
-                this.anims.create({
-                  key: animKey,
-                  frames: this.anims.generateFrameNumbers(skinKey, { start, end }),
-                  frameRate: anim.frameRate,
-                  repeat: anim.repeat,
-                });
-              }
+            // 8 directions order (sword_attack, damage, death, broomstick)
+            dirIndex = packDirs.indexOf(dir);
+          }
+
+          const framesPerDir = totalFrames / dirCount;
+          const start = dirIndex * Math.floor(framesPerDir);
+          const end = start + Math.ceil(framesPerDir) - 1;
+          const animKey = `${fullKey}_${dir}`;
+          if (!this.anims.exists(animKey)) {
+            this.anims.create({
+              key: animKey,
+              frames: this.anims.generateFrameNumbers(fullKey, { start, end }),
+              frameRate: frameRate,
+              repeat: repeat,
             });
           }
+        });
+      }
+    };
+
+    const gendersList = ["Male", "Female"];
+    const eyeColorsList = ["Black", "Blue", "Brown", "Green"];
+    const stylesList = ["Standard", "Fawn", "Iridessa", "Josh", "Lyria", "Sebastian", "Silvermist"];
+    const colorsList = ["Black", "Blonde", "Brown", "Ginger"];
+    const clothesList = ["Blue", "Green", "Pink", "Purple", "Red", "White"];
+    const accsList = ["Beret", "Wizard", "Pirate", "Farm", "Santa_hat", "Leprechaun", "Cook", "Chicken", "Cow", "Frog", "Deer"];
+
+    // Register all action anims for skins, eyes, hair, clothes, weapons, and broomsticks!
+    actionAnims.forEach(anim => {
+      // 1. Skins
+      for (let t = 1; t <= 4; t++) {
+        buildActionAnims(`pack_skin_${t}`, anim.suffix, anim.totalFrames, anim.dirCount, anim.frameRate, anim.repeat);
+      }
+      // 2. Eyes
+      for (const g of gendersList) {
+        for (const ec of eyeColorsList) {
+          buildActionAnims(`pack_eyes_${g}_${ec}`, anim.suffix, anim.totalFrames, anim.dirCount, anim.frameRate, anim.repeat);
         }
       }
-    }
+      // 3. Hair
+      for (const s of stylesList) {
+        for (const c of colorsList) {
+          buildActionAnims(`pack_hair_${s}_${c}`, anim.suffix, anim.totalFrames, anim.dirCount, anim.frameRate, anim.repeat);
+        }
+      }
+      // 4. Clothes
+      for (const c of clothesList) {
+        buildActionAnims(`pack_clothes_${c}`, anim.suffix, anim.totalFrames, anim.dirCount, anim.frameRate, anim.repeat);
+      }
+
+      // 4.5. Accessories
+      for (const a of accsList) {
+        buildActionAnims(`pack_acc_${a}`, anim.suffix, anim.totalFrames, anim.dirCount, anim.frameRate, anim.repeat);
+      }
+      // 5. Weapons
+      for (let tier = 1; tier <= 10; tier++) {
+        buildActionAnims(`pack_weapon_Sword_${tier}`, anim.suffix, anim.totalFrames, anim.dirCount, anim.frameRate, anim.repeat);
+        buildActionAnims(`pack_weapon_Bow_${tier}`, anim.suffix, anim.totalFrames, anim.dirCount, anim.frameRate, anim.repeat);
+        buildActionAnims(`pack_weapon_Pickaxe_${tier}`, anim.suffix, anim.totalFrames, anim.dirCount, anim.frameRate, anim.repeat);
+        buildActionAnims(`pack_weapon_Hoe_${tier}`, anim.suffix, anim.totalFrames, anim.dirCount, anim.frameRate, anim.repeat);
+        buildActionAnims(`pack_weapon_Axe_${tier}`, anim.suffix, anim.totalFrames, anim.dirCount, anim.frameRate, anim.repeat);
+        buildActionAnims(`pack_weapon_Sickle_${tier}`, anim.suffix, anim.totalFrames, anim.dirCount, anim.frameRate, anim.repeat);
+        buildActionAnims(`pack_weapon_Shovel_${tier}`, anim.suffix, anim.totalFrames, anim.dirCount, anim.frameRate, anim.repeat);
+        buildActionAnims(`pack_weapon_Watering_${tier}`, anim.suffix, anim.totalFrames, anim.dirCount, anim.frameRate, anim.repeat);
+      }
+      // 6. Broomstick Mounts
+      for (let c = 1; c <= 3; c++) {
+        buildActionAnims(`pack_ride_broomstick_mount_${c}`, anim.suffix, anim.totalFrames, anim.dirCount, anim.frameRate, anim.repeat);
+      }
+    });
 
     // ─── 9. Horse Extended Animations (Lower, Eating) ────────────────────────
     const horseLowerEat = ["lower", "eating"];
@@ -2033,6 +2167,22 @@ export class GameScene extends Phaser.Scene {
         this.room.send("toggle-mount", { mountType: "bicycle_blue" });
       }
     });
+
+    // G Key - Toggle Broomstick Mount
+    this.input.keyboard!.on("keydown-G", () => {
+      if (document.activeElement && (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA")) {
+        return;
+      }
+      const localPlayer = this.room.state.players.get(this.room.sessionId);
+      if (!localPlayer) return;
+
+      const isCurrentlyRidingBroom = localPlayer.isRiding && localPlayer.mountType && localPlayer.mountType.indexOf("broomstick") !== -1;
+      if (isCurrentlyRidingBroom) {
+        this.room.send("toggle-mount", { mountType: "none" });
+      } else {
+        this.room.send("toggle-mount", { mountType: "broomstick_1" });
+      }
+    });
   }
 
   // ─── Selection Management ──────────────────────────────────────────────────
@@ -2222,7 +2372,7 @@ export class GameScene extends Phaser.Scene {
           }
 
           if (entity.isLayered) {
-            this.updatePlayerLayers(entity, player);
+            this.updatePlayerLayers(entity, player, sessionId);
           } else {
             const animKey = `${player.skin}_${player.state}_${player.direction}`;
             if (entity.sprite.anims.currentAnim?.key !== animKey) {
@@ -2552,7 +2702,7 @@ export class GameScene extends Phaser.Scene {
     this.entities.set(sessionId, entity);
 
     if (isLayered) {
-      this.updatePlayerLayers(entity, player);
+      this.updatePlayerLayers(entity, player, sessionId);
     }
 
     if (!isLocal) {
@@ -2568,41 +2718,85 @@ export class GameScene extends Phaser.Scene {
     this.updatePlayerVisibilities();
   }
 
-  private updatePlayerLayers(entity: PlayerEntity, player: any): void {
+  private updatePlayerLayers(entity: PlayerEntity, player: any, sessionId: string): void {
     if (!entity.isLayered || !entity.layers) return;
 
     const layers = entity.layers;
-    const isMoving = player.state === "walk";
+    const state = player.state || "idle";
+    const isMoving = state === "walk";
     const dir = player.direction || "down";
+    const isLocal = sessionId === this.localId;
 
     const isRiding = player.isRiding && player.mountType && player.mountType !== "none";
     const mountType = isRiding ? player.mountType : "none";
     const isHorse = isRiding && mountType.indexOf("horse") !== -1;
     const isBicycle = isRiding && mountType.indexOf("bicycle") !== -1;
+    const isBroomstick = isRiding && mountType.indexOf("broomstick") !== -1;
 
     let keyPrefix = "pack";
     let animType = isMoving ? "walk" : "idle";
 
-    if (isHorse) {
+    const isAction = state === "sword_attack" || state === "bow_attack" || state === "mage" ||
+                     state === "pickaxe_attack" || state === "hoe_attack" || state === "axe_attack" ||
+                     state === "scythe_attack" || state === "shovel_attack" || state === "watering" ||
+                     state === "damage" || state === "death";
+
+    if (isAction) {
+      animType = state;
+    } else if (isHorse) {
       keyPrefix = "pack_ride_horse";
       animType = isMoving ? "run" : "idle";
     } else if (isBicycle) {
       keyPrefix = "pack_ride_bicycle";
       animType = isMoving ? "run" : "idle";
+    } else if (isBroomstick) {
+      keyPrefix = "pack";
+      animType = "broomstick";
     }
+
+    // Helper function to play layer animations with fallbacks
+    const playLayerAnim = (sprite: Phaser.GameObjects.Sprite, keyBase: string, type: string, fallbackBase?: string) => {
+      const key = `${keyBase}_${type}`;
+      const dirAnim = `${key}_${dir}`;
+      const singleAnim = `${key}_anim`;
+      
+      if (this.anims.exists(dirAnim)) {
+        sprite.setVisible(true);
+        if (sprite.texture.key !== key) sprite.setTexture(key);
+        if (sprite.anims.currentAnim?.key !== dirAnim) sprite.play(dirAnim, true);
+      } else if (this.anims.exists(singleAnim)) {
+        sprite.setVisible(true);
+        if (sprite.texture.key !== key) sprite.setTexture(key);
+        if (sprite.anims.currentAnim?.key !== singleAnim) sprite.play(singleAnim, true);
+      } else if (fallbackBase) {
+        const fbKey = `${fallbackBase}_idle`;
+        const fbAnim = `${fbKey}_${dir}`;
+        sprite.setVisible(true);
+        if (sprite.texture.key !== fbKey) sprite.setTexture(fbKey);
+        if (sprite.anims.currentAnim?.key !== fbAnim) sprite.play(fbAnim, true);
+      } else {
+        sprite.setVisible(false);
+      }
+    };
 
     // 0. Mount Layer
     if (layers.mount) {
       if (isRiding) {
         layers.mount.setVisible(true);
         let mountKey = "";
+        let mountAnim = "";
         if (isHorse) {
           const horseNum = mountType.split("_")[1] || "1";
           mountKey = `pack_ride_horse_mount_${horseNum}_${animType}`;
-          layers.mount.setY(2);
+          mountAnim = `${mountKey}_${dir}`;
         } else if (isBicycle) {
           const bikeColor = mountType.split("_")[1] || "blue";
           mountKey = `pack_ride_bicycle_mount_${bikeColor}_${animType}`;
+          mountAnim = `${mountKey}_${dir}`;
+        } else if (isBroomstick) {
+          const broomstickNum = mountType.split("_")[1] || "1";
+          mountKey = `pack_ride_broomstick_mount_${broomstickNum}_broomstick`;
+          mountAnim = `${mountKey}_${dir}`;
           layers.mount.setY(10);
         }
 
@@ -2610,7 +2804,6 @@ export class GameScene extends Phaser.Scene {
           if (layers.mount.texture.key !== mountKey) {
             layers.mount.setTexture(mountKey);
           }
-          const mountAnim = `${mountKey}_${dir}`;
           if (layers.mount.anims.currentAnim?.key !== mountAnim) {
             layers.mount.play(mountAnim, true);
           }
@@ -2622,114 +2815,65 @@ export class GameScene extends Phaser.Scene {
 
     // 1. Skin Layer
     const skinTone = player.skinTone || "1";
-    const skinKey = `${keyPrefix}_skin_${skinTone}_${animType}`;
-    if (layers.skin.texture.key !== skinKey) {
-      layers.skin.setTexture(skinKey);
-    }
-    const skinAnim = `${skinKey}_${dir}`;
-    if (layers.skin.anims.currentAnim?.key !== skinAnim) {
-      layers.skin.play(skinAnim, true);
-    }
+    playLayerAnim(layers.skin, `${keyPrefix}_skin_${skinTone}`, animType);
 
     // 2. Eyes Layer
     if (layers.eyes) {
       const g = (player.gender || "male") === "male" ? "Male" : "Female";
       const ec = player.eyeColor || "Black";
-      const eyesKey = `${keyPrefix}_eyes_${g}_${ec}_${animType}`;
-      if (this.textures.exists(eyesKey)) {
-        layers.eyes.setVisible(true);
-        if (layers.eyes.texture.key !== eyesKey) {
-          layers.eyes.setTexture(eyesKey);
-        }
-        const eyesAnim = `${eyesKey}_${dir}`;
-        if (layers.eyes.anims.currentAnim?.key !== eyesAnim) {
-          layers.eyes.play(eyesAnim, true);
-        }
-      } else {
-        // Fallback to idle eyes if walk/run texture is missing
-        const fallbackKey = `${keyPrefix}_eyes_${g}_${ec}_idle`;
-        if (this.textures.exists(fallbackKey)) {
-          layers.eyes.setVisible(true);
-          if (layers.eyes.texture.key !== fallbackKey) {
-            layers.eyes.setTexture(fallbackKey);
-          }
-          const eyesAnim = `${fallbackKey}_${dir}`;
-          if (layers.eyes.anims.currentAnim?.key !== eyesAnim) {
-            layers.eyes.play(eyesAnim, true);
-          }
-        } else {
-          layers.eyes.setVisible(false);
-        }
-      }
+      playLayerAnim(layers.eyes, `${keyPrefix}_eyes_${g}_${ec}`, animType, `${keyPrefix}_eyes_${g}_${ec}`);
     }
 
     // 3. Hair Layer
     if (layers.hair) {
       const hStyle = player.hairStyle || "Standard";
       const hColor = player.hairColor || "Black";
-      const hairKey = `${keyPrefix}_hair_${hStyle}_${hColor}_${animType}`;
-      if (this.textures.exists(hairKey)) {
-        layers.hair.setVisible(true);
-        if (layers.hair.texture.key !== hairKey) {
-          layers.hair.setTexture(hairKey);
-        }
-        const hairAnim = `${hairKey}_${dir}`;
-        if (layers.hair.anims.currentAnim?.key !== hairAnim) {
-          layers.hair.play(hairAnim, true);
-        }
-      } else {
-        layers.hair.setVisible(false);
-      }
+      playLayerAnim(layers.hair, `${keyPrefix}_hair_${hStyle}_${hColor}`, animType, `${keyPrefix}_hair_${hStyle}_${hColor}`);
     }
 
     // 4. Clothes Layer
     if (layers.clothes) {
-      // If player has equipped a chestplate or leggings, map it to a clothes color
-      let cColor = player.clothesColor || "";
-      if (player.equippedChestplate) {
-        const tier = player.equippedChestplate.split(":")[0];
-        if (tier === "1._Wood") cColor = "Red";
-        else if (tier === "2._Copper") cColor = "Purple";
-        else if (tier === "3._Iron") cColor = "Blue";
-        else if (tier === "4._Gold") cColor = "Pink";
-        else cColor = "Green"; // fallback for higher tiers
-      } else if (player.equippedLeggings) {
-        const tier = player.equippedLeggings.split(":")[0];
-        if (tier === "1._Wood") cColor = "Red";
-        else if (tier === "2._Copper") cColor = "Purple";
-        else if (tier === "3._Iron") cColor = "Blue";
-        else if (tier === "4._Gold") cColor = "Pink";
-        else cColor = "Green";
+      let cColor = player.clothesColor || "Blue";
+      let hasArmor = false;
+      let armorTier = "";
+      
+      if (player.equippedChestplate && player.equippedChestplate !== "none" && player.equippedChestplate.indexOf("none") === -1) {
+        armorTier = player.equippedChestplate.split(":")[0];
+        hasArmor = true;
+      } else if (player.equippedLeggings && player.equippedLeggings !== "none" && player.equippedLeggings.indexOf("none") === -1) {
+        armorTier = player.equippedLeggings.split(":")[0];
+        hasArmor = true;
       }
 
-      const clothesKey = cColor ? `${keyPrefix}_clothes_${cColor}_${animType}` : "";
-      if (cColor && this.textures.exists(clothesKey)) {
-        layers.clothes.setVisible(true);
-        if (layers.clothes.texture.key !== clothesKey) {
-          layers.clothes.setTexture(clothesKey);
-        }
-        const clothesAnim = `${clothesKey}_${dir}`;
-        if (layers.clothes.anims.currentAnim?.key !== clothesAnim) {
-          layers.clothes.play(clothesAnim, true);
-        }
+      const getTierTint = (tier: string): number => {
+        if (tier.includes("Wood")) return 0x8B5A2B;      // Wood brown
+        if (tier.includes("Cooper")) return 0xCD7F32;    // Copper orange-brown
+        if (tier.includes("Iron")) return 0x909497;      // Iron steel gray
+        if (tier.includes("Gold")) return 0xFFD700;      // Gold yellow
+        if (tier.includes("Platinum")) return 0xE5E4E2;  // Platinum light gray
+        if (tier.includes("Crimson")) return 0xDC143C;   // Crimson red
+        if (tier.includes("Frost")) return 0x87CEEB;     // Frost sky blue
+        if (tier.includes("Shadow")) return 0x4B0082;    // Shadow dark indigo/purple
+        if (tier.includes("Fairy")) return 0xFF69B4;     // Fairy hot pink
+        if (tier.includes("Obsidian")) return 0x1C1C1C;  // Obsidian dark charcoal/black
+        return 0xFFFFFF;
+      };
+
+      if (hasArmor) {
+        cColor = "White";
+        playLayerAnim(layers.clothes, `${keyPrefix}_clothes_${cColor}`, animType, `${keyPrefix}_clothes_${cColor}`);
+        layers.clothes.setTint(getTierTint(armorTier));
       } else {
-        layers.clothes.setVisible(false);
+        playLayerAnim(layers.clothes, `${keyPrefix}_clothes_${cColor}`, animType, `${keyPrefix}_clothes_${cColor}`);
+        layers.clothes.clearTint();
       }
     }
 
     // 5. Beard Layer
     if (layers.beard) {
       const bColor = player.beardColor || "";
-      const beardKey = bColor ? `${keyPrefix}_beard_${bColor}_${animType}` : "";
-      if (bColor && this.textures.exists(beardKey)) {
-        layers.beard.setVisible(true);
-        if (layers.beard.texture.key !== beardKey) {
-          layers.beard.setTexture(beardKey);
-        }
-        const beardAnim = `${beardKey}_${dir}`;
-        if (layers.beard.anims.currentAnim?.key !== beardAnim) {
-          layers.beard.play(beardAnim, true);
-        }
+      if (bColor) {
+        playLayerAnim(layers.beard, `${keyPrefix}_beard_${bColor}`, animType, `${keyPrefix}_beard_${bColor}`);
       } else {
         layers.beard.setVisible(false);
       }
@@ -2737,107 +2881,165 @@ export class GameScene extends Phaser.Scene {
 
     // 6. Accessories Layer
     if (layers.acc) {
-      // If player has equipped a helmet, map it to a cosmetic hat representing the helmet
       let accItem = player.accItem || "";
-      if (player.equippedHelmet) {
-        const tier = player.equippedHelmet.split(":")[0];
-        if (tier === "1._Wood") accItem = "Farm";
-        else if (tier === "2._Copper") accItem = "Leprechaun";
-        else if (tier === "3._Iron") accItem = "Pirate";
-        else if (tier === "4._Gold") accItem = "Santa_hat";
-        else if (tier === "5._Plat") accItem = "Cook";
-        else if (tier === "6._Crim") accItem = "Beret";
-        else if (tier === "7._Fro") accItem = "Wizard";
-        else if (tier === "8._Sha") accItem = "Wizard";
-        else if (tier === "9._Obs") accItem = "Wizard";
-        else if (tier === "9._Fai") accItem = "Chicken";
+      let hasHelmet = false;
+      let helmetTier = "";
+      
+      if (player.equippedHelmet && player.equippedHelmet !== "none" && player.equippedHelmet.indexOf("none") === -1) {
+        helmetTier = player.equippedHelmet.split(":")[0];
+        hasHelmet = true;
       }
 
-      const accKey = accItem ? `${keyPrefix}_acc_${accItem}_${animType}` : "";
-      if (accItem && this.textures.exists(accKey)) {
-        layers.acc.setVisible(true);
-        if (layers.acc.texture.key !== accKey) {
-          layers.acc.setTexture(accKey);
+      const getTierTint = (tier: string): number => {
+        if (tier.includes("Wood")) return 0x8B5A2B;      // Wood brown
+        if (tier.includes("Cooper")) return 0xCD7F32;    // Copper orange-brown
+        if (tier.includes("Iron")) return 0x909497;      // Iron steel gray
+        if (tier.includes("Gold")) return 0xFFD700;      // Gold yellow
+        if (tier.includes("Platinum")) return 0xE5E4E2;  // Platinum light gray
+        if (tier.includes("Crimson")) return 0xDC143C;   // Crimson red
+        if (tier.includes("Frost")) return 0x87CEEB;     // Frost sky blue
+        if (tier.includes("Shadow")) return 0x4B0082;    // Shadow dark indigo/purple
+        if (tier.includes("Fairy")) return 0xFF69B4;     // Fairy hot pink
+        if (tier.includes("Obsidian")) return 0x1C1C1C;  // Obsidian dark charcoal/black
+        return 0xFFFFFF;
+      };
+
+      if (hasHelmet) {
+        // Use wizard hat for magical tiers, beret for physical armor tiers
+        if (helmetTier.includes("Frost") || helmetTier.includes("Shadow") || helmetTier.includes("Obsidian")) {
+          accItem = "Wizard";
+        } else {
+          accItem = "Beret";
         }
-        const accAnim = `${accKey}_${dir}`;
-        if (layers.acc.anims.currentAnim?.key !== accAnim) {
-          layers.acc.play(accAnim, true);
-        }
+        
+        playLayerAnim(layers.acc, `${keyPrefix}_acc_${accItem}`, animType, `${keyPrefix}_acc_${accItem}`);
+        layers.acc.setTint(getTierTint(helmetTier));
       } else {
-        layers.acc.setVisible(false);
+        if (accItem) {
+          playLayerAnim(layers.acc, `${keyPrefix}_acc_${accItem}`, animType, `${keyPrefix}_acc_${accItem}`);
+          layers.acc.clearTint();
+        } else {
+          layers.acc.setVisible(false);
+        }
       }
     }
 
-    // 7. Tool/Weapon Layer
+    // 7. Tool/Weapon Layer (layers.tool)
     const toolSpr = layers.tool;
     if (toolSpr) {
       const eqWeapon = player.equippedWeapon || "";
       if (eqWeapon && !isRiding) {
         const parts = eqWeapon.split(":");
-        const tierName = parts[0]; // e.g. "4._Gold", "1._Wood"
-        const toolName = parts[1]; // e.g. "Sword", "Pickaxe"
-        const cacheKey = `eq_tool_${tierName}_${toolName}`;
+        const tierName = parts[0] || "";
+        const toolName = parts[1] || "";
         
-        const applyToolPosition = () => {
-          if (dir === "up") {
-            toolSpr.setVisible(false);
-          } else {
-            toolSpr.setVisible(true);
-            if (dir === "left") {
-              toolSpr.setPosition(-8, 12);
-              toolSpr.setAngle(-25);
-              toolSpr.setFlipX(true);
-            } else if (dir === "right") {
-              toolSpr.setPosition(8, 12);
-              toolSpr.setAngle(25);
-              toolSpr.setFlipX(false);
-            } else { // down
-              toolSpr.setPosition(-8, 14);
-              toolSpr.setAngle(0);
-              toolSpr.setFlipX(true);
-            }
-          }
+        const getTierNum = (tName: string): number => {
+          const num = parseInt(tName.split(".")[0]);
+          return isNaN(num) ? 1 : num;
+        };
+        const tierNum = getTierNum(tierName);
+
+        // Custom weapon mappings for action states
+        const activeActionMap: Record<string, string> = {
+          "sword_attack": "Sword",
+          "bow_attack": "Bow",
+          "pickaxe_attack": "Pickaxe",
+          "hoe_attack": "Hoe",
+          "axe_attack": "Axe",
+          "scythe_attack": "Sickle",
+          "shovel_attack": "Shovel",
+          "watering": "Watering"
         };
 
-        if (!this.textures.exists(cacheKey)) {
-          const path = `assets/pack/icons/RPG_icons/Weapons_and_Armor/${tierName}/${toolName}.png`;
-          this.load.image(cacheKey, path);
-          this.load.once(`filecomplete-image-${cacheKey}`, () => {
-            if (toolSpr) {
-              const tex = this.textures.get(cacheKey);
-              if (tex) {
-                const H = tex.get('__BASE__').height;
-                if (!tex.has('single')) {
-                  tex.add('single', 0, 0, 0, H, H);
+        if (isAction && activeActionMap[state] && toolName === activeActionMap[state]) {
+          // Animated Weapon Spritesheet
+          toolSpr.setVisible(true);
+          toolSpr.setScale(1.0);
+          toolSpr.setPosition(0, 10);
+          toolSpr.setAngle(0);
+          toolSpr.setFlipX(false);
+          
+          const weaponPrefix = `pack_weapon_${activeActionMap[state]}_${tierNum}`;
+          playLayerAnim(toolSpr, weaponPrefix, animType);
+        } else if (isAction && activeActionMap[state]) {
+          // If player has a mismatching weapon equipped, hide weapon overlay but play body anims
+          toolSpr.setVisible(false);
+        } else {
+          // Static weapon display
+          toolSpr.setScale(0.65);
+          const cacheKey = `eq_tool_${tierName}_${toolName}`;
+          
+          const applyToolPosition = () => {
+            if (dir === "up") {
+              toolSpr.setVisible(false);
+            } else {
+              toolSpr.setVisible(true);
+              if (dir === "left") {
+                toolSpr.setPosition(-8, 12);
+                toolSpr.setAngle(-25);
+                toolSpr.setFlipX(true);
+              } else if (dir === "right") {
+                toolSpr.setPosition(8, 12);
+                toolSpr.setAngle(25);
+                toolSpr.setFlipX(false);
+              } else { // down
+                toolSpr.setPosition(-8, 14);
+                toolSpr.setAngle(0);
+                toolSpr.setFlipX(true);
+              }
+            }
+          };
+
+          if (!this.textures.exists(cacheKey)) {
+            const path = `assets/pack/icons/RPG_icons/Weapons_and_Armor/${tierName}/${toolName}.png`;
+            this.load.image(cacheKey, path);
+            this.load.once(`filecomplete-image-${cacheKey}`, () => {
+              if (toolSpr) {
+                const tex = this.textures.get(cacheKey);
+                if (tex) {
+                  const H = tex.get('__BASE__').height;
+                  if (!tex.has('single')) {
+                    tex.add('single', 0, 0, 0, H, H);
+                  }
+                  toolSpr.setTexture(cacheKey, 'single');
+                } else {
+                  toolSpr.setTexture(cacheKey);
                 }
+                applyToolPosition();
+              }
+            });
+            this.load.start();
+          } else {
+            const tex = this.textures.get(cacheKey);
+            if (tex) {
+              const H = tex.get('__BASE__').height;
+              if (!tex.has('single')) {
+                tex.add('single', 0, 0, 0, H, H);
+              }
+              if (toolSpr.texture.key !== cacheKey || toolSpr.frame.name !== 'single') {
                 toolSpr.setTexture(cacheKey, 'single');
-              } else {
+              }
+            } else {
+              if (toolSpr.texture.key !== cacheKey) {
                 toolSpr.setTexture(cacheKey);
               }
-              applyToolPosition();
             }
-          });
-          this.load.start();
-        } else {
-          const tex = this.textures.get(cacheKey);
-          if (tex) {
-            const H = tex.get('__BASE__').height;
-            if (!tex.has('single')) {
-              tex.add('single', 0, 0, 0, H, H);
-            }
-            if (toolSpr.texture.key !== cacheKey || toolSpr.frame.name !== 'single') {
-              toolSpr.setTexture(cacheKey, 'single');
-            }
-          } else {
-            if (toolSpr.texture.key !== cacheKey) {
-              toolSpr.setTexture(cacheKey);
-            }
+            applyToolPosition();
           }
-          applyToolPosition();
         }
       } else {
         toolSpr.setVisible(false);
       }
+    }
+
+    // Reset local player attack state when skin animation finishes playing
+    if (isLocal && isAction) {
+      layers.skin.once("animationcomplete", () => {
+        const lp = this.room.state.players.get(this.localId);
+        if (lp && lp.state === state) {
+          this.room.send("action", { type: "idle" });
+        }
+      });
     }
   }
 
@@ -2999,6 +3201,37 @@ export class GameScene extends Phaser.Scene {
     if (this.editorMode) {
       this.drawSelectionOutline();
       return;
+    }
+
+    // Spacebar Key listener (Attack/Action)
+    if (Phaser.Input.Keyboard.JustDown(this.keySpace)) {
+      const isTyping = document.activeElement && (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA");
+      if (!isTyping) {
+        const localPlayerState = this.room.state.players.get(this.localId);
+        if (localPlayerState) {
+          const eqWeapon = localPlayerState.equippedWeapon || "";
+          const parts = eqWeapon.split(":");
+          const toolName = parts[1] || "";
+          
+          let attackState = "";
+          if (toolName === "Sword") attackState = "sword_attack";
+          else if (toolName === "Bow") attackState = "bow_attack";
+          else if (toolName === "Staff") attackState = "mage";
+          else if (toolName === "Axe") attackState = "axe_attack";
+          else if (toolName === "Pickaxe") attackState = "pickaxe_attack";
+          else if (toolName === "Shovel") attackState = "shovel_attack";
+          else if (toolName === "Sickle") attackState = "scythe_attack";
+          
+          const currentAction = localPlayerState.state;
+          const isAlreadyAttacking = currentAction === "sword_attack" || currentAction === "bow_attack" || currentAction === "mage" ||
+                                     currentAction === "pickaxe_attack" || currentAction === "hoe_attack" || currentAction === "axe_attack" ||
+                                     currentAction === "scythe_attack" || currentAction === "shovel_attack" || currentAction === "watering";
+          
+          if (attackState && !isAlreadyAttacking) {
+            this.room.send("action", { type: attackState, direction: localPlayerState.direction || "down" });
+          }
+        }
+      }
     }
 
     // 2. Read movement inputs
