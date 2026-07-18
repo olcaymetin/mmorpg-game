@@ -1126,7 +1126,7 @@ export class GameScene extends Phaser.Scene {
     });
     // ─── Farm RPG Pack Character Anim Generator ──────────────────────────────
     const directionsList = ["down", "right", "up", "left"];
-    const packDirections = ["down", "down_right", "right", "up_right", "up", "up_left", "left", "down_left"];
+    const packDirections = ["down", "down_diagonal", "up", "up_diagonal", "right", "right_diagonal", "left", "left_diagonal"];
 
     const buildAnims = (keyPrefix: string) => {
       // 1. Idle (16 frames, 2 frames per direction)
@@ -1374,7 +1374,7 @@ export class GameScene extends Phaser.Scene {
 
     // ─── 8. Action Animations ────────────────────────────────────────────────
     const actionDirs = ["down", "right", "up", "left"];
-    const packDirs = ["down", "down_right", "right", "up_right", "up", "up_left", "left", "down_left"];
+    const packDirs = ["down", "down_diagonal", "up", "up_diagonal", "right", "right_diagonal", "left", "left_diagonal"];
     const actionAnims = [
       // Damage (16 frames = 2 per direction)
       { prefix: "pack_skin", suffix: "_damage", dirSuffix: "", totalFrames: 16, dirCount: 8, frameRate: 12, repeat: 0 },
@@ -2490,7 +2490,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     const container = this.add.container(player.x, player.y);
-    container.setScale(2.0);
+    container.setScale(2.4);
 
     // ── Shadow ───────────────────────────────────────────────────────────────
     const shadow = this.add.graphics();

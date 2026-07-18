@@ -39,7 +39,7 @@ export class NPC {
     this.opts = opts;
 
     this.container = scene.add.container(x, y);
-    this.container.setScale(2.0); // Upscale to 2.0 to match players
+    this.container.setScale(2.4); // Upscale to 2.4 to match players
     
     this.shadow = scene.add.graphics();
     this.shadow.fillStyle(0x000000, 0.25);
