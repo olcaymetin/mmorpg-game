@@ -2225,6 +2225,12 @@ export class GameScene extends Phaser.Scene {
 
     // ─── Object Click / Drag handlers ───
     this.input.on("gameobjectdown", (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject) => {
+      const isLineToolActive = (this.currentBrushType === "object" && this.currentObjectName === "collision_line") || 
+                               (this.currentBrushType === "eraser_line");
+      if (this.editorMode && isLineToolActive) {
+        return;
+      }
+
       const type = gameObject.getData("type");
       const id = gameObject.getData("id");
 
@@ -2319,6 +2325,10 @@ export class GameScene extends Phaser.Scene {
 
     this.input.on("dragstart", (_pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject) => {
       if (!this.editorMode) return;
+      const isLineToolActive = (this.currentBrushType === "object" && this.currentObjectName === "collision_line") || 
+                               (this.currentBrushType === "eraser_line");
+      if (isLineToolActive) return;
+
       this.isDraggingObject = true;
       this.selectObject(gameObject.getData("id"));
     });
