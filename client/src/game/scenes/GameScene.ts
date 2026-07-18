@@ -2668,6 +2668,7 @@ export class GameScene extends Phaser.Scene {
       x,
       y,
       scale,
+      angle: stateObjForBlocked ? stateObjForBlocked.angle : 0,
       blocked: isBlocked,
       imageObj: img,
     };
@@ -2899,6 +2900,7 @@ export class GameScene extends Phaser.Scene {
           obj.x = objState.x;
           obj.y = objState.y;
           obj.scale = objState.scale;
+          obj.angle = objState.angle;
           if (obj.imageObj) {
             obj.imageObj.x = objState.x;
             obj.imageObj.y = objState.y;
