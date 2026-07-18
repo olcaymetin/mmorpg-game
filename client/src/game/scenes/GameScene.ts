@@ -313,6 +313,8 @@ export class GameScene extends Phaser.Scene {
     for (const g of gendersList) {
       for (const ec of eyeColorsList) {
         this.load.spritesheet(`pack_eyes_${g}_${ec}_idle`, `${charBase}/idle/eyes/${g}/${ec}.png`, { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet(`pack_eyes_${g}_${ec}_walk`, `${charBase}/walk/eyes/${g}/${ec}.png`, { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet(`pack_eyes_${g}_${ec}_run`, `${charBase}/run/eyes/${g}/${ec}.png`, { frameWidth: 32, frameHeight: 32 });
       }
     }
 
@@ -1208,25 +1210,12 @@ export class GameScene extends Phaser.Scene {
       buildAnims(`pack_acc_${a}`);
     }
 
-    // Build eyes (idle only)
+    // Build eyes (idle, walk, run)
     const genders = ["Male", "Female"];
     const eyeColors = ["Black", "Blue", "Brown", "Green"];
     for (const g of genders) {
       for (const ec of eyeColors) {
-        const eyeKey = `pack_eyes_${g}_${ec}_idle`;
-        if (this.textures.exists(eyeKey)) {
-          directionsList.forEach((dir) => {
-            const dirIndex = packDirections.indexOf(dir);
-            const start = dirIndex * 2;
-            const end = start + 1;
-            this.anims.create({
-              key: `${eyeKey}_${dir}`,
-              frames: this.anims.generateFrameNumbers(eyeKey, { start, end }),
-              frameRate: 4,
-              repeat: -1,
-            });
-          });
-        }
+        buildAnims(`pack_eyes_${g}_${ec}`);
       }
     }
 
@@ -2501,6 +2490,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     const container = this.add.container(player.x, player.y);
+    container.setScale(1.4);
 
     // ── Shadow ───────────────────────────────────────────────────────────────
     const shadow = this.add.graphics();
@@ -2641,24 +2631,35 @@ export class GameScene extends Phaser.Scene {
       layers.skin.play(skinAnim, true);
     }
 
-    // 2. Eyes Layer (Idle only)
+    // 2. Eyes Layer
     if (layers.eyes) {
-      if (animType === "idle") {
+      const g = (player.gender || "male") === "male" ? "Male" : "Female";
+      const ec = player.eyeColor || "Black";
+      const eyesKey = `${keyPrefix}_eyes_${g}_${ec}_${animType}`;
+      if (this.textures.exists(eyesKey)) {
         layers.eyes.setVisible(true);
-        const g = (player.gender || "male") === "male" ? "Male" : "Female";
-        const ec = player.eyeColor || "Black";
-        const eyesKey = `${keyPrefix}_eyes_${g}_${ec}_idle`;
-        if (this.textures.exists(eyesKey)) {
-          if (layers.eyes.texture.key !== eyesKey) {
-            layers.eyes.setTexture(eyesKey);
+        if (layers.eyes.texture.key !== eyesKey) {
+          layers.eyes.setTexture(eyesKey);
+        }
+        const eyesAnim = `${eyesKey}_${dir}`;
+        if (layers.eyes.anims.currentAnim?.key !== eyesAnim) {
+          layers.eyes.play(eyesAnim, true);
+        }
+      } else {
+        // Fallback to idle eyes if walk/run texture is missing
+        const fallbackKey = `${keyPrefix}_eyes_${g}_${ec}_idle`;
+        if (this.textures.exists(fallbackKey)) {
+          layers.eyes.setVisible(true);
+          if (layers.eyes.texture.key !== fallbackKey) {
+            layers.eyes.setTexture(fallbackKey);
           }
-          const eyesAnim = `${eyesKey}_${dir}`;
+          const eyesAnim = `${fallbackKey}_${dir}`;
           if (layers.eyes.anims.currentAnim?.key !== eyesAnim) {
             layers.eyes.play(eyesAnim, true);
           }
+        } else {
+          layers.eyes.setVisible(false);
         }
-      } else {
-        layers.eyes.setVisible(false);
       }
     }
 

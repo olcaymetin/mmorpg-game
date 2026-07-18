@@ -43,6 +43,7 @@ export class NPC {
   ) {
     this.scene = scene;
     this.container = scene.add.container(x, y);
+    this.container.setScale(1.4);
     this.shadow = scene.add.graphics();
     this.shadow.fillStyle(0x000000, 0.25);
     this.shadow.fillEllipse(0, 14, 18, 7);
@@ -133,6 +134,19 @@ export class NPC {
     const skinAnim = `pack_skin_1_${state}_${dir}`;
     if (this.skin.anims.currentAnim?.key !== skinAnim && this.skin.anims.exists(skinAnim)) {
       this.skin.play(skinAnim, true);
+    }
+    
+    if (this.eyes) {
+      const g = opts.gender === "male" ? "Male" : "Female";
+      const eyeAnim = `pack_eyes_${g}_${opts.eyeColor}_${state}_${dir}`;
+      if (this.eyes.anims.exists(eyeAnim)) {
+        this.eyes.play(eyeAnim, true);
+      } else {
+        const fallbackAnim = `pack_eyes_${g}_${opts.eyeColor}_idle_${dir}`;
+        if (this.eyes.anims.exists(fallbackAnim)) {
+          this.eyes.play(fallbackAnim, true);
+        }
+      }
     }
 
     if (this.hair && this.hair.anims.exists(`pack_hair_${this.hair.texture.key}_${state}_${dir}`)) {
