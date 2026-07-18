@@ -26,28 +26,76 @@ const SPEED = 4;
 /** Half of player size — used for boundary clamping */
 const HALF = 16;
 
-// ─── Bottom Island (Balık Tutma Adası) Su Sınırları ─────────────────────────
-// Harita: 38x30 tile × 32px = 1216×960 px
-// Sadece kumsal ve iskele alanında yürünebilir, su tile'ları engel.
-//
-// Görsele göre gerçekçi koordinatlar:
-//   1. Kumsal şeridi: haritanın altındaki ~2 tile (y >= 880)  
-//   2. İskele yatay kolu (T'nin üstü): x: 256-736, y: 352-480
-//   3. İskele dikey kolu: x: 448-576, y: 480-880
-//   Toleranslar geniş tutulmuştur (oyuncu sınırlarda takılmasın)
-//
-function isWalkableOnBottomIsland(x: number, y: number): boolean {
-  // 1. Kumsal şeridi (alt alan)
-  if (y >= 864) return true;
+function isPlayerOnDockOrBridge(x: number, y: number, state: GameState): boolean {
+  let onDock = false;
+  state.placedObjects.forEach((obj) => {
+    // Only check objects on the bottom_island
+    if ((obj.mapId || "main") !== "bottom_island") return;
+    
+    if (
+      obj.type.startsWith("pack_ext_bridge") ||
+      obj.type.startsWith("pack_ext_dock") ||
+      obj.type.startsWith("pack_dock_") ||
+      obj.type.startsWith("pack_iskele_") ||
+      obj.type.startsWith("iskele:")
+    ) {
+      // Estimate the dimensions of these objects
+      let baseW = 32;
+      let baseH = 32;
+      
+      if (obj.type.startsWith("pack_ext_bridge_beach")) {
+        baseW = 128;
+        baseH = 224;
+      } else if (obj.type.startsWith("pack_ext_bridge")) {
+        baseW = 128;
+        baseH = 128;
+      } else if (obj.type.startsWith("pack_dock_iskele") || obj.type.startsWith("pack_iskele_legacy")) {
+        baseW = 144;
+        baseH = 64;
+      } else if (obj.type.startsWith("pack_dock_tahta_iskele")) {
+        baseW = 208;
+        baseH = 144;
+      }
+      
+      const scale = obj.scale || 1.0;
+      const w = baseW * scale;
+      const h = baseH * scale;
+      
+      // origin is 0.5, 0.5 for floor-level objects
+      const left = obj.x - w / 2;
+      const right = obj.x + w / 2;
+      const top = obj.y - h / 2;
+      const bottom = obj.y + h / 2;
+      
+      // Tiny 4px padding so player doesn't get stuck on edges
+      if (x >= left - 4 && x <= right + 4 && y >= top - 4 && y <= bottom + 4) {
+        onDock = true;
+      }
+    }
+  });
+  return onDock;
+}
 
-  // 2. İskele yatay kolu (T'nin yatay çubuğu)
-  if (x >= 224 && x <= 768 && y >= 320 && y <= 512) return true;
-
-  // 3. İskele dikey kolu (T'nin sapı - kumsala bağlanan kol)
-  if (x >= 416 && x <= 608 && y >= 480 && y <= 880) return true;
-
-  // Bunların dışındaki her yer su
-  return false;
+function isWalkableOnBottomIsland(x: number, y: number, state: GameState): boolean {
+  const tileX = Math.floor(x / 32);
+  const tileY = Math.floor(y / 32);
+  const key = `bottom_island:${tileX},${tileY}`;
+  const tileIndex = state.mapData.get(key);
+  
+  if (tileIndex !== undefined) {
+    const cleanIndex = tileIndex & 0xFFFF;
+    const waterGids = new Set([
+      3, 4, 5, 6, 7, 8, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 24, 25, 26, 27,
+      35, 36, 37, 38, 39, 40, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 56, 57, 58, 59,
+      67, 68, 69, 70, 71, 72, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 88, 89, 90, 91
+    ]);
+    
+    if (waterGids.has(cleanIndex)) {
+      // It's a water tile. Player can walk here ONLY if there is a dock/bridge placed on top.
+      return isPlayerOnDockOrBridge(x, y, state);
+    }
+  }
+  return true; // Not water, walkable
 }
 
 const SAVE_FILE_PATH = fs.existsSync("/data")
@@ -257,13 +305,13 @@ export class GameRoom extends Room<GameState> {
 
         if (mapId === "bottom_island") {
           // Sliding collision: try full move first, then axis-by-axis fallback
-          if (isWalkableOnBottomIsland(newX, newY)) {
+          if (isWalkableOnBottomIsland(newX, newY, this.state)) {
             player.x = newX;
             player.y = newY;
-          } else if (isWalkableOnBottomIsland(newX, player.y)) {
+          } else if (isWalkableOnBottomIsland(newX, player.y, this.state)) {
             // Can slide horizontally
             player.x = newX;
-          } else if (isWalkableOnBottomIsland(player.x, newY)) {
+          } else if (isWalkableOnBottomIsland(player.x, newY, this.state)) {
             // Can slide vertically
             player.y = newY;
           }

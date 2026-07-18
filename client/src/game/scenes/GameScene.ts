@@ -104,6 +104,18 @@ export class GameScene extends Phaser.Scene {
   private cameraStartX = 0;
   private cameraStartY = 0;
 
+  // Su tile GID aralıkları (terrains.png, startGid=0, 32 sütun)
+  // Mavi hexagonal su deseni ve geçiş tile'ları
+  private static readonly WATER_TILE_GIDS: ReadonlySet<number> = new Set([
+    // terrains.png'deki su tile'ları — satır×32+sütun formatında
+    // Satır 0: su köşe geçişleri (sütun 3-8)
+    3, 4, 5, 6, 7, 8,
+    // Satır 1: ana su tile'ları (sütun 3-8)
+    35, 36, 37, 38, 39, 40,
+    // Satır 2: su alt geçişleri (sütun 3-8)
+    67, 68, 69, 70, 71, 72,
+  ]);
+
   public currentMapId = "main";
   public mapWidth = 1600;
   public mapHeight = 1280;
@@ -738,6 +750,47 @@ export class GameScene extends Phaser.Scene {
       return "decor";
     }
     return "terrain";
+  }
+
+  private isWaterTileAt(worldX: number, worldY: number): boolean {
+    if (!this.map || !this.layer) return false;
+    // Calculate tile coordinate
+    const tileX = Math.floor(worldX / 32);
+    const tileY = Math.floor(worldY / 32);
+    const tile = this.map.getTileAt(tileX, tileY, true, this.layer);
+    if (!tile) return false;
+    
+    // GID values are stored on the tile's index property.
+    // If the index matches one of the known water tiles, block it.
+    const cleanIndex = tile.index & 0xFFFF;
+    if (GameScene.WATER_TILE_GIDS.has(cleanIndex)) {
+      // It's a water tile. But is there a dock or bridge object on top of it?
+      // Check if world coordinate overlaps with any dock/bridge object bounding box!
+      for (const obj of this.placedObjects) {
+        if (
+          obj.type.startsWith("pack_ext_bridge") ||
+          obj.type.startsWith("pack_ext_dock") ||
+          obj.type.startsWith("pack_dock_") ||
+          obj.type.startsWith("pack_iskele_") ||
+          obj.type.startsWith("iskele:")
+        ) {
+          if (obj.imageObj) {
+            const bounds = obj.imageObj.getBounds();
+            // Pad bounds slightly to prevent getting stuck on seams (4px padding)
+            if (
+              worldX >= bounds.x - 4 &&
+              worldX <= bounds.x + bounds.width + 4 &&
+              worldY >= bounds.y - 4 &&
+              worldY <= bounds.y + bounds.height + 4
+            ) {
+              return false; // Not blocked! Player is on a dock/bridge.
+            }
+          }
+        }
+      }
+      return true; // Blocked: it is water and no dock/bridge is here.
+    }
+    return false; // Not a water tile.
   }
 
   private getDefaultScaleForType(type: string): number {
@@ -2304,7 +2357,10 @@ export class GameScene extends Phaser.Scene {
       type.startsWith("pack_ext_white_fence") ||
       type.startsWith("pack_fences_tilemap") ||
       type.startsWith("pack_ext_dock") ||
-      type.startsWith("pack_int_floor")
+      type.startsWith("pack_int_floor") ||
+      type.startsWith("pack_dock_") ||
+      type.startsWith("pack_iskele_") ||
+      type.startsWith("iskele:")
     ) {
       // Floor-level objects: always render BELOW the player character
       img.setOrigin(0.5, 0.5);
@@ -3277,8 +3333,26 @@ export class GameScene extends Phaser.Scene {
       if (isNowMoving) {
         // Server moves at 4px per 50ms = 0.08px/ms. Scale by delta for frame-rate independence.
         const spd = 0.08 * delta;
-        this.localX = Math.max(16, Math.min(this.mapWidth - 16, this.localX + dx * spd));
-        this.localY = Math.max(16, Math.min(this.mapHeight - 16, this.localY + dy * spd));
+        const newX = Math.max(16, Math.min(this.mapWidth - 16, this.localX + dx * spd));
+        const newY = Math.max(16, Math.min(this.mapHeight - 16, this.localY + dy * spd));
+
+        // Su tile kontrolü: bottom_island'da su tile'larına girişi engelle
+        if (this.currentMapId === "bottom_island") {
+          const canMoveXY = !this.isWaterTileAt(newX, newY);
+          const canMoveX  = !this.isWaterTileAt(newX, this.localY);
+          const canMoveY  = !this.isWaterTileAt(this.localX, newY);
+          if (canMoveXY) {
+            this.localX = newX;
+            this.localY = newY;
+          } else if (canMoveX) {
+            this.localX = newX;
+          } else if (canMoveY) {
+            this.localY = newY;
+          }
+        } else {
+          this.localX = newX;
+          this.localY = newY;
+        }
       }
       
       // Soft reconciliation: gradually nudge predicted coordinates to server coordinates
