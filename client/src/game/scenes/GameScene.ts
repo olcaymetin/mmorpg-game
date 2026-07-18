@@ -94,6 +94,7 @@ export class GameScene extends Phaser.Scene {
   private localY = 0; // predicted local player Y
   private lastSentMs = 0;
   private isMoving = false;
+  private isFishingTimelineActive = false;
 
 
   // Drag Panning & Dragging Objects
@@ -771,6 +772,8 @@ export class GameScene extends Phaser.Scene {
   startFishingSequence() {
     if (!this.room) return;
 
+    this.isFishingTimelineActive = true;
+
     // 1. Send casting state
     this.room.send("action", { type: "fishing_cast" });
 
@@ -778,43 +781,34 @@ export class GameScene extends Phaser.Scene {
     this.time.addEvent({
       delay: 2000,
       callback: () => {
-        const localPlayerState = this.room?.state.players.get(this.localId);
-        if (!localPlayerState || localPlayerState.state !== "fishing_cast") return;
-        
+        if (!this.isFishingTimelineActive) return;
         this.room.send("action", { type: "fishing_wait" });
 
         this.time.addEvent({
           delay: 25000,
           callback: () => {
-            const current = this.room?.state.players.get(this.localId);
-            if (!current || current.state !== "fishing_wait") return;
-
+            if (!this.isFishingTimelineActive) return;
             this.room.send("action", { type: "fishing_bite" });
 
             this.time.addEvent({
               delay: 1500,
               callback: () => {
-                const cur = this.room?.state.players.get(this.localId);
-                if (!cur || cur.state !== "fishing_bite") return;
-
+                if (!this.isFishingTimelineActive) return;
                 this.room.send("action", { type: "fishing_reel" });
 
                 this.time.addEvent({
                   delay: 1000,
                   callback: () => {
-                    const c = this.room?.state.players.get(this.localId);
-                    if (!c || c.state !== "fishing_reel") return;
-
+                    if (!this.isFishingTimelineActive) return;
                     this.room.send("action", { type: "fishing_catch" });
 
                     this.time.addEvent({
-                      delay: 500,
+                      delay: 1000, // Show catch animation for 1 second
                       callback: () => {
-                        const final = this.room?.state.players.get(this.localId);
-                        if (!final || final.state !== "fishing_catch") return;
-
+                        if (!this.isFishingTimelineActive) return;
                         this.room.send("fish-cast");
                         this.room.send("action", { type: "idle" });
+                        this.isFishingTimelineActive = false;
                       }
                     });
                   }
@@ -1926,7 +1920,7 @@ export class GameScene extends Phaser.Scene {
         const eqWeapon = localPlayerState?.equippedWeapon || "";
         const parts = eqWeapon.split(":");
         const toolName = parts[1] || "";
-        const isFishing = localPlayerState?.state?.startsWith("fishing_");
+        const isFishing = (localPlayerState?.state?.startsWith("fishing_")) || this.isFishingTimelineActive;
 
         if (!this.editorMode && toolName === "Fishing_Rod" && !isFishing) {
           const terrainTile = this.map.getTileAt(tileX, tileY, true, this.layer);
@@ -3399,7 +3393,7 @@ export class GameScene extends Phaser.Scene {
     const down  = this.cursors.down.isDown  || this.keyS.isDown  || this.virtualDown;
 
     const localPlayerState = this.room?.state.players.get(this.localId);
-    const isFishing = localPlayerState?.state?.startsWith("fishing_");
+    const isFishing = (localPlayerState?.state?.startsWith("fishing_")) || this.isFishingTimelineActive;
 
     let dx = right ? 1 : left ? -1 : 0;
     let dy = down  ? 1 : up   ? -1 : 0;

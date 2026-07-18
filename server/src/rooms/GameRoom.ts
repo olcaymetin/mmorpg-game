@@ -313,6 +313,11 @@ export class GameRoom extends Room<GameState> {
       if (!player) return;
       (player as any).lastActivityAt = Date.now();
 
+      // Block movement if the player is in any active fishing state
+      if (player.state && player.state.startsWith("fishing_")) {
+        return;
+      }
+
       const dx = Math.max(-1, Math.min(1, msg.dx));
       const dy = Math.max(-1, Math.min(1, msg.dy));
 
