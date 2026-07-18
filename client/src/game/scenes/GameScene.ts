@@ -3380,24 +3380,37 @@ export class GameScene extends Phaser.Scene {
                 const dir = localPlayerState.direction || "down";
                 
                 // Convert world pixels to 16px tile coordinates (scale is 2, so 32px per tile)
-                let tileX = Math.floor(px / 32);
-                let tileY = Math.floor(py / 32);
+                const baseTileX = Math.floor(px / 32);
+                const baseTileY = Math.floor(py / 32);
                 
-                if (dir === "left") tileX -= 1;
-                else if (dir === "right") tileX += 1;
-                else if (dir === "up") tileY -= 1;
-                else if (dir === "down") tileY += 1;
+                let isWaterFound = false;
                 
-                const terrainTile = this.map.getTileAt(tileX, tileY, true, this.layer);
-                const decorTile = this.map.getTileAt(tileX, tileY, true, this.decorLayer);
-                const terrainGid = terrainTile ? (terrainTile.index & 0xFFFF) : -1;
-                const decorGid = decorTile ? (decorTile.index & 0xFFFF) : -1;
+                // Scan up to 3 tiles in front of the player
+                for (let dist = 1; dist <= 3; dist++) {
+                  let tileX = baseTileX;
+                  let tileY = baseTileY;
+                  
+                  if (dir === "left") tileX -= dist;
+                  else if (dir === "right") tileX += dist;
+                  else if (dir === "up") tileY -= dist;
+                  else if (dir === "down") tileY += dist;
+                  
+                  const terrainTile = this.map.getTileAt(tileX, tileY, true, this.layer);
+                  const decorTile = this.map.getTileAt(tileX, tileY, true, this.decorLayer);
+                  const terrainGid = terrainTile ? (terrainTile.index & 0xFFFF) : -1;
+                  const decorGid = decorTile ? (decorTile.index & 0xFFFF) : -1;
 
-                const isWater = GameScene.WATER_TILE_GIDS.has(terrainGid) || GameScene.WATER_TILE_GIDS.has(decorGid) || terrainGid === -1;
-                if (isWater) {
+                  const isWater = GameScene.WATER_TILE_GIDS.has(terrainGid) || GameScene.WATER_TILE_GIDS.has(decorGid) || terrainGid === -1;
+                  if (isWater) {
+                    isWaterFound = true;
+                    break;
+                  }
+                }
+                
+                if (isWaterFound) {
                   this.startFishingSequence();
                 } else {
-                  console.log("[Fishing] Must face water to fish! Checked tile:", tileX, tileY);
+                  console.log("[Fishing] Must face water to fish! Checked tiles in front of player direction:", dir);
                 }
               }
             }
