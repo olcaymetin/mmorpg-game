@@ -3379,15 +3379,14 @@ export class GameScene extends Phaser.Scene {
                 const py = localPlayer.container.y;
                 const dir = localPlayerState.direction || "down";
                 
-                let targetX = px;
-                let targetY = py;
-                if (dir === "left") targetX -= 32;
-                else if (dir === "right") targetX += 32;
-                else if (dir === "up") targetY -= 32;
-                else if (dir === "down") targetY += 32;
+                // Convert world pixels to 16px tile coordinates (scale is 2, so 32px per tile)
+                let tileX = Math.floor(px / 32);
+                let tileY = Math.floor(py / 32);
                 
-                const tileX = Math.floor(targetX / 16);
-                const tileY = Math.floor(targetY / 16);
+                if (dir === "left") tileX -= 1;
+                else if (dir === "right") tileX += 1;
+                else if (dir === "up") tileY -= 1;
+                else if (dir === "down") tileY += 1;
                 
                 const terrainTile = this.map.getTileAt(tileX, tileY, true, this.layer);
                 const decorTile = this.map.getTileAt(tileX, tileY, true, this.decorLayer);
@@ -3398,7 +3397,7 @@ export class GameScene extends Phaser.Scene {
                 if (isWater) {
                   this.startFishingSequence();
                 } else {
-                  console.log("[Fishing] Must face water to fish!");
+                  console.log("[Fishing] Must face water to fish! Checked tile:", tileX, tileY);
                 }
               }
             }
