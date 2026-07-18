@@ -96,6 +96,8 @@ export class GameScene extends Phaser.Scene {
   private isMoving = false;
   private isFishingTimelineActive = false;
   private localFishingDir: string | null = null;
+  private lineDrawStart: { x: number; y: number } | null = null;
+  private tempLineGraphics: Phaser.GameObjects.Graphics | null = null;
 
 
   // Drag Panning & Dragging Objects
@@ -842,9 +844,49 @@ export class GameScene extends Phaser.Scene {
     }
     return false;
   }
+ 
+  // Helpers for line segment intersection (CCW algorithm)
+  private ccw(ax: number, ay: number, bx: number, by: number, cx: number, cy: number): boolean {
+    return (cy - ay) * (bx - ax) > (by - ay) * (cx - ax);
+  }
+
+  private lineIntersect(
+    ax: number, ay: number, bx: number, by: number,
+    cx: number, cy: number, dx: number, dy: number
+  ): boolean {
+    return this.ccw(ax, ay, cx, cy, dx, dy) !== this.ccw(bx, by, cx, cy, dx, dy) &&
+           this.ccw(ax, ay, bx, by, cx, cy) !== this.ccw(ax, ay, bx, by, dx, dy);
+  }
+
+  private distToSegment(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    if (dx === 0 && dy === 0) return Math.hypot(px - x1, py - y1);
+    
+    let t = ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy);
+    t = Math.max(0, Math.min(1, t));
+    
+    return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+  }
+
+  private isBlockedByLocalLine(oldX: number, oldY: number, newX: number, newY: number): boolean {
+    for (const obj of this.placedObjects) {
+      if (obj.type !== "collision_line") continue;
+      
+      const x1 = obj.x;
+      const y1 = obj.y;
+      const x2 = obj.scale; // x2
+      const y2 = obj.angle ?? 0; // y2
+      
+      if (this.lineIntersect(oldX, oldY, newX, newY, x1, y1, x2, y2)) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   private getDefaultScaleForType(type: string): number {
-    if (type === "collision_blocker") {
+    if (type === "collision_blocker" || type === "collision_line") {
       return 1.0;
     }
     if (type === "farm_tile" || type === "farm_tile_hoed" || type === "farm_tile_watered") {
@@ -972,9 +1014,9 @@ export class GameScene extends Phaser.Scene {
       this.editorMode = enabled;
       this.selectionGraphics.clear();
       
-      // Update visibility of all collision_blockers
+      // Update visibility of all collision_blockers and collision_lines
       this.placedObjects.forEach(obj => {
-        if (obj.type === "collision_blocker" && obj.imageObj) {
+        if ((obj.type === "collision_blocker" || obj.type === "collision_line") && obj.imageObj) {
           obj.imageObj.setVisible(enabled);
         }
       });
@@ -1901,20 +1943,6 @@ export class GameScene extends Phaser.Scene {
             const encodedIndex = this.currentTileIndex + (this.activeBrushRotationStep << 16) + (this.activeBrushFlipX ? 1 << 18 : 0) + (this.activeBrushFlipY ? 1 << 19 : 0);
             this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: encodedIndex, layer });
           }
-        } else if (this.currentBrushType === "object" && this.currentObjectName === "collision_blocker") {
-          const posX = tileX * 32 + 16;
-          const posY = tileY * 32 + 16;
-          const exists = this.placedObjects.some(obj => obj.type === "collision_blocker" && obj.x === posX && obj.y === posY);
-          if (!exists) {
-            const uniqueId = `obj_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            this.room.send("object-place", {
-              id: uniqueId,
-              type: "collision_blocker",
-              x: posX,
-              y: posY,
-              scale: 1.0
-            });
-          }
         } else if (this.currentBrushType === "eraser" && !this.clickedGameObject) {
           // Delete any collision blocker on this tile
           const targetX = tileX * 32 + 16;
@@ -1922,6 +1950,16 @@ export class GameScene extends Phaser.Scene {
           const blockerToDelete = this.placedObjects.find(obj => obj.type === "collision_blocker" && obj.x === targetX && obj.y === targetY);
           if (blockerToDelete) {
             this.room.send("object-delete", { id: blockerToDelete.id });
+          }
+
+          // Delete any collision line near the pointer
+          const lineToDelete = this.placedObjects.find(obj => {
+            if (obj.type !== "collision_line") return false;
+            const dist = this.distToSegment(pointer.worldX, pointer.worldY, obj.x, obj.y, obj.scale, obj.angle ?? 0);
+            return dist <= 16;
+          });
+          if (lineToDelete) {
+            this.room.send("object-delete", { id: lineToDelete.id });
           }
 
           if (this.paintOnTop) {
@@ -2058,6 +2096,12 @@ export class GameScene extends Phaser.Scene {
 
         if (this.editorMode && !this.clickedGameObject) {
           if (this.currentBrushType === "object") {
+            if (this.currentObjectName === "collision_line") {
+              this.lineDrawStart = { x: pointer.worldX, y: pointer.worldY };
+              this.tempLineGraphics = this.add.graphics();
+              return;
+            }
+
             const now = Date.now();
             if (now - this.lastPlacedTime < 250) {
               return;
@@ -2305,6 +2349,39 @@ export class GameScene extends Phaser.Scene {
       this.room.send("object-move", { id, x: gameObject.x, y: gameObject.y });
     });
 
+    this.input.on("pointermove", (pointer: Phaser.Input.Pointer) => {
+      if (!this.editorMode) return;
+      if (this.lineDrawStart && this.tempLineGraphics) {
+        this.tempLineGraphics.clear();
+        this.tempLineGraphics.lineStyle(3, 0xff0000, 0.85);
+        this.tempLineGraphics.strokeLineShape(new Phaser.Geom.Line(this.lineDrawStart.x, this.lineDrawStart.y, pointer.worldX, pointer.worldY));
+      }
+    });
+
+    this.input.on("pointerup", (pointer: Phaser.Input.Pointer) => {
+      if (!this.editorMode) return;
+      if (this.lineDrawStart) {
+        if (this.tempLineGraphics) {
+          this.tempLineGraphics.destroy();
+          this.tempLineGraphics = null;
+        }
+
+        const dist = Phaser.Math.Distance.Between(this.lineDrawStart.x, this.lineDrawStart.y, pointer.worldX, pointer.worldY);
+        if (dist > 5) {
+          const uniqueId = `obj_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          this.room.send("object-place", {
+            id: uniqueId,
+            type: "collision_line",
+            x: this.lineDrawStart.x,
+            y: this.lineDrawStart.y,
+            scale: pointer.worldX, // x2
+            angle: pointer.worldY  // y2
+          });
+        }
+        this.lineDrawStart = null;
+      }
+    });
+
     // R Key - Rotate hovered tile in editor mode
     this.input.keyboard!.on("keydown-R", () => {
       if (!this.editorMode) return;
@@ -2481,6 +2558,16 @@ export class GameScene extends Phaser.Scene {
       rect.setDepth(99999); // Draw on top
       rect.setVisible(this.editorMode);
       img = rect as any;
+    } else if (type === "collision_line") {
+      const graphics = this.add.graphics();
+      graphics.lineStyle(3, 0xff0000, 0.8);
+      const objState = this.room?.state.placedObjects.get(id);
+      const x2 = objState ? objState.scale : x;
+      const y2 = objState ? objState.angle : y;
+      graphics.strokeLineShape(new Phaser.Geom.Line(x, y, x2, y2));
+      graphics.setDepth(99999);
+      graphics.setVisible(this.editorMode);
+      img = graphics as any;
     } else if (type.startsWith("decor_gorsel_")) {
       const frameStr = type.substring("decor_gorsel_".length);
       const frameIdx = parseInt(frameStr, 10) || 0;
@@ -3491,6 +3578,9 @@ export class GameScene extends Phaser.Scene {
         const newX = Math.max(16, Math.min(this.mapWidth - 16, this.localX + dx * spd));
         const newY = Math.max(16, Math.min(this.mapHeight - 16, this.localY + dy * spd));
 
+        const startX = this.localX;
+        const startY = this.localY;
+
         // Su tile kontrolü: bottom_island'da su tile'larına girişi engelle
         if (this.currentMapId === "bottom_island") {
           const canMoveXY = !this.isWaterTileAt(newX, newY);
@@ -3520,6 +3610,18 @@ export class GameScene extends Phaser.Scene {
             // Tamamen blokla — geri dön
             this.localX = this.localX - dx * spd;
             this.localY = this.localY - dy * spd;
+          }
+        }
+
+        // Custom collision lines crossing check
+        if (this.isBlockedByLocalLine(startX, startY, this.localX, this.localY)) {
+          if (!this.isBlockedByLocalLine(startX, startY, this.localX, startY)) {
+            this.localY = startY;
+          } else if (!this.isBlockedByLocalLine(startX, startY, startX, this.localY)) {
+            this.localX = startX;
+          } else {
+            this.localX = startX;
+            this.localY = startY;
           }
         }
       }

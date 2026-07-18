@@ -97,6 +97,39 @@ function isWalkableOnBottomIsland(x: number, y: number, state: GameState): boole
   }
   return true; // Not water, walkable
 }
+ 
+function ccw(ax: number, ay: number, bx: number, by: number, cx: number, cy: number): boolean {
+  return (cy - ay) * (bx - ax) > (by - ay) * (cx - ax);
+}
+
+function lineIntersect(
+  ax: number, ay: number, bx: number, by: number,
+  cx: number, cy: number, dx: number, dy: number
+): boolean {
+  return ccw(ax, ay, cx, cy, dx, dy) !== ccw(bx, by, cx, cy, dx, dy) &&
+         ccw(ax, ay, bx, by, cx, cy) !== ccw(ax, ay, bx, by, dx, dy);
+}
+
+function isMovementBlockedByLine(
+  oldX: number, oldY: number, newX: number, newY: number,
+  mapId: string, state: GameState
+): boolean {
+  let blocked = false;
+  state.placedObjects.forEach((obj) => {
+    if (obj.type !== "collision_line") return;
+    if ((obj.mapId || "main") !== mapId) return;
+
+    const x1 = obj.x;
+    const y1 = obj.y;
+    const x2 = obj.scale; // x2 stored in scale
+    const y2 = obj.angle; // y2 stored in angle
+
+    if (lineIntersect(oldX, oldY, newX, newY, x1, y1, x2, y2)) {
+      blocked = true;
+    }
+  });
+  return blocked;
+}
 
 // ─── Geçilmez (blocked) Nesne Kontrolü — Tüm Haritalar ──────────────────────
 // Herhangi bir haritada "blocked" flag'i olan nesnelerin bounding box'ı
@@ -357,6 +390,8 @@ export class GameRoom extends Room<GameState> {
           mapW = 38 * 32; // 1216
           mapH = 30 * 32; // 960
         }
+        const startX = player.x;
+        const startY = player.y;
         let newX = Math.max(HALF, Math.min(mapW - HALF, player.x + vx));
         let newY = Math.max(HALF, Math.min(mapH - HALF, player.y + vy));
 
@@ -389,6 +424,18 @@ export class GameRoom extends Room<GameState> {
             // Tamamen blokla — önceki konuma dön
             player.x = player.x - vx;
             player.y = player.y - vy;
+          }
+        }
+
+        // Custom collision lines crossing check
+        if (isMovementBlockedByLine(startX, startY, player.x, player.y, mapId, this.state)) {
+          if (!isMovementBlockedByLine(startX, startY, player.x, startY, mapId, this.state)) {
+            player.y = startY;
+          } else if (!isMovementBlockedByLine(startX, startY, startX, player.y, mapId, this.state)) {
+            player.x = startX;
+          } else {
+            player.x = startX;
+            player.y = startY;
           }
         }
       } else {

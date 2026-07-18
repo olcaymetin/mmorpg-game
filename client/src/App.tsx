@@ -1959,17 +1959,17 @@ const App: React.FC = () => {
                   🧹 Silgi (Eraser)
                 </button>
                 <button
-                  className={`btn ${selectedTile === -2 && selectedObjectName === "collision_blocker" ? "btn--active" : ""}`}
-                  onClick={() => handleSelectObjectBrush("collision_blocker")}
+                  className={`btn ${selectedTile === -2 && selectedObjectName === "collision_line" ? "btn--active" : ""}`}
+                  onClick={() => handleSelectObjectBrush("collision_line")}
                   style={{
                     flex: 1,
                     fontSize: "10px",
-                    backgroundColor: (selectedTile === -2 && selectedObjectName === "collision_blocker") ? "#e74c3c" : "",
-                    color: (selectedTile === -2 && selectedObjectName === "collision_blocker") ? "#fff" : ""
+                    backgroundColor: (selectedTile === -2 && selectedObjectName === "collision_line") ? "#e74c3c" : "",
+                    color: (selectedTile === -2 && selectedObjectName === "collision_line") ? "#fff" : ""
                   }}
-                  title="Karakterlerin geçemeyeceği görünmez engeller çizer."
+                  title="Sürükleyerek karakterlerin geçemeyeceği ince çizgi engeller çizer."
                 >
-                  🚫 Engel Çizici
+                  ✏️ Çizgi Engel
                 </button>
                 <button
                   className={`btn ${paintOnTop ? "btn--active" : ""}`}
