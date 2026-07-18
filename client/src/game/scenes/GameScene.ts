@@ -2490,7 +2490,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     const container = this.add.container(player.x, player.y);
-    container.setScale(1.4);
+    container.setScale(2.0);
 
     // ── Shadow ───────────────────────────────────────────────────────────────
     const shadow = this.add.graphics();

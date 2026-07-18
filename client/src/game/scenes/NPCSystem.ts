@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 
 /**
- * NPC — a non-player character that walks around and can be clicked.
+ * NPC — a non-player character that stands still at its shop or designated spot.
  * Uses the same layered system as players: skin, eyes, hair, clothes, acc.
  */
 export class NPC {
@@ -15,14 +15,8 @@ export class NPC {
 
   private scene: Phaser.Scene;
   private currentDir = "down";
-  private walkTimer = 0;
-  private walkInterval = 1000 + Math.random() * 2000;
-  private dirTimer = 0;
-  private dirInterval = 2000 + Math.random() * 3000;
   private isWalking = false;
-  private targetX: number | null = null;
-  private targetY: number | null = null;
-  private moveSpeed = 0.06;
+  private opts: any;
 
   constructor(
     scene: Phaser.Scene,
@@ -42,13 +36,17 @@ export class NPC {
     }
   ) {
     this.scene = scene;
+    this.opts = opts;
+
     this.container = scene.add.container(x, y);
-    this.container.setScale(1.4);
+    this.container.setScale(2.0); // Upscale to 2.0 to match players
+    
     this.shadow = scene.add.graphics();
     this.shadow.fillStyle(0x000000, 0.25);
     this.shadow.fillEllipse(0, 14, 18, 7);
 
-    this.skin = scene.add.sprite(0, 10, "pack_skin_1_idle", 0);
+    // Initial skins/layers setup
+    this.skin = scene.add.sprite(0, 10, `pack_skin_${opts.skinTone}_idle`, 0);
     const g = opts.gender === "male" ? "Male" : "Female";
     this.eyes = scene.add.sprite(0, 10, `pack_eyes_${g}_${opts.eyeColor}_idle`, 0);
     this.hair = scene.add.sprite(0, 10, `pack_hair_${opts.hairStyle}_${opts.hairColor}_idle`, 0);
@@ -57,7 +55,8 @@ export class NPC {
     this.acc = scene.add.sprite(0, 10, opts.accItem ? `pack_acc_${opts.accItem}_idle` : "")
       .setVisible(!!opts.accItem);
 
-    scene.add.text(0, -28, opts.name, {
+    // Name tag
+    const tag = scene.add.text(0, -28, opts.name, {
       fontFamily: "'Press Start 2P', monospace",
       fontSize: "7px",
       color: opts.color,
@@ -66,102 +65,83 @@ export class NPC {
       resolution: 2,
     }).setOrigin(0.5, 1);
 
-    this.container.add([this.shadow, this.skin, this.eyes!, this.hair!, this.clothes!, this.acc!]);
+    this.container.add([this.shadow, this.skin, this.eyes!, this.hair!, this.clothes!, this.acc!, tag]);
     this.container.setSize(32, 48);
-    this.container.setInteractive({ draggable: true });
+    
+    // Not draggable anymore as per user request
+    this.container.setInteractive();
     this.container.setData("type", "npc");
     this.container.setData("npcKey", opts.npcKey);
-  }
 
-  /** Advance NPC AI (call from scene update loop) */
-  update(_time: number): void {
-    this.walkTimer += 16;
-    this.dirTimer += 16;
-
-    // Move toward target if set
-    if (this.targetX !== null && this.targetY !== null) {
-      const dx = this.targetX - this.container.x;
-      const dy = this.targetY - this.container.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-
-      if (dist > 4) {
-        this.isWalking = true;
-        this.moveNPC(dx / dist, dy / dist, 16);
-      } else {
-        this.targetX = null;
-        this.targetY = null;
-        this.isWalking = false;
-      }
-    }
-
-    if (this.dirTimer >= this.dirInterval) {
-      this.dirTimer = 0;
-      this.dirInterval = 2000 + Math.random() * 3000;
-      this.pickNewTarget();
-    }
-
-    if (this.walkTimer >= this.walkInterval) {
-      this.walkTimer = 0;
-      this.walkInterval = 800 + Math.random() * 1200;
-    }
-  }
-
-  private pickNewTarget(): void {
-    this.targetX = Phaser.Math.Between(200, 1400);
-    this.targetY = Phaser.Math.Between(300, 1100);
-  }
-
-  private moveNPC(dx: number, dy: number, delta: number): void {
-    const spd = this.moveSpeed * delta;
-    this.container.x = Phaser.Math.Clamp(this.container.x + dx * spd, 32, 1568);
-    this.container.y = Phaser.Math.Clamp(this.container.y + dy * spd, 32, 1248);
-
-    // Determine direction for animation
-    if (Math.abs(dx) > Math.abs(dy)) {
-      this.currentDir = dx > 0 ? "right" : "left";
-    } else {
-      this.currentDir = dy > 0 ? "down" : "up";
-    }
-
+    // Play default idle animation
     this.playCurrentAnimation();
+  }
+
+  /** NPCs are static and stand still at their positions, no active movement updates needed */
+  update(_time: number): void {
+    // Empty — NPCs are static and stand still
   }
 
   private playCurrentAnimation(): void {
     const state = this.isWalking ? "walk" : "idle";
     const dir = this.currentDir;
 
-    // Use the anim key pattern: pack_skin_1_{state}_{dir}
-    const skinAnim = `pack_skin_1_${state}_${dir}`;
-    if (this.skin.anims.currentAnim?.key !== skinAnim && this.skin.anims.exists(skinAnim)) {
+    // 1. Skin Layer
+    const skinAnim = `pack_skin_${this.opts.skinTone}_${state}_${dir}`;
+    if (this.skin.anims.exists(skinAnim)) {
       this.skin.play(skinAnim, true);
     }
-    
+
+    // 2. Eyes Layer
     if (this.eyes) {
-      const g = opts.gender === "male" ? "Male" : "Female";
-      const eyeAnim = `pack_eyes_${g}_${opts.eyeColor}_${state}_${dir}`;
+      const g = this.opts.gender === "male" ? "Male" : "Female";
+      const eyeAnim = `pack_eyes_${g}_${this.opts.eyeColor}_${state}_${dir}`;
       if (this.eyes.anims.exists(eyeAnim)) {
         this.eyes.play(eyeAnim, true);
       } else {
-        const fallbackAnim = `pack_eyes_${g}_${opts.eyeColor}_idle_${dir}`;
+        const fallbackAnim = `pack_eyes_${g}_${this.opts.eyeColor}_idle_${dir}`;
         if (this.eyes.anims.exists(fallbackAnim)) {
           this.eyes.play(fallbackAnim, true);
         }
       }
     }
 
-    if (this.hair && this.hair.anims.exists(`pack_hair_${this.hair.texture.key}_${state}_${dir}`)) {
-      this.hair.play(`pack_hair_${this.hair.texture.key}_${state}_${dir}`, true);
-    }
-    if (this.clothes && this.clothes.visible) {
-      const clothesAnim = `pack_clothes_${this.clothes.texture.key}_${state}_${dir}`;
-      if (this.clothes.anims.exists(clothesAnim)) {
-        this.clothes.play(clothesAnim, true);
+    // 3. Hair Layer
+    if (this.hair) {
+      const hairAnim = `pack_hair_${this.opts.hairStyle}_${this.opts.hairColor}_${state}_${dir}`;
+      if (this.hair.anims.exists(hairAnim)) {
+        this.hair.play(hairAnim, true);
+      } else {
+        const fallbackAnim = `pack_hair_${this.opts.hairStyle}_${this.opts.hairColor}_idle_${dir}`;
+        if (this.hair.anims.exists(fallbackAnim)) {
+          this.hair.play(fallbackAnim, true);
+        }
       }
     }
-    if (this.acc && this.acc.visible) {
-      const accAnim = `pack_acc_${this.acc.texture.key}_${state}_${dir}`;
+
+    // 4. Clothes Layer
+    if (this.clothes && this.opts.clothesColor) {
+      const clothesAnim = `pack_clothes_${this.opts.clothesColor}_${state}_${dir}`;
+      if (this.clothes.anims.exists(clothesAnim)) {
+        this.clothes.play(clothesAnim, true);
+      } else {
+        const fallbackAnim = `pack_clothes_${this.opts.clothesColor}_idle_${dir}`;
+        if (this.clothes.anims.exists(fallbackAnim)) {
+          this.clothes.play(fallbackAnim, true);
+        }
+      }
+    }
+
+    // 5. Accessory Layer
+    if (this.acc && this.opts.accItem) {
+      const accAnim = `pack_acc_${this.opts.accItem}_${state}_${dir}`;
       if (this.acc.anims.exists(accAnim)) {
         this.acc.play(accAnim, true);
+      } else {
+        const fallbackAnim = `pack_acc_${this.opts.accItem}_idle_${dir}`;
+        if (this.acc.anims.exists(fallbackAnim)) {
+          this.acc.play(fallbackAnim, true);
+        }
       }
     }
   }
@@ -184,12 +164,12 @@ export class NPC {
   }
 }
 
-// NPC definitions
+// NPC definitions - Spawn points mapped in front of buildings
 export const NPC_DEFS = [
   {
     key: "banker",
     name: "Banker",
-    x: 600, y: 600,
+    x: 1530, y: 1110, // Standing in front of the BANK building door
     skinTone: "1", gender: "male" as const,
     hairStyle: "Josh", hairColor: "Black", eyeColor: "Brown",
     clothesColor: "Blue", accItem: "Beret",
@@ -198,7 +178,7 @@ export const NPC_DEFS = [
   {
     key: "blacksmith",
     name: "Blacksmith",
-    x: 1000, y: 700,
+    x: 1040, y: 640, // Standing in front of the Blacksmith shop
     skinTone: "2", gender: "male" as const,
     hairStyle: "Sebastian", hairColor: "Brown", eyeColor: "Brown",
     clothesColor: "Red", accItem: "Farm",
@@ -207,7 +187,7 @@ export const NPC_DEFS = [
   {
     key: "pirate",
     name: "Pirate",
-    x: 800, y: 900,
+    x: 250, y: 780, // Standing near the docks
     skinTone: "3", gender: "male" as const,
     hairStyle: "Standard", hairColor: "Ginger", eyeColor: "Black",
     clothesColor: "Purple", accItem: "Pirate",
@@ -216,7 +196,7 @@ export const NPC_DEFS = [
   {
     key: "mermaid",
     name: "Mermaid",
-    x: 1400, y: 500,
+    x: 1400, y: 500, // Near the shoreline/lake
     skinTone: "2", gender: "female" as const,
     hairStyle: "Silvermist", hairColor: "Blonde", eyeColor: "Green",
     clothesColor: "Green", accItem: "",
