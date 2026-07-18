@@ -95,6 +95,7 @@ export class GameScene extends Phaser.Scene {
   private lastSentMs = 0;
   private isMoving = false;
   private isFishingTimelineActive = false;
+  private localFishingDir: string | null = null;
 
 
   // Drag Panning & Dragging Objects
@@ -809,6 +810,7 @@ export class GameScene extends Phaser.Scene {
                         this.room.send("fish-cast");
                         this.room.send("action", { type: "idle" });
                         this.isFishingTimelineActive = false;
+                        this.localFishingDir = null;
                       }
                     });
                   }
@@ -1949,55 +1951,32 @@ export class GameScene extends Phaser.Scene {
               const py = localPlayer.container.y;
               const distance = Phaser.Math.Distance.Between(px, py, clickedFishObj.x, clickedFishObj.y);
               
-              if (distance <= 256) { // must be near the fish spot
-                // Define 4 candidate positions around the fish spot (48px / 3 tiles away)
-                const candidates = [
-                  { x: clickedFishObj.x - 48, y: clickedFishObj.y, dir: "right" },
-                  { x: clickedFishObj.x + 48, y: clickedFishObj.y, dir: "left" },
-                  { x: clickedFishObj.x, y: clickedFishObj.y - 48, dir: "down" },
-                  { x: clickedFishObj.x, y: clickedFishObj.y + 48, dir: "up" }
-                ];
-                
-                // Filter to find candidate positions that are ON LAND (not water)
-                const landCandidates = candidates.filter(c => {
-                  const tx = Math.floor(c.x / 16);
-                  const ty = Math.floor(c.y / 16);
-                  const terrainTile = this.map.getTileAt(tx, ty, true, this.layer);
-                  const decorTile = this.map.getTileAt(tx, ty, true, this.decorLayer);
-                  const terrainGid = terrainTile ? (terrainTile.index & 0xFFFF) : -1;
-                  const decorGid = decorTile ? (decorTile.index & 0xFFFF) : -1;
-                  const isWater = GameScene.WATER_TILE_GIDS.has(terrainGid) || GameScene.WATER_TILE_GIDS.has(decorGid) || terrainGid === -1;
-                  return !isWater; // Must be land
-                });
-                
-                // If no land candidates found, fallback to all candidates
-                const validCandidates = landCandidates.length > 0 ? landCandidates : candidates;
-                
-                // Find the candidate closest to the player's current position
-                let bestCandidate = validCandidates[0];
-                let minDist = Phaser.Math.Distance.Between(px, py, bestCandidate.x, bestCandidate.y);
-                
-                for (let i = 1; i < validCandidates.length; i++) {
-                  const dist = Phaser.Math.Distance.Between(px, py, validCandidates[i].x, validCandidates[i].y);
-                  if (dist < minDist) {
-                    minDist = dist;
-                    bestCandidate = validCandidates[i];
-                  }
-                }
-                
-                // Snap player position to the best candidate position (making the animation line align perfectly)
-                this.localX = bestCandidate.x;
-                this.localY = bestCandidate.y;
-                localPlayer.container.setPosition(bestCandidate.x, bestCandidate.y);
-                
-                // Inform server of movement and correct direction
-                this.room.send("player-teleport", { mapId: this.currentMapId, x: bestCandidate.x, y: bestCandidate.y });
-                this.room.send("move", { dx: 0, dy: 0, dir: bestCandidate.dir });
-                
-                // Start the fishing sequence
-                this.startFishingSequence();
+              if (distance > 100) {
+                // Show floating error message and return
+                this.showFloatingText("Balık tutmak için spota daha çok yaklaşmalısın! 🚶‍♂️", px, py - 40, "#ff5555");
                 return;
               }
+              
+              // Face the player directly towards the clicked fish spot
+              let fishDir = "down";
+              const dx = clickedFishObj.x - px;
+              const dy = clickedFishObj.y - py;
+              if (Math.abs(dx) > Math.abs(dy)) {
+                fishDir = dx > 0 ? "right" : "left";
+              } else {
+                fishDir = dy > 0 ? "down" : "up";
+              }
+              
+              // Set local override direction instantly to prevent network latency rotation issues
+              this.localFishingDir = fishDir;
+              this.updatePlayerLayers(localPlayer, localPlayerState, this.localId);
+              
+              // Inform server of direction
+              this.room.send("move", { dx: 0, dy: 0, dir: fishDir });
+              
+              // Start the fishing sequence
+              this.startFishingSequence();
+              return;
             }
           }
         }
@@ -2962,8 +2941,11 @@ export class GameScene extends Phaser.Scene {
     const layers = entity.layers;
     const state = player.state || "idle";
     const isMoving = state === "walk";
-    const dir = player.direction || "down";
     const isLocal = sessionId === this.localId;
+    let dir = player.direction || "down";
+    if (isLocal && this.isFishingTimelineActive && this.localFishingDir) {
+      dir = this.localFishingDir;
+    }
 
     const isRiding = player.isRiding && player.mountType && player.mountType !== "none";
     const mountType = isRiding ? player.mountType : "none";
@@ -3691,6 +3673,29 @@ export class GameScene extends Phaser.Scene {
           frameRate: 3,   // yavaş, doğal görünüm — slider ile 0.1x→5x çarpanla ayarlanabilir
           repeat: -1,
         });
+      }
+    });
+  }
+
+  showFloatingText(text: string, x: number, y: number, color: string = "#ff3333") {
+    const textObj = this.add.text(x, y - 20, text, {
+      fontFamily: "Outfit, Arial, sans-serif",
+      fontSize: "14px",
+      color: color,
+      stroke: "#000000",
+      strokeThickness: 3,
+      align: "center"
+    });
+    textObj.setOrigin(0.5);
+    textObj.setDepth(100000);
+    
+    this.tweens.add({
+      targets: textObj,
+      y: y - 50,
+      alpha: 0,
+      duration: 2000,
+      onComplete: () => {
+        textObj.destroy();
       }
     });
   }
