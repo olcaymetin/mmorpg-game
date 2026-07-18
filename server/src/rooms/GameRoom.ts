@@ -413,11 +413,17 @@ export class GameRoom extends Room<GameState> {
                             "fishing_cast", "fishing_wait", "fishing_bite", "fishing_reel", "fishing_catch",
                             "damage", "death"];
       if (attackStates.includes(actionState)) {
+        let timeout = 2000;
+        if (actionState === "fishing_wait") {
+          timeout = 35000; // 35 seconds safety for wait state
+        } else if (actionState.startsWith("fishing_")) {
+          timeout = 4000; // 4 seconds safety for other fishing actions
+        }
         this.clock.setTimeout(() => {
           if (player.state === actionState) {
             player.state = "idle";
           }
-        }, 2000); // 2 second max safety timeout
+        }, timeout);
       }
     });
 

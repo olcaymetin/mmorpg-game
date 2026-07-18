@@ -3184,8 +3184,9 @@ export class GameScene extends Phaser.Scene {
       }
     }
 
-    // Reset local player attack state when skin animation finishes playing
-    if (isLocal && isAction) {
+    // Reset local player attack state when skin animation finishes playing (excluding fishing states which are managed by timeline)
+    const isFishingState = state.startsWith("fishing_");
+    if (isLocal && isAction && !isFishingState) {
       layers.skin.once("animationcomplete", () => {
         const lp = this.room.state.players.get(this.localId);
         if (lp && lp.state === state) {

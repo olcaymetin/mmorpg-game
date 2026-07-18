@@ -1,0 +1,15 @@
+# MMORPG Game - AI Assistant Rules & Design Philosophy
+
+Always adhere to the following principles when implementing features or editing code in this workspace:
+
+1. **Think to the Finest Detail (En İnce Ayrıntısına Kadar Düşün)**:
+   - Do not implement basic placeholders or half-finished animations.
+   - When creating or modifying animations, verify the spritesheet dimensions (e.g., 64x64 vs 32x32) on disk and configure the exact frame limits, directions, and alignment offsets (`setPosition`) so they display cleanly.
+   - Walk through the execution sequence step-by-step and write robust timelines with state synchronizations between client and server.
+   - Provide clear, immediate visual and gameplay feedback to the player for any active process (such as a fishing progress overlay showing statuses like cast, wait, bite, reel, catch).
+   - Double check the codebase for compilation correctness, types, and logic errors before completing a task.
+
+2. **Hotbar & Usability Rules**:
+   - Ensure the Hotbar sits on top of all modal backdrops (`zIndex: 20000`) so it remains visible and interactive.
+   - Support both Drag-and-Drop and Right-Click shortcuts (`onContextMenu`) to auto-assign items (crops, seeds, food, water, weapons, tools) into the Hotbar from any panel.
+   - Always display helper hints (`💡`) to explain shortcuts to the player.
