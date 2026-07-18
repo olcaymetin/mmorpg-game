@@ -1943,7 +1943,7 @@ export class GameScene extends Phaser.Scene {
             const encodedIndex = this.currentTileIndex + (this.activeBrushRotationStep << 16) + (this.activeBrushFlipX ? 1 << 18 : 0) + (this.activeBrushFlipY ? 1 << 19 : 0);
             this.room.send("tile-update", { x: tileX, y: tileY, tileIndex: encodedIndex, layer });
           }
-        } else if (this.currentBrushType === "eraser" && !this.clickedGameObject) {
+        } else if (this.currentBrushType === "eraser_line") {
           // Delete any collision blocker on this tile
           const targetX = tileX * 32 + 16;
           const targetY = tileY * 32 + 16;
@@ -1961,7 +1961,7 @@ export class GameScene extends Phaser.Scene {
           if (lineToDelete) {
             this.room.send("object-delete", { id: lineToDelete.id });
           }
-
+        } else if (this.currentBrushType === "eraser" && !this.clickedGameObject) {
           if (this.paintOnTop) {
             // Layering mode: peel one layer at a time (decor first, then terrain)
             const decorTile = this.map.getTileAt(tileX, tileY, true, this.decorLayer);

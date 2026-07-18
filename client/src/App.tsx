@@ -1343,6 +1343,14 @@ const App: React.FC = () => {
     }
   };
 
+  const handleSelectEraserLine = () => {
+    setSelectedTile(-3);
+    setSelectedObject(null);
+    if (game) {
+      game.events.emit("editor-brush-selected", { type: "eraser_line" });
+    }
+  };
+
   const renderSlicedButton = (item: any) => {
     const fw = item.fw;
     const fh = item.fh;
@@ -1950,20 +1958,34 @@ const App: React.FC = () => {
               )}
 
               {/* ── Action Brushes ── */}
-              <div className="brush-row" style={{ display: "flex", gap: "8px" }}>
+              <div className="brush-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
                 <button
                   className={`btn btn--eraser ${selectedTile === -1 ? "btn--active" : ""}`}
                   onClick={handleSelectEraser}
-                  style={{ flex: 1, fontSize: "10px" }}
+                  style={{ fontSize: "10px", padding: "6px" }}
+                  title="Zemin kaplamalarını ve ekinleri siler."
                 >
-                  🧹 Silgi (Eraser)
+                  🧹 Zemin Sil
+                </button>
+                <button
+                  className={`btn ${selectedTile === -3 ? "btn--active" : ""}`}
+                  onClick={handleSelectEraserLine}
+                  style={{
+                    fontSize: "10px",
+                    padding: "6px",
+                    backgroundColor: selectedTile === -3 ? "#d35400" : "",
+                    color: selectedTile === -3 ? "#fff" : ""
+                  }}
+                  title="Çizdiğiniz engel çizgilerini siler (Zeminlere zarar vermez)."
+                >
+                  🧹 Çizgi Sil
                 </button>
                 <button
                   className={`btn ${selectedTile === -2 && selectedObjectName === "collision_line" ? "btn--active" : ""}`}
                   onClick={() => handleSelectObjectBrush("collision_line")}
                   style={{
-                    flex: 1,
                     fontSize: "10px",
+                    padding: "6px",
                     backgroundColor: (selectedTile === -2 && selectedObjectName === "collision_line") ? "#e74c3c" : "",
                     color: (selectedTile === -2 && selectedObjectName === "collision_line") ? "#fff" : ""
                   }}
@@ -1978,7 +2000,7 @@ const App: React.FC = () => {
                     setPaintOnTop(nextVal);
                     if (game) game.events.emit("editor-paint-on-top-changed", nextVal);
                   }}
-                  style={{ flex: 1, fontSize: "9px", backgroundColor: paintOnTop ? "#55ff22" : "", color: paintOnTop ? "#000" : "" }}
+                  style={{ fontSize: "9px", padding: "6px", backgroundColor: paintOnTop ? "#55ff22" : "", color: paintOnTop ? "#000" : "" }}
                   title="Açık olduğunda, çizdiğiniz zeminler altındaki zeminleri silmeden üst üste biner."
                 >
                   Layering: {paintOnTop ? "Açık 🟢" : "Kapalı 🔴"}
