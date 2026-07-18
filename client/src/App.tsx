@@ -1024,6 +1024,18 @@ const App: React.FC = () => {
     localStorage.setItem("mmorpg_hotbar", JSON.stringify(newHotbar));
   };
 
+  const autoAssignToHotbar = (itemKey: string) => {
+    const emptyIndex = hotbar.indexOf(null);
+    const newHotbar = [...hotbar];
+    if (emptyIndex !== -1) {
+      newHotbar[emptyIndex] = itemKey;
+    } else {
+      newHotbar[0] = itemKey;
+    }
+    setHotbar(newHotbar);
+    localStorage.setItem("mmorpg_hotbar", JSON.stringify(newHotbar));
+  };
+
   const activateHotbarSlot = (index: number) => {
     const itemKey = hotbar[index];
     if (!itemKey) return;
@@ -3251,6 +3263,7 @@ const App: React.FC = () => {
       {connected && !editMode && (
         <div className="inventory-card">
           <div className="inventory-title">🎒 Envanterim (Çantam)</div>
+          <div style={{ fontSize: "8px", color: "#a855f7", marginBottom: "6px", textAlign: "center" }}>💡 Sağ tıklayarak Kısayol Barına ekleyebilirsiniz!</div>
           
           {/* Sub-tabs inside inventory card */}
           <div style={{ display: "flex", gap: "4px", marginBottom: "8px" }}>
@@ -3360,6 +3373,8 @@ const App: React.FC = () => {
                         className="inventory-item"
                         draggable={true}
                         onDragStart={(e) => e.dataTransfer.setData("text/plain", "crop:" + cropName)}
+                        onContextMenu={(e) => { e.preventDefault(); autoAssignToHotbar("crop:" + cropName); }}
+                        title="Sürükle veya Sağ Tık ile Kısayola Ekle"
                       >
                       <div
                         className="inventory-thumb"
@@ -3395,7 +3410,8 @@ const App: React.FC = () => {
                         onClick={() => handleSelectInventorySeed(cropName)}
                         draggable={true}
                         onDragStart={(e) => e.dataTransfer.setData("text/plain", "seed:" + cropName)}
-                        title="Ekmek için seç / iptal et"
+                        onContextMenu={(e) => { e.preventDefault(); autoAssignToHotbar("seed:" + cropName); }}
+                        title="Ekmek için sol tık | Sürükle veya Sağ Tık ile Kısayola Ekle"
                       >
                       <div
                         className="inventory-thumb"
@@ -3426,6 +3442,8 @@ const App: React.FC = () => {
                       style={{ display: "flex", justifyContent: "space-between", width: "100%" }}
                       draggable={true}
                       onDragStart={(e) => e.dataTransfer.setData("text/plain", "Water")}
+                      onContextMenu={(e) => { e.preventDefault(); autoAssignToHotbar("Water"); }}
+                      title="Sürükle veya Sağ Tık ile Kısayola Ekle"
                     >
                       <span style={{ fontSize: "20px" }}>💧</span>
                       <div className="inventory-details" style={{ flex: 1, marginLeft: "10px" }}>
@@ -3456,6 +3474,8 @@ const App: React.FC = () => {
                       style={{ display: "flex", justifyContent: "space-between", width: "100%" }}
                       draggable={true}
                       onDragStart={(e) => e.dataTransfer.setData("text/plain", "Bread")}
+                      onContextMenu={(e) => { e.preventDefault(); autoAssignToHotbar("Bread"); }}
+                      title="Sürükle veya Sağ Tık ile Kısayola Ekle"
                     >
                       <span style={{ fontSize: "20px" }}>🍞</span>
                       <div className="inventory-details" style={{ flex: 1, marginLeft: "10px" }}>
@@ -3557,6 +3577,72 @@ const App: React.FC = () => {
         <FriendsPanel room={room} players={allPlayers} mySessionId={sessionId} />
       )}
 
+      {/* ── Fishing HUD Overlay ── */}
+      {room && sessionId && !editMode && (
+        (() => {
+          const lp = room.state.players.get(sessionId);
+          if (!lp || !lp.state || !lp.state.startsWith("fishing_")) return null;
+          
+          let text = "";
+          let color = "#3b82f6";
+          let progress = 0;
+          
+          if (lp.state === "fishing_cast") {
+            text = "Oltayı Fırlatıyorsun... 🎣";
+            color = "#60a5fa";
+            progress = 10;
+          } else if (lp.state === "fishing_wait") {
+            text = "Balık Bekleniyor... 🐟";
+            color = "#a855f7";
+            progress = 50;
+          } else if (lp.state === "fishing_bite") {
+            text = "YAKALA! Balık Vurdu! 🚨";
+            color = "#f43f5e";
+            progress = 85;
+          } else if (lp.state === "fishing_reel") {
+            text = "Makarayı Sarıyorsun... ⚙️";
+            color = "#eab308";
+            progress = 95;
+          } else if (lp.state === "fishing_catch") {
+            text = "Tebrikler! Balığı Yakaladın! 🎉";
+            color = "#22c55e";
+            progress = 100;
+          }
+          
+          return (
+            <div 
+              style={{
+                position: "absolute",
+                bottom: "96px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                background: "rgba(15, 23, 42, 0.95)",
+                border: `2px solid ${color}`,
+                borderRadius: "10px",
+                padding: "8px 16px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "6px",
+                color: "#fff",
+                fontFamily: "monospace",
+                fontSize: "12px",
+                fontWeight: "bold",
+                boxShadow: "0 4px 15px rgba(0,0,0,0.5)",
+                zIndex: 20000,
+                pointerEvents: "none",
+                minWidth: "220px",
+              }}
+            >
+              <div>{text}</div>
+              <div style={{ width: "100%", height: "6px", background: "rgba(255,255,255,0.1)", borderRadius: "3px", overflow: "hidden" }}>
+                <div style={{ width: `${progress}%`, height: "100%", background: color, transition: "width 0.2s ease" }} />
+              </div>
+            </div>
+          );
+        })()
+      )}
+
       {/* ── Hotbar (Kısayol Çubuğu) ── */}
       {room && sessionId && !editMode && (
         <div 
@@ -3569,7 +3655,7 @@ const App: React.FC = () => {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            zIndex: 1000,
+            zIndex: 20000,
             pointerEvents: "auto",
           }}
         >
@@ -3741,9 +3827,12 @@ const App: React.FC = () => {
           }}>
             {/* Header */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(59, 130, 246, 0.1)" }}>
-              <h2 style={{ margin: 0, fontSize: "16px", fontWeight: "bold", color: "#60a5fa", display: "flex", alignItems: "center", gap: "8px" }}>
-                👤 Karakter & Ekipman Paneli
-              </h2>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <h2 style={{ margin: 0, fontSize: "16px", fontWeight: "bold", color: "#60a5fa", display: "flex", alignItems: "center", gap: "8px" }}>
+                  👤 Karakter & Ekipman Paneli
+                </h2>
+                <span style={{ fontSize: "9px", color: "#a855f7", marginTop: "2px" }}>💡 Silah ve aletlere sağ tıklayarak hızlıca Kısayol Barına (Hotbar) ekleyebilirsiniz!</span>
+              </div>
               <button 
                 onClick={() => setIsEquipmentOpen(false)}
                 style={{ background: "none", border: "none", color: "rgba(255,255,255,0.6)", cursor: "pointer", fontSize: "18px" }}
@@ -4102,6 +4191,8 @@ const App: React.FC = () => {
                                     style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "8px", background: "rgba(255,255,255,0.02)", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.05)" }}
                                     draggable={true}
                                     onDragStart={(e) => e.dataTransfer.setData("text/plain", itemKey)}
+                                    onContextMenu={(e) => { e.preventDefault(); autoAssignToHotbar(itemKey); }}
+                                    title="Sürükle veya Sağ Tık ile Kısayola Ekle"
                                   >
                                     <img 
                                       src={`/assets/pack/icons/RPG_icons/Weapons_and_Armor/${tier.id}/${item.icon}`}

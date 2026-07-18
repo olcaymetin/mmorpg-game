@@ -544,11 +544,11 @@ export class GameScene extends Phaser.Scene {
       this.load.spritesheet(`pack_weapon_Sickle_${tier}_scythe_attack`, `assets/pack/char/action/axe_scythe/Weapons/Sickle/${tier}.png`, { frameWidth: 32, frameHeight: 32 });
       this.load.spritesheet(`pack_weapon_Shovel_${tier}_shovel_attack`, `assets/pack/char/action/shovel/Weapons/Shovel/${tier}.png`, { frameWidth: 32, frameHeight: 32 });
       this.load.spritesheet(`pack_weapon_Watering_${tier}_watering`, `assets/pack/char/action/watering/Weapons/Watering/${tier}.png`, { frameWidth: 32, frameHeight: 32 });
-      this.load.spritesheet(`pack_weapon_Fishing_Rod_${tier}_fishing_cast`, `assets/pack/char/action/fishing_cast/Weapons/${tier}.png`, { frameWidth: 32, frameHeight: 32 });
-      this.load.spritesheet(`pack_weapon_Fishing_Rod_${tier}_fishing_wait`, `assets/pack/char/action/fishing_wait/Weapons/${tier}.png`, { frameWidth: 32, frameHeight: 32 });
-      this.load.spritesheet(`pack_weapon_Fishing_Rod_${tier}_fishing_bite`, `assets/pack/char/action/fishing_bite/Weapons/${tier}.png`, { frameWidth: 32, frameHeight: 32 });
-      this.load.spritesheet(`pack_weapon_Fishing_Rod_${tier}_fishing_reel`, `assets/pack/char/action/fishing_reel/Weapons/${tier}.png`, { frameWidth: 32, frameHeight: 32 });
-      this.load.spritesheet(`pack_weapon_Fishing_Rod_${tier}_fishing_catch`, `assets/pack/char/action/fishing_catch/Weapons/${tier}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_weapon_Fishing_Rod_${tier}_fishing_cast`, `assets/pack/char/action/fishing_cast/Weapons/${tier}.png`, { frameWidth: 64, frameHeight: 64 });
+      this.load.spritesheet(`pack_weapon_Fishing_Rod_${tier}_fishing_wait`, `assets/pack/char/action/fishing_wait/Weapons/${tier}.png`, { frameWidth: 64, frameHeight: 64 });
+      this.load.spritesheet(`pack_weapon_Fishing_Rod_${tier}_fishing_bite`, `assets/pack/char/action/fishing_bite/Weapons/${tier}.png`, { frameWidth: 64, frameHeight: 64 });
+      this.load.spritesheet(`pack_weapon_Fishing_Rod_${tier}_fishing_reel`, `assets/pack/char/action/fishing_reel/Weapons/${tier}.png`, { frameWidth: 64, frameHeight: 64 });
+      this.load.spritesheet(`pack_weapon_Fishing_Rod_${tier}_fishing_catch`, `assets/pack/char/action/fishing_catch/Weapons/${tier}.png`, { frameWidth: 64, frameHeight: 64 });
     }
 
     // ─── 6.7. Horse Extended Animations (Lower, Eating) ───
@@ -3165,7 +3165,11 @@ export class GameScene extends Phaser.Scene {
           // Animated Weapon Spritesheet
           toolSpr.setVisible(true);
           toolSpr.setScale(1.0);
-          toolSpr.setPosition(0, 10);
+          if (state.startsWith("fishing_")) {
+            toolSpr.setPosition(0, 0); // 64x64 frame centering
+          } else {
+            toolSpr.setPosition(0, 10); // 32x32 frame offset
+          }
           toolSpr.setAngle(0);
           toolSpr.setFlipX(false);
           
