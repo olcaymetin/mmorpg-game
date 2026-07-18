@@ -1922,24 +1922,37 @@ export class GameScene extends Phaser.Scene {
         const toolName = parts[1] || "";
         const isFishing = (localPlayerState?.state?.startsWith("fishing_")) || this.isFishingTimelineActive;
 
-        if (!this.editorMode && toolName === "Fishing_Rod" && !isFishing) {
-          const terrainTile = this.map.getTileAt(tileX, tileY, true, this.layer);
-          const decorTile = this.map.getTileAt(tileX, tileY, true, this.decorLayer);
-          const terrainGid = terrainTile ? (terrainTile.index & 0xFFFF) : -1;
-          const decorGid = decorTile ? (decorTile.index & 0xFFFF) : -1;
+         if (!this.editorMode && toolName === "Fishing_Rod" && !isFishing) {
+          // Find if there is a fish spot near the click (within 32 pixels in world coordinates)
+          const clickedFishObj = this.placedObjects.find(obj => {
+            const assetDef = this.room?.state.customAssets.get(obj.type);
+            const isFishType = obj.type.toLowerCase().includes("fish") || 
+                               obj.type.toLowerCase().includes("bubbles") || 
+                               obj.type.toLowerCase().includes("balık") ||
+                               (assetDef && (
+                                 assetDef.label.toLowerCase().includes("fish") || 
+                                 assetDef.label.toLowerCase().includes("balık") || 
+                                 assetDef.path.toLowerCase().includes("fish") || 
+                                 assetDef.path.toLowerCase().includes("bubbles")
+                               ));
+            
+            if (!isFishType) return false;
+            
+            const clickDist = Phaser.Math.Distance.Between(obj.x, obj.y, pointer.worldX, pointer.worldY);
+            return clickDist <= 32;
+          });
 
-          const isWater = GameScene.WATER_TILE_GIDS.has(terrainGid) || GameScene.WATER_TILE_GIDS.has(decorGid) || terrainGid === -1;
-          if (isWater) {
+          if (clickedFishObj) {
             const localPlayer = this.entities.get(this.localId);
             if (localPlayer) {
               const px = localPlayer.container.x;
               const py = localPlayer.container.y;
-              const distance = Phaser.Math.Distance.Between(px, py, pointer.worldX, pointer.worldY);
+              const distance = Phaser.Math.Distance.Between(px, py, clickedFishObj.x, clickedFishObj.y);
               
-              if (distance <= 256) { // must be near water (expanded to 8 tiles)
+              if (distance <= 256) { // must be near the fish spot
                 let fishDir = "down";
-                const dx = pointer.worldX - px;
-                const dy = pointer.worldY - py;
+                const dx = clickedFishObj.x - px;
+                const dy = clickedFishObj.y - py;
                 if (Math.abs(dx) > Math.abs(dy)) {
                   fishDir = dx > 0 ? "right" : "left";
                 } else {
@@ -3370,52 +3383,7 @@ export class GameScene extends Phaser.Scene {
           else if (toolName === "Sickle") attackState = "scythe_attack";
           else if (toolName === "Hoe") attackState = "hoe_attack";
           else if (toolName === "Watering_can") attackState = "watering";
-          else if (toolName === "Fishing_Rod") {
-            const isFishing = (localPlayerState?.state?.startsWith("fishing_")) || this.isFishingTimelineActive;
-            if (!isFishing) {
-              const localPlayer = this.entities.get(this.localId);
-              if (localPlayer) {
-                const px = localPlayer.container.x;
-                const py = localPlayer.container.y;
-                const dir = localPlayerState.direction || "down";
-                
-                // Convert world pixels to 16px tile coordinates
-                const baseTileX = Math.floor(px / 16);
-                const baseTileY = Math.floor(py / 16);
-                
-                let isWaterFound = false;
-                
-                // Scan up to 3 tiles in front of the player
-                for (let dist = 1; dist <= 3; dist++) {
-                  let tileX = baseTileX;
-                  let tileY = baseTileY;
-                  
-                  if (dir === "left") tileX -= dist;
-                  else if (dir === "right") tileX += dist;
-                  else if (dir === "up") tileY -= dist;
-                  else if (dir === "down") tileY += dist;
-                  
-                  const terrainTile = this.map.getTileAt(tileX, tileY, true, this.layer);
-                  const decorTile = this.map.getTileAt(tileX, tileY, true, this.decorLayer);
-                  const terrainGid = terrainTile ? (terrainTile.index & 0xFFFF) : -1;
-                  const decorGid = decorTile ? (decorTile.index & 0xFFFF) : -1;
 
-                  const isWater = GameScene.WATER_TILE_GIDS.has(terrainGid) || GameScene.WATER_TILE_GIDS.has(decorGid) || terrainGid === -1;
-                  if (isWater) {
-                    isWaterFound = true;
-                    break;
-                  }
-                }
-                
-                if (isWaterFound) {
-                  this.startFishingSequence();
-                } else {
-                  console.log("[Fishing] Must face water to fish! Checked tiles in front of player direction:", dir);
-                }
-              }
-            }
-            return;
-          }
           
           const currentAction = localPlayerState.state;
           const isAlreadyAttacking = currentAction === "sword_attack" || currentAction === "bow_attack" || currentAction === "mage" ||
