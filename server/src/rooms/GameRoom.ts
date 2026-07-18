@@ -26,6 +26,29 @@ const SPEED = 4;
 /** Half of player size — used for boundary clamping */
 const HALF = 16;
 
+// ─── Bottom Island (Balık Tutma Adası) Su Sınırları ─────────────────────────
+// Harita: 38x30 tile × 32px = 1216×960 px
+// Sadece kumsal ve iskele alanında yürünebilir, su tile'ları engel.
+//
+// YÜRÜNEMEYEN (Su) alanlar dışındaki bölgeler:
+//   1. Kumsal şeridi: Tüm haritanın altındaki ~6 tile (y >= 768)
+//   2. İskele dikey kolu: ortada ~6 tile geniş köprü (x: 512–704, y: 0–768)
+//   3. İskele yatay kolu (T'nin üst çubuğu): (x: 128–1088, y: 0–352)
+//
+function isWalkableOnBottomIsland(x: number, y: number): boolean {
+  // 1. Kumsal şeridi (alt alan) - su yok
+  if (y >= 768) return true;
+
+  // 2. İskele dikey kolu (ortadaki tahta rıhtım)
+  if (x >= 512 && x <= 704 && y >= 352 && y <= 768) return true;
+
+  // 3. İskele yatay kolu (T'nin üstü)
+  if (x >= 128 && x <= 1088 && y >= 160 && y <= 352) return true;
+
+  // Bunların dışındaki her yer su
+  return false;
+}
+
 const SAVE_FILE_PATH = fs.existsSync("/data")
   ? "/data/save_data.json"
   : path.join(__dirname, "..", "..", "save_data.json");
@@ -228,8 +251,26 @@ export class GameRoom extends Room<GameState> {
           mapW = 38 * 32; // 1216
           mapH = 30 * 32; // 960
         }
-        player.x = Math.max(HALF, Math.min(mapW - HALF, player.x + vx));
-        player.y = Math.max(HALF, Math.min(mapH - HALF, player.y + vy));
+        let newX = Math.max(HALF, Math.min(mapW - HALF, player.x + vx));
+        let newY = Math.max(HALF, Math.min(mapH - HALF, player.y + vy));
+
+        if (mapId === "bottom_island") {
+          // Sliding collision: try full move first, then axis-by-axis fallback
+          if (isWalkableOnBottomIsland(newX, newY)) {
+            player.x = newX;
+            player.y = newY;
+          } else if (isWalkableOnBottomIsland(newX, player.y)) {
+            // Can slide horizontally
+            player.x = newX;
+          } else if (isWalkableOnBottomIsland(player.x, newY)) {
+            // Can slide vertically
+            player.y = newY;
+          }
+          // else: fully blocked, player stays in place
+        } else {
+          player.x = newX;
+          player.y = newY;
+        }
       } else {
         // If movement stops, return to idle
         if (player.state === "walk") {
