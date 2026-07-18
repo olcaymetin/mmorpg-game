@@ -409,7 +409,9 @@ export class GameRoom extends Room<GameState> {
 
       // Auto-reset attack states to idle after a safe timeout (client normally resets via animationcomplete)
       const attackStates = ["sword_attack", "bow_attack", "mage", "pickaxe_attack", "hoe_attack",
-                            "axe_attack", "scythe_attack", "shovel_attack", "damage", "death"];
+                            "axe_attack", "scythe_attack", "shovel_attack", "watering",
+                            "fishing_cast", "fishing_wait", "fishing_bite", "fishing_reel", "fishing_catch",
+                            "damage", "death"];
       if (attackStates.includes(actionState)) {
         this.clock.setTimeout(() => {
           if (player.state === actionState) {

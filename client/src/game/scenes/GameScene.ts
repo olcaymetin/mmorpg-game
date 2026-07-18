@@ -544,6 +544,11 @@ export class GameScene extends Phaser.Scene {
       this.load.spritesheet(`pack_weapon_Sickle_${tier}_scythe_attack`, `assets/pack/char/action/axe_scythe/Weapons/Sickle/${tier}.png`, { frameWidth: 32, frameHeight: 32 });
       this.load.spritesheet(`pack_weapon_Shovel_${tier}_shovel_attack`, `assets/pack/char/action/shovel/Weapons/Shovel/${tier}.png`, { frameWidth: 32, frameHeight: 32 });
       this.load.spritesheet(`pack_weapon_Watering_${tier}_watering`, `assets/pack/char/action/watering/Weapons/Watering/${tier}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_weapon_Fishing_Rod_${tier}_fishing_cast`, `assets/pack/char/action/fishing_cast/Weapons/${tier}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_weapon_Fishing_Rod_${tier}_fishing_wait`, `assets/pack/char/action/fishing_wait/Weapons/${tier}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_weapon_Fishing_Rod_${tier}_fishing_bite`, `assets/pack/char/action/fishing_bite/Weapons/${tier}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_weapon_Fishing_Rod_${tier}_fishing_reel`, `assets/pack/char/action/fishing_reel/Weapons/${tier}.png`, { frameWidth: 32, frameHeight: 32 });
+      this.load.spritesheet(`pack_weapon_Fishing_Rod_${tier}_fishing_catch`, `assets/pack/char/action/fishing_catch/Weapons/${tier}.png`, { frameWidth: 32, frameHeight: 32 });
     }
 
     // ─── 6.7. Horse Extended Animations (Lower, Eating) ───
@@ -1669,6 +1674,7 @@ export class GameScene extends Phaser.Scene {
         buildActionAnims(`pack_weapon_Sickle_${tier}`, anim.suffix, anim.totalFrames, anim.dirCount, anim.frameRate, anim.repeat);
         buildActionAnims(`pack_weapon_Shovel_${tier}`, anim.suffix, anim.totalFrames, anim.dirCount, anim.frameRate, anim.repeat);
         buildActionAnims(`pack_weapon_Watering_${tier}`, anim.suffix, anim.totalFrames, anim.dirCount, anim.frameRate, anim.repeat);
+        buildActionAnims(`pack_weapon_Fishing_Rod_${tier}`, anim.suffix, anim.totalFrames, anim.dirCount, anim.frameRate, anim.repeat);
       }
       // 6. Broomstick Mounts
       for (let c = 1; c <= 3; c++) {
@@ -2830,10 +2836,18 @@ export class GameScene extends Phaser.Scene {
     let keyPrefix = "pack";
     let animType = isMoving ? "walk" : "idle";
 
+    const extraActions = [
+      "fishing_cast", "fishing_wait", "fishing_bite", "fishing_reel", "fishing_catch",
+      "carry_idle", "carry_walk", "carry_run", "carry_pickup", "throwing_items",
+      "sit", "sleep", "petting", "climbing", "flute",
+      "umbrella_idle", "umbrella_walk", "umbrella_run",
+      "swim_idle", "swim_outwater", "swim_submerged", "swim_swim"
+    ];
     const isAction = state === "sword_attack" || state === "bow_attack" || state === "mage" ||
                      state === "pickaxe_attack" || state === "hoe_attack" || state === "axe_attack" ||
                      state === "scythe_attack" || state === "shovel_attack" || state === "watering" ||
-                     state === "damage" || state === "death";
+                     state === "damage" || state === "death" ||
+                     extraActions.includes(state);
 
     if (isAction) {
       animType = state;
@@ -3037,12 +3051,18 @@ export class GameScene extends Phaser.Scene {
         const activeActionMap: Record<string, string> = {
           "sword_attack": "Sword",
           "bow_attack": "Bow",
+          "mage": "Staff",
           "pickaxe_attack": "Pickaxe",
           "hoe_attack": "Hoe",
           "axe_attack": "Axe",
           "scythe_attack": "Sickle",
           "shovel_attack": "Shovel",
-          "watering": "Watering"
+          "watering": "Watering",
+          "fishing_cast": "Fishing_Rod",
+          "fishing_wait": "Fishing_Rod",
+          "fishing_bite": "Fishing_Rod",
+          "fishing_reel": "Fishing_Rod",
+          "fishing_catch": "Fishing_Rod"
         };
 
         if (isAction && activeActionMap[state] && toolName === activeActionMap[state]) {
@@ -3055,71 +3075,9 @@ export class GameScene extends Phaser.Scene {
           
           const weaponPrefix = `pack_weapon_${activeActionMap[state]}_${tierNum}`;
           playLayerAnim(toolSpr, weaponPrefix, animType);
-        } else if (isAction && activeActionMap[state]) {
-          // If player has a mismatching weapon equipped, hide weapon overlay but play body anims
-          toolSpr.setVisible(false);
         } else {
-          // Static weapon display
-          toolSpr.setScale(0.65);
-          const cacheKey = `eq_tool_${tierName}_${toolName}`;
-          
-          const applyToolPosition = () => {
-            if (dir === "up") {
-              toolSpr.setVisible(false);
-            } else {
-              toolSpr.setVisible(true);
-              if (dir === "left") {
-                toolSpr.setPosition(-8, 12);
-                toolSpr.setAngle(-25);
-                toolSpr.setFlipX(true);
-              } else if (dir === "right") {
-                toolSpr.setPosition(8, 12);
-                toolSpr.setAngle(25);
-                toolSpr.setFlipX(false);
-              } else { // down
-                toolSpr.setPosition(-8, 14);
-                toolSpr.setAngle(0);
-                toolSpr.setFlipX(true);
-              }
-            }
-          };
-
-          if (!this.textures.exists(cacheKey)) {
-            const path = `assets/pack/icons/RPG_icons/Weapons_and_Armor/${tierName}/${toolName}.png`;
-            this.load.image(cacheKey, path);
-            this.load.once(`filecomplete-image-${cacheKey}`, () => {
-              if (toolSpr) {
-                const tex = this.textures.get(cacheKey);
-                if (tex) {
-                  const H = tex.get('__BASE__').height;
-                  if (!tex.has('single')) {
-                    tex.add('single', 0, 0, 0, H, H);
-                  }
-                  toolSpr.setTexture(cacheKey, 'single');
-                } else {
-                  toolSpr.setTexture(cacheKey);
-                }
-                applyToolPosition();
-              }
-            });
-            this.load.start();
-          } else {
-            const tex = this.textures.get(cacheKey);
-            if (tex) {
-              const H = tex.get('__BASE__').height;
-              if (!tex.has('single')) {
-                tex.add('single', 0, 0, 0, H, H);
-              }
-              if (toolSpr.texture.key !== cacheKey || toolSpr.frame.name !== 'single') {
-                toolSpr.setTexture(cacheKey, 'single');
-              }
-            } else {
-              if (toolSpr.texture.key !== cacheKey) {
-                toolSpr.setTexture(cacheKey);
-              }
-            }
-            applyToolPosition();
-          }
+          // If player has a mismatching weapon equipped, or is in idle/movement (keep weapon sheathed)
+          toolSpr.setVisible(false);
         }
       } else {
         toolSpr.setVisible(false);
@@ -3315,11 +3273,16 @@ export class GameScene extends Phaser.Scene {
           else if (toolName === "Pickaxe") attackState = "pickaxe_attack";
           else if (toolName === "Shovel") attackState = "shovel_attack";
           else if (toolName === "Sickle") attackState = "scythe_attack";
+          else if (toolName === "Hoe") attackState = "hoe_attack";
+          else if (toolName === "Watering_can") attackState = "watering";
+          else if (toolName === "Fishing_Rod") attackState = "fishing_cast";
           
           const currentAction = localPlayerState.state;
           const isAlreadyAttacking = currentAction === "sword_attack" || currentAction === "bow_attack" || currentAction === "mage" ||
                                      currentAction === "pickaxe_attack" || currentAction === "hoe_attack" || currentAction === "axe_attack" ||
-                                     currentAction === "scythe_attack" || currentAction === "shovel_attack" || currentAction === "watering";
+                                     currentAction === "scythe_attack" || currentAction === "shovel_attack" || currentAction === "watering" ||
+                                     currentAction === "fishing_cast" || currentAction === "fishing_wait" || currentAction === "fishing_bite" ||
+                                     currentAction === "fishing_reel" || currentAction === "fishing_catch";
           
           if (attackState && !isAlreadyAttacking) {
             this.room.send("action", { type: attackState, direction: localPlayerState.direction || "down" });
